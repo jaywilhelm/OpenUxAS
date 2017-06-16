@@ -94,7 +94,7 @@ private:
     /** brief Copy assignment operation not permitted */
     void operator=(PixhawkService const&) = delete;
 
-    /*bool
+    bool
     configure(const pugi::xml_node& serviceXmlNode) override;
 
     bool
@@ -108,7 +108,7 @@ private:
 
     bool
     processReceivedLmcpMessage(std::unique_ptr<uxas::communications::data::LmcpMessage> receivedLmcpMessage) override;
-    */
+    
 
 private:
     /** brief The timer calls this function periodically to send out messages */

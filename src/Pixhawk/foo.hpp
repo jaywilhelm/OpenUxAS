@@ -6,11 +6,16 @@
 
 #warning "foo was here"
 
-class foobar
+class sub
+{
+public:
+    int num=123123;
+};
+class foobar : public sub
 {
 public:
     int x=555;
-    foobar()
+    foobar() : sub()
     {
         
     }
