@@ -16,7 +16,7 @@
  * <Service Type="HelloWorld" StringToSend="Option_01" SendPeriod_ms="36" />
  * 
  */
-
+#include "mavlinkc/common/mavlink.h"
 // include header for this service
 #include "01_HelloWorld.h"
 
@@ -45,7 +45,13 @@ HelloWorld::s_registrar(HelloWorld::s_registryServiceTypeNames());
 
 // service constructor
 HelloWorld::HelloWorld()
-: ServiceBase(HelloWorld::s_typeName(), HelloWorld::s_directoryName()) { };
+: ServiceBase(HelloWorld::s_typeName(), HelloWorld::s_directoryName()) 
+{ 
+    mavlink_message_t r_message;
+    mavlink_status_t r_mavlink_status;
+    char newc = 0;
+    uint8_t res = mavlink_parse_char(0,newc, &r_message, &r_mavlink_status);
+};
 
 // service destructor
 HelloWorld::~HelloWorld() { };
