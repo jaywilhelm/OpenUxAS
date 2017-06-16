@@ -91,6 +91,8 @@ subdir('src/Utilities')
 
 subdir('src/Plans')
 
+subdir('src/Pixhawk')
+
 dep_thread              = dependency('threads')
 
 libs = [
@@ -113,6 +115,7 @@ libs = [
   lib_minizip,
   lib_zlib,
   lib_dpss,
+  lib_pixhawk
 ]
 
 if get_option('afrl_internal')
@@ -159,6 +162,7 @@ executable(
       '3rd/PugiXML/src',
       '3rd/sqlite-amalgamation-3120200',
       '3rd/SQLiteCpp-1.3.1/include',
+      'src/Pixhawk'
     ),
     incs_lmcp,
   ],

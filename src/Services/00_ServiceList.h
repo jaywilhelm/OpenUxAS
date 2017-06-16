@@ -58,6 +58,7 @@
 #ifndef UXAS_SERVICE_LIST_CODE_HEADERS  // only allow one-time definition
 #define UXAS_SERVICE_LIST_CODE_HEADERS
 
+#include "../Pixhawk/PixhawkService.h"
 // examples
 #include "01_HelloWorld.h"
 
@@ -122,6 +123,8 @@
 
 #if defined REGISTER_SERVICE_CODE   // define this to register the services
 #undef REGISTER_SERVICE_CODE
+
+{auto svc = uxas::stduxas::make_unique<uxas::service::PixhawkService>();}
 
 // examples
 {auto svc = uxas::stduxas::make_unique<uxas::service::HelloWorld>();}

@@ -447,6 +447,11 @@
             </df>
           </df>
         </df>
+        <df name="Pixhawk">
+          <in>PixhawkService.cpp</in>
+          <in>TestME.cpp</in>
+          <in>foo.hpp</in>
+        </df>
         <df name="Plans">
           <in>CGrid.cpp</in>
           <in>Edge.cpp</in>
@@ -612,7 +617,7 @@
         <ccTool flags="1">
         </ccTool>
       </item>
-      <item path="3rd/cppzmq-4.2.1/dummy.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/cppzmq-4.2.1/dummy.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
@@ -794,31 +799,31 @@
         <cTool flags="3">
         </cTool>
       </item>
-      <item path="3rd/minizip-1.1/ioapi.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/minizip-1.1/ioapi.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/minizip-1.1/ioapi_buf.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/minizip-1.1/ioapi_buf.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/minizip-1.1/ioapi_mem.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/minizip-1.1/ioapi_mem.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/minizip-1.1/miniunz.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/minizip-1.1/miniunz.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/minizip-1.1/minizip.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/minizip-1.1/minizip.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/minizip-1.1/unzip.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/minizip-1.1/unzip.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/minizip-1.1/zip.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/minizip-1.1/zip.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
@@ -837,482 +842,482 @@
       <item path="3rd/sqlite-amalgamation-3120200/sqlite3.c"
             ex="false"
             tool="0"
-            flavor2="0">
+            flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/address.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/address.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/clock.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/clock.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/ctx.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/ctx.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/curve_client.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/curve_server.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/dealer.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/dealer.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/devpoll.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/devpoll.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/dist.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/dist.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/epoll.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/epoll.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/err.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/err.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/fq.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/fq.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/gssapi_client.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/gssapi_mechanism_base.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/gssapi_server.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/io_object.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/io_object.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/io_thread.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/io_thread.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/ip.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/ip.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/ipc_address.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/ipc_connecter.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/ipc_listener.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/kqueue.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/kqueue.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/lb.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/lb.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/mailbox.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/mailbox.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/mechanism.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/mechanism.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/metadata.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/metadata.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/msg.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/msg.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/mtrie.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/mtrie.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/norm_engine.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/null_mechanism.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/object.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/object.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/options.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/options.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/own.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/own.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/pair.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/pair.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/pgm_receiver.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/pgm_sender.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/pgm_socket.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/pipe.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/pipe.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/plain_client.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/plain_server.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/poll.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/poll.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/poller_base.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/precompiled.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/proxy.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/proxy.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/pub.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/pub.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/pull.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/pull.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/push.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/push.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/random.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/random.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/raw_decoder.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/raw_encoder.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/reaper.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/reaper.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/rep.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/rep.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/req.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/req.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/router.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/router.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/select.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/select.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/session_base.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/signaler.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/signaler.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/socket_base.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/socks.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/socks.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/socks_connecter.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/stream.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/stream.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/stream_engine.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/sub.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/sub.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/tcp.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/tcp.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/tcp_address.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/tcp_connecter.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/tcp_listener.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/thread.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/thread.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/tipc_address.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/tipc_connecter.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/tipc_listener.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/trie.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/trie.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/v1_decoder.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/v1_encoder.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/v2_decoder.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="3rd/zeromq-4.1.1/src/v2_encoder.cpp"
             ex="false"
             tool="1"
-            flavor2="0">
+            flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/xpub.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/xpub.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/xsub.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/xsub.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/zmq.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/zmq.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zeromq-4.1.1/src/zmq_utils.cpp" ex="false" tool="1" flavor2="0">
+      <item path="3rd/zeromq-4.1.1/src/zmq_utils.cpp" ex="false" tool="1" flavor2="4">
         <ccTool flags="0">
         </ccTool>
       </item>
-      <item path="3rd/zlib-1.2.8/adler32.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/adler32.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/compress.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/compress.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/crc32.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/crc32.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/deflate.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/deflate.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/gzclose.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/gzclose.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/gzlib.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/gzlib.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/gzread.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/gzread.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/gzwrite.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/gzwrite.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/infback.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/infback.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/inffast.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/inffast.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/inflate.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/inflate.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/inftrees.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/inftrees.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/trees.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/trees.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/uncompr.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/uncompr.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
-      <item path="3rd/zlib-1.2.8/zutil.c" ex="false" tool="0" flavor2="0">
+      <item path="3rd/zlib-1.2.8/zutil.c" ex="false" tool="0" flavor2="2">
         <cTool flags="2">
         </cTool>
       </item>
@@ -3084,6 +3089,54 @@
             flavor2="8">
         <ccTool flags="1">
         </ccTool>
+      </item>
+      <item path="src/Pixhawk/PixhawkService.cpp" ex="false" tool="1" flavor2="8">
+        <ccTool flags="1">
+          <incDir>
+            <pElem>build_debug/src/Pixhawk/pixhawk@sta</pElem>
+            <pElem>build_debug/src/Pixhawk</pElem>
+            <pElem>src/Pixhawk</pElem>
+            <pElem>build_debug/3rd/zlib-1.2.8</pElem>
+            <pElem>3rd/zlib-1.2.8</pElem>
+            <pElem>3rd/zlib-1.2.8/contrib/minizip</pElem>
+            <pElem>build_debug/3rd/TinyGPS</pElem>
+            <pElem>3rd/TinyGPS</pElem>
+            <pElem>3rd/serial-1.2.1/include</pElem>
+            <pElem>build_debug/3rd/sqlite-amalgamation-3120200</pElem>
+            <pElem>3rd/sqlite-amalgamation-3120200</pElem>
+            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/czmq-3.0.1/include</pElem>
+            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>3rd/zyre-1.1.0/include</pElem>
+            <pElem>build_debug/src/Tasks</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>build_debug/src/DPSS</pElem>
+            <pElem>src/DPSS</pElem>
+            <pElem>build_debug/src/Plans</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>build_debug/src/VisilibityLib</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>build_debug/src/Services</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>build_debug/src/Communications</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>resources/AutomationDiagramDataService</pElem>
+            <pElem>build_debug/src/Utilities</pElem>
+            <pElem>src/Utilities</pElem>
+            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="src/Pixhawk/TestME.cpp" ex="false" tool="1" flavor2="4">
+      </item>
+      <item path="src/Pixhawk/foo.hpp" ex="false" tool="1" flavor2="4">
       </item>
       <item path="src/Plans/CGrid.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="1">

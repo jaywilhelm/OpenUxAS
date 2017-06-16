@@ -2031,35 +2031,7 @@
             </df>
           </df>
         </df>
-        <df name="Plans">
-          <in>Assignment.h</in>
-          <in>BaseObject.h</in>
-          <in>CGrid.cpp</in>
-          <in>CGrid.h</in>
-          <in>Circle.h</in>
-          <in>Edge.cpp</in>
-          <in>Edge.h</in>
-          <in>HeadingParameters.h</in>
-          <in>PathInformation.h</in>
-          <in>PlanningParameters.h</in>
-          <in>Polygon.cpp</in>
-          <in>Polygon.h</in>
-          <in>Position.cpp</in>
-          <in>Position.h</in>
-          <in>SensorType.h</in>
-          <in>TaskAssignment.h</in>
-          <in>Trajectory.cpp</in>
-          <in>Trajectory.h</in>
-          <in>TrajectoryParameters.h</in>
-          <in>VehicleBase.h</in>
-          <in>VehicleParameters.h</in>
-          <in>VisibilityGraph.cpp</in>
-          <in>VisibilityGraph.h</in>
-          <in>Waypoint.cpp</in>
-          <in>Waypoint.h</in>
-          <in>rasSensorParameters.h</in>
-        </df>
-        <df name="Services">
+        <df name="Pixhawk">
           <df name="mavlinkc">
             <df name="ardupilotmega">
               <in>ardupilotmega.h</in>
@@ -2404,6 +2376,41 @@
             <in>mavlink_types.h</in>
             <in>protocol.h</in>
           </df>
+          <in>PixhawkService.cpp</in>
+          <in>PixhawkService.h</in>
+          <in>TestME.cpp</in>
+          <in>TestME.h</in>
+          <in>foo.hpp</in>
+        </df>
+        <df name="Plans">
+          <in>Assignment.h</in>
+          <in>BaseObject.h</in>
+          <in>CGrid.cpp</in>
+          <in>CGrid.h</in>
+          <in>Circle.h</in>
+          <in>Edge.cpp</in>
+          <in>Edge.h</in>
+          <in>HeadingParameters.h</in>
+          <in>PathInformation.h</in>
+          <in>PlanningParameters.h</in>
+          <in>Polygon.cpp</in>
+          <in>Polygon.h</in>
+          <in>Position.cpp</in>
+          <in>Position.h</in>
+          <in>SensorType.h</in>
+          <in>TaskAssignment.h</in>
+          <in>Trajectory.cpp</in>
+          <in>Trajectory.h</in>
+          <in>TrajectoryParameters.h</in>
+          <in>VehicleBase.h</in>
+          <in>VehicleParameters.h</in>
+          <in>VisibilityGraph.cpp</in>
+          <in>VisibilityGraph.h</in>
+          <in>Waypoint.cpp</in>
+          <in>Waypoint.h</in>
+          <in>rasSensorParameters.h</in>
+        </df>
+        <df name="Services">
           <in>00_ServiceList.h</in>
           <in>00_ServiceTemplate.cpp</in>
           <in>00_ServiceTemplate.h</in>
@@ -2614,6 +2621,8 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
+        <gdb_signals>
+        </gdb_signals>
         <gdb_options>
           <DebugOptions>
             <option name="debug_dir" value="/home/jay/uxas/OpenUxAS/examples/01_HelloWorld"/>
