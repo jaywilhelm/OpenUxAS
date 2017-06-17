@@ -5,6 +5,7 @@
 
 #warning "Building with Pixhawk"
 #include "foo.hpp"
+#define COUT_INFO(MESSAGE) std::cout << "PX: " << MESSAGE << std::endl;std::cout.flush();
 
 // namespace definitions
 namespace uxas
@@ -55,24 +56,23 @@ bool PixhawkService::initialize()
 
     std::cout <<  "PX init"<<std::endl;
 
-    if (m_useTcpIpConnection)
+    if (m_useNetConnection)
     {
         // open tcp/ip socket for sending/receiving messages
-        assert(!m_tcpAddress.empty());
-        std::cout << "PX Connecting to " << m_tcpAddress << std::endl;
-        m_contextLocal.reset(new zmq::context_t(1));
-        m_tcpConnectionSocket.reset(new zmq::socket_t(*m_contextLocal, ZMQ_STREAM));
-        if (m_bServer)
+        //assert(!m_tcpAddress.empty());
+        //std::cout << "PX Connecting to " << m_tcpAddress << std::endl;
+        if ((m_netSocketFD=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
         {
-            m_tcpConnectionSocket->bind(m_tcpAddress.c_str());
+            bSuccess=false;
+            COUT_INFO("create socket failed");
         }
         else
-        {
-            m_tcpConnectionSocket->connect(m_tcpAddress.c_str());
-        }
+            COUT_INFO("socket created");
+
     }
     else
     {
+        COUT_INFO("serial");
         // 0) initialize the serial connection
         //m_serialConnectionPiccolo.reset(new serial::Serial(m_strTTyDevice, m_ui32Baudrate, serial::Timeout::simpleTimeout(m_serialTimeout_ms)));
         //if (!m_serialConnectionPiccolo->isOpen())
@@ -86,8 +86,8 @@ bool PixhawkService::initialize()
 
 bool PixhawkService::start()
 {
-    m_receiveFromPixhawkProcessingThread = uxas::stduxas::make_unique<std::thread>(&PixhawkService::executePixhawkAutopilotCommProcessing, this);
     std::cout <<  "PX start"<<std::endl;
+    m_receiveFromPixhawkProcessingThread = uxas::stduxas::make_unique<std::thread>(&PixhawkService::executePixhawkAutopilotCommProcessing, this);
     return (true);
     // start the timer
     return true;
@@ -105,11 +105,11 @@ bool PixhawkService::terminate()
     }
     std::cout <<  "PX terminate"<<std::endl;
 
-    if (m_tcpConnectionSocket)
+    if (m_useNetConnection)
     {
         uint32_t ui32LingerTime(0);
-        m_tcpConnectionSocket->setsockopt(ZMQ_LINGER, &ui32LingerTime, sizeof (ui32LingerTime));
-        m_tcpConnectionSocket->close();
+        //m_tcpConnectionSocket->setsockopt(ZMQ_LINGER, &ui32LingerTime, sizeof (ui32LingerTime));
+        //m_tcpConnectionSocket->close();
         // make sure the file is closed
     }
     
@@ -140,14 +140,34 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
 void
 PixhawkService::executePixhawkAutopilotCommProcessing()
 {
-    std::cout <<  "PX executePixhawkAutopilotCommProcessing"<<std::endl;
+    COUT_INFO("executePixhawkAutopilotCommProcessing");
+    std::string strInputFromPixhawk;
+    if (m_bServer)
+    {
+        // zero out the structure
+        memset((char *) &m_listenSocket, 0, sizeof(m_listenSocket));
 
-    std::string strInputFromPiccolo;
+        m_listenSocket.sin_family = AF_INET;
+        m_listenSocket.sin_port = htons(m_netPort);
+        m_listenSocket.sin_addr.s_addr = htonl(INADDR_ANY);
+
+        //bind socket to port
+        if( bind(m_netSocketFD , (struct sockaddr*)&m_listenSocket, sizeof(m_listenSocket) ) == -1)
+        {
+            COUT_INFO("bind failed");
+        }
+        else
+            COUT_INFO("bind good");
+    }
+    else
+    {
+        //m_tcpConnectionSocket->connect(m_tcpAddress.c_str());
+    }
     while (!m_isTerminate)
     {
         std::string strInputFromPiccolo;
         strInputFromPiccolo.clear();
-        if (m_useTcpIpConnection)
+        if (m_useNetConnection)
         {
             //  Process messages from receiver and controller
             //zmq::pollitem_t items [] = {
@@ -161,11 +181,53 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
 
             //if (items [0].revents & ZMQ_POLLIN) //m_ptr_ZsckTcpConnection
             {
-                char buf;
+                char buf[1024];
                 int len = 1;
+                memset((char *) &m_remoteSocket, 0, sizeof(m_remoteSocket));
+
+                socklen_t slen = sizeof(m_remoteSocket);
+                int recv_len=0;
+                    
+                //int ret = recv(m_netSocketFD,buf,sizeof(buf), 0);//non-blocking, also will drop bytes if packet is smaller than buffer
+                //(ret == 0)
+                
+                recv_len = recvfrom(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, &slen);
+                if (recv_len == -1)
+                {
+                    COUT_INFO("bad recv " << recv_len);
+                }
+                else
+                {
+                    buf[recv_len]=0;
+                    //COUT_INFO("recv " << buf << " " << recv_len);
+                    int chan = 0;
+                    mavlink_message_t msg;
+                    mavlink_status_t status;
+                    std::cout << std::hex << (uint16_t) 0xFD << std::endl;
+                    for(uint32_t i=0;i<recv_len;i++)
+                    {
+                        uint8_t mvp_ret = mavlink_parse_char(chan,buf[i],&msg,&status);
+                        uint16_t data = 0x00FF & buf[i];
+                        //std::cout << "p_ret " << std::hex << data << std::endl;
+                        if(mvp_ret != 0)
+                        {
+                            COUT_INFO("Msg " << msg.msgid);
+                            switch (msg.msgid)
+                            {
+                                case MAVLINK_MSG_ID_HEARTBEAT:
+                                {
+                                    mavlink_heartbeat_t heartbeat;
+                                    mavlink_msg_heartbeat_decode(&msg, &heartbeat);
+                                    std::cout << "HB " << (uint16_t) heartbeat.autopilot << " - " << (uint16_t) heartbeat.mavlink_version << std::endl;
+                                }
+                            }
+                        }         
+                    }
+                        
+                }               
                 uint32_t flags = 0;
-                int ret = m_tcpConnectionSocket->recv(&buf,len,flags);
-                std::cout << "PX data " << ret << std::endl;
+                //int ret = m_tcpConnectionSocket->recv(&buf,len,flags);
+                //std::cout << "PX data " << ret << std::endl;
             } 
         }
         else

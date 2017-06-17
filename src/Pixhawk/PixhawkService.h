@@ -20,7 +20,13 @@
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
 #include "TypeDefs/UxAS_TypeDefs_Timer.h"
-
+extern "C"{
+#include<arpa/inet.h>
+#include<sys/socket.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+};
 namespace uxas
 {
 namespace service
@@ -121,14 +127,17 @@ private:
     int64_t m_sendPeriod_ms{1000};
     uint64_t m_sendMessageTimerId{0};
     
-    bool m_useTcpIpConnection{true};
+    bool m_useNetConnection{true};
     ///// TCP/IP
     /*! \brief this is the zmq context used to connect to the external device */
-    std::shared_ptr<zmq::context_t> m_contextLocal;
+    ///std::shared_ptr<zmq::context_t> m_contextLocal;
     /*! \brief this is the stream socket used to connect to the external device */
-    std::shared_ptr<zmq::socket_t> m_tcpConnectionSocket;
-    
-    std::string m_tcpAddress{"udp://localhost:14501"};
+    //std::shared_ptr<zmq::socket_t> m_tcpConnectionSocket;
+    int m_netSocketFD;
+    sockaddr_in m_listenSocket;
+    sockaddr_in m_remoteSocket;
+    //std::string m_tcpAddress{"udp://localhost:14501"};
+    uint16_t m_netPort{14501};
     bool m_bServer{true};
     std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;
     bool m_isTerminate{false};//read thread terminate
