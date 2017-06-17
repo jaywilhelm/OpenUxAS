@@ -10,7 +10,7 @@
 
 // print outs
 #include <iostream>     // std::cout, cerr, etc
-
+#include "serial/serial.h"
 // convenience definitions for the option strings
 #define STRING_XML_STRING_TO_SEND "StringToSend"
 #define STRING_XML_SEND_PERIOD_MS "SendPeriod_ms"
@@ -109,16 +109,29 @@ private:
     bool
     processReceivedLmcpMessage(std::unique_ptr<uxas::communications::data::LmcpMessage> receivedLmcpMessage) override;
     
-
+    
 private:
     /** brief The timer calls this function periodically to send out messages */
     //void OnSendMessage();
+    void
+    executePixhawkAutopilotCommProcessing();
     
 private:
     std::string m_stringToSend = std::string("PixhawkService String");
     int64_t m_sendPeriod_ms{1000};
     uint64_t m_sendMessageTimerId{0};
-
+    
+    bool m_useTcpIpConnection{true};
+    ///// TCP/IP
+    /*! \brief this is the zmq context used to connect to the external device */
+    std::shared_ptr<zmq::context_t> m_contextLocal;
+    /*! \brief this is the stream socket used to connect to the external device */
+    std::shared_ptr<zmq::socket_t> m_tcpConnectionSocket;
+    
+    std::string m_tcpAddress{"udp://localhost:14501"};
+    bool m_bServer{true};
+    std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;
+    bool m_isTerminate{false};//read thread terminate
 };
 
 }; //namespace service
