@@ -137,7 +137,7 @@ private:
     sockaddr_in m_listenSocket;
     sockaddr_in m_remoteSocket;
     //std::string m_tcpAddress{"udp://localhost:14501"};
-    uint16_t m_netPort{14501};
+    uint16_t m_netPort{14552};
     bool m_bServer{true};
     std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;
     bool m_isTerminate{false};//read thread terminate

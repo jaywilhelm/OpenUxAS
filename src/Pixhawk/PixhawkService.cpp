@@ -150,9 +150,10 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         m_listenSocket.sin_family = AF_INET;
         m_listenSocket.sin_port = htons(m_netPort);
         m_listenSocket.sin_addr.s_addr = htonl(INADDR_ANY);
+        COUT_INFO("binding to port " << m_netPort);
 
         //bind socket to port
-        if( bind(m_netSocketFD , (struct sockaddr*)&m_listenSocket, sizeof(m_listenSocket) ) == -1)
+        if(bind(m_netSocketFD , (struct sockaddr*)&m_listenSocket, sizeof(m_listenSocket) ) == -1)
         {
             COUT_INFO("bind failed");
         }
@@ -163,71 +164,29 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
     {
         //m_tcpConnectionSocket->connect(m_tcpAddress.c_str());
     }
+    char buf[1024];
+    int recv_len=0;
+
     while (!m_isTerminate)
     {
         std::string strInputFromPiccolo;
         strInputFromPiccolo.clear();
         if (m_useNetConnection)
-        {
-            //  Process messages from receiver and controller
-            //zmq::pollitem_t items [] = {
-            //    { *m_tcpConnectionSocket, 0, ZMQ_POLLIN, 0}
-            //};
+        {                 
+            memset((char *) &m_remoteSocket, 0, sizeof(m_remoteSocket));
+            socklen_t slen = sizeof(m_remoteSocket);
+            recv_len=0;
+            //int ret = recv(m_netSocketFD,buf,sizeof(buf), 0);//non-blocking, also will drop bytes if packet is smaller than buffer
+            //(ret == 0)
 
-            //TODO:: should I use 0 time out???
-            //size_t szPollTimeOut_ms = 1; //larger numbers limit the speed that messages can be sent
-
-            //zmq::poll(&items [0], 1, szPollTimeOut_ms);
-
-            //if (items [0].revents & ZMQ_POLLIN) //m_ptr_ZsckTcpConnection
+            recv_len = recvfrom(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, &slen);
+            if (recv_len == -1)
             {
-                char buf[1024];
-                int len = 1;
-                memset((char *) &m_remoteSocket, 0, sizeof(m_remoteSocket));
-
-                socklen_t slen = sizeof(m_remoteSocket);
-                int recv_len=0;
-                    
-                //int ret = recv(m_netSocketFD,buf,sizeof(buf), 0);//non-blocking, also will drop bytes if packet is smaller than buffer
-                //(ret == 0)
+                COUT_INFO("bad recv " << recv_len);
+            }
+            else
+            {
                 
-                recv_len = recvfrom(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, &slen);
-                if (recv_len == -1)
-                {
-                    COUT_INFO("bad recv " << recv_len);
-                }
-                else
-                {
-                    buf[recv_len]=0;
-                    //COUT_INFO("recv " << buf << " " << recv_len);
-                    int chan = 0;
-                    mavlink_message_t msg;
-                    mavlink_status_t status;
-                    std::cout << std::hex << (uint16_t) 0xFD << std::endl;
-                    for(uint32_t i=0;i<recv_len;i++)
-                    {
-                        uint8_t mvp_ret = mavlink_parse_char(chan,buf[i],&msg,&status);
-                        uint16_t data = 0x00FF & buf[i];
-                        //std::cout << "p_ret " << std::hex << data << std::endl;
-                        if(mvp_ret != 0)
-                        {
-                            COUT_INFO("Msg " << msg.msgid);
-                            switch (msg.msgid)
-                            {
-                                case MAVLINK_MSG_ID_HEARTBEAT:
-                                {
-                                    mavlink_heartbeat_t heartbeat;
-                                    mavlink_msg_heartbeat_decode(&msg, &heartbeat);
-                                    std::cout << "HB " << (uint16_t) heartbeat.autopilot << " - " << (uint16_t) heartbeat.mavlink_version << std::endl;
-                                }
-                            }
-                        }         
-                    }
-                        
-                }               
-                uint32_t flags = 0;
-                //int ret = m_tcpConnectionSocket->recv(&buf,len,flags);
-                //std::cout << "PX data " << ret << std::endl;
             } 
         }
         else
@@ -236,6 +195,52 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
             //strInputFromPiccolo = m_serialConnectionPiccolo->read(m_serialReadSize);
             //UXAS_LOG_DEBUG_VERBOSE("PiccoloAutopilotAdapterService::executePiccoloAutopilotSerialProcessing", " bytes on serial port: ", strInputFromPiccolo.length());
             //UXAS_LOG_DEBUG_VERBOSE("PiccoloAutopilotAdapterService::executePiccoloAutopilotSerialProcessing", " all bytes read from serial port: ", strInputFromPiccolo);
+        }
+        if(recv_len <= 0)
+            continue;
+        
+        buf[recv_len]=0;
+        //COUT_INFO("recv " << buf << " " << recv_len);
+        int chan = 0;
+        mavlink_message_t msg;
+        mavlink_status_t status;
+        //std::cout << std::hex << (uint16_t) 0xFD << std::endl;
+        for(uint32_t i=0;i<recv_len;i++)
+        {
+            uint8_t mvp_ret = mavlink_parse_char(chan,buf[i],&msg,&status);
+            uint16_t data = 0x00FF & buf[i];
+            //std::cout << "p_ret " << std::hex << data << std::endl;
+            if(mvp_ret != 0)
+            {
+                //COUT_INFO("Msg ID " << msg.msgid);
+                switch (msg.msgid)
+                {
+                    case MAVLINK_MSG_ID_HEARTBEAT:
+                    {
+                        mavlink_heartbeat_t heartbeat;
+                        mavlink_msg_heartbeat_decode(&msg, &heartbeat);
+                        std::cout << "HB " << (uint16_t) heartbeat.autopilot << " - " << (uint16_t) heartbeat.mavlink_version << std::endl;
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
+                    {
+                        mavlink_global_position_int_t gpsi;
+                        mavlink_msg_global_position_int_decode(&msg,&gpsi);
+                        COUT_INFO("GPS POS INT " << gpsi.alt);
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_MISSION_CURRENT:
+                    {
+                        mavlink_mission_current_t mcur;
+                        mavlink_msg_mission_current_decode(&msg,&mcur);
+                        COUT_INFO("Mission Curr: "<<mcur.seq);
+                        break;
+                    }
+                    //GPS_RAW_INT (1 Hz)
+                    //GLOBAL_POSITION_INT (50Hz)
+                    //MISSION_CURRENT.seq (current waypoint)
+                }
+            }         
         }
     }
 };
