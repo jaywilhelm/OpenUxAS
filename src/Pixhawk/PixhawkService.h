@@ -16,7 +16,12 @@
 #define STRING_XML_SEND_PERIOD_MS "SendPeriod_ms"
 #ifndef PIXHAWKSERVICE_H
 #define PIXHAWKSERVICE_H
-
+#include "afrl/cmasi/AirVehicleState.h"
+#include "afrl/cmasi/MissionCommand.h"
+#include "afrl/cmasi/AirVehicleConfiguration.h"
+#include "afrl/cmasi/CameraState.h"
+#include "afrl/cmasi/GimbalState.h"
+#include "afrl/cmasi/VideoStreamState.h"
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
 #include "TypeDefs/UxAS_TypeDefs_Timer.h"
@@ -122,7 +127,7 @@ private:
     void
     executePixhawkAutopilotCommProcessing();
     
-private:
+protected:
     std::string m_stringToSend = std::string("PixhawkService String");
     int64_t m_sendPeriod_ms{1000};
     uint64_t m_sendMessageTimerId{0};
@@ -141,6 +146,8 @@ private:
     bool m_bServer{true};
     std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;
     bool m_isTerminate{false};//read thread terminate
+    
+    std::shared_ptr<afrl::cmasi::AirVehicleState> m_ptr_CurrentAirVehicleState;
 };
 
 }; //namespace service

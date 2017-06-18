@@ -43,7 +43,18 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
 
     // subscribe to messages::
     addSubscriptionAddress(afrl::cmasi::KeyValuePair::Subscription);*/
-
+    ////////////////////////////////////////////////////////
+    // subscribe to messages
+    ////////////////////////////////////////////////////////
+    addSubscriptionAddress(afrl::cmasi::MissionCommand::Subscription);
+    //addSubscriptionAddress(uxas::messages::uxnative::AutopilotKeepAlive::Subscription);
+    //addSubscriptionAddress(afrl::cmasi::VehicleActionCommand::Subscription);
+    //addSubscriptionAddress(afrl::cmasi::GimbalStareAction::Subscription);
+    //addSubscriptionAddress(afrl::cmasi::GimbalAngleAction::Subscription);
+    //addSubscriptionAddress(afrl::cmasi::CameraAction::Subscription);
+    
+    m_ptr_CurrentAirVehicleState.reset(new afrl::cmasi::AirVehicleState());
+    //sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
     return (isSuccess);
 }
 
