@@ -4,7 +4,6 @@
 
 
 #warning "Building with Pixhawk"
-#include "foo.hpp"
 #define COUT_INFO(MESSAGE) std::cout << "PX: " << MESSAGE << std::endl;std::cout.flush();
 
 // namespace definitions
@@ -17,12 +16,15 @@ PixhawkService::s_registrar(PixhawkService::s_registryServiceTypeNames());// ser
 // service constructor
 PixhawkService::PixhawkService() : ServiceBase(PixhawkService::s_typeName(), PixhawkService::s_directoryName()) 
 { 
+    //Test the MAVLink interface
     mavlink_message_t r_message;
     mavlink_status_t r_mavlink_status;
     char newc = 0;
     uint8_t res = mavlink_parse_char(0,newc, &r_message, &r_mavlink_status);
-    foobar fb;
-    std::cout << "PixhawkService called"<<" "<<fb.giveme() << std::endl;
+    
+    
+    std::cout << "PixhawkService called";
+    std::memset(&m_Attitude,0,sizeof(m_Attitude));
 }
 
 PixhawkService::~PixhawkService() { }
@@ -52,7 +54,7 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
     //addSubscriptionAddress(afrl::cmasi::GimbalStareAction::Subscription);
     //addSubscriptionAddress(afrl::cmasi::GimbalAngleAction::Subscription);
     //addSubscriptionAddress(afrl::cmasi::CameraAction::Subscription);
-    
+    std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
     m_ptr_CurrentAirVehicleState.reset(new afrl::cmasi::AirVehicleState());
     //sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
     return (isSuccess);
@@ -223,7 +225,6 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
             //std::cout << "p_ret " << std::hex << data << std::endl;
             if(mvp_ret != 0)
             {
-                //COUT_INFO("Msg ID " << msg.msgid);
                 switch (msg.msgid)
                 {
                     case MAVLINK_MSG_ID_HEARTBEAT:
@@ -237,7 +238,41 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         mavlink_global_position_int_t gpsi;
                         mavlink_msg_global_position_int_decode(&msg,&gpsi);
-                        COUT_INFO("GPS POS INT " << gpsi.alt);
+                        float newAlt_m = (float)gpsi.alt/1000.0f;//AMSL
+                        float cog_d = (float)gpsi.hdg/1000.0f;//deg
+                        double lat_d = (double)gpsi.lat/10000000.0;//deg
+                        double lon_d = (double)gpsi.lon/10000000.0;//deg
+
+                        //COUT_INFO("GLOBAL POS INT " << newAlt_m); 
+                        if(m_AirvehicleStateMutex.try_lock())
+                        {
+                            //Need airspeed
+                            if(m_Attitude.time_boot_ms!=0)
+                            {
+                                m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
+                                m_ptr_CurrentAirVehicleState->setRoll(m_Attitude.roll);
+                            }
+                            m_ptr_CurrentAirVehicleState->setAirspeed(m_Airspeed);//m/s
+                            
+                            m_ptr_CurrentAirVehicleState->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);
+                            m_ptr_CurrentAirVehicleState->getLocation()->setAltitude(newAlt_m);
+                            m_ptr_CurrentAirVehicleState->getLocation()->setLatitude(lat_d);
+                            m_ptr_CurrentAirVehicleState->getLocation()->setLongitude(lon_d);
+                            m_ptr_CurrentAirVehicleState->setCourse(cog_d);
+                            // u, v, w, udot, vdot, wdot
+                            m_ptr_CurrentAirVehicleState->setU(0.0);
+                            m_ptr_CurrentAirVehicleState->setV(0.0);
+                            m_ptr_CurrentAirVehicleState->setW(0.0);
+                            m_ptr_CurrentAirVehicleState->setUdot(0.0);
+                            m_ptr_CurrentAirVehicleState->setVdot(0.0);
+                            m_ptr_CurrentAirVehicleState->setWdot(0.0);
+                             // ActualEnergyRate, EnergyAvailable
+                            m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0);
+                            m_ptr_CurrentAirVehicleState->setEnergyAvailable(0.0);
+                            
+                            m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint);
+                            sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
+                        }
                         break;
                     }
                     case MAVLINK_MSG_ID_MISSION_CURRENT:
@@ -245,11 +280,102 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         mavlink_mission_current_t mcur;
                         mavlink_msg_mission_current_decode(&msg,&mcur);
                         COUT_INFO("Mission Curr: "<<mcur.seq);
+                        m_CurrentWaypoint=mcur.seq;
                         break;
                     }
-                    //GPS_RAW_INT (1 Hz)
-                    //GLOBAL_POSITION_INT (50Hz)
-                    //MISSION_CURRENT.seq (current waypoint)
+                    case MAVLINK_MSG_ID_VFR_HUD:
+                    {
+                        mavlink_vfr_hud_t vfr;
+                        mavlink_msg_vfr_hud_decode(&msg,&vfr);
+                        COUT_INFO("Speed VFR "<<vfr.airspeed);
+                        m_Airspeed = vfr.airspeed;
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_WIND_COV://#231
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_ALTITUDE:
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_ATTITUDE: //#30
+                    {
+                        mavlink_attitude_t att;
+                        mavlink_msg_attitude_decode(&msg,&att);
+                        memcpy(&m_Attitude,&att,sizeof(m_Attitude));
+                        //pitch roll yaw
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_SYS_STATUS://#1
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_SYSTEM_TIME://#2
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_BATTERY_STATUS://#147
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_EXTENDED_SYS_STATE://#245
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_ATTITUDE_QUATERNION:
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_LOCAL_POSITION_NED:
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_ATTITUDE_TARGET:
+                    {
+                        //Reports the current commanded attitude of the vehicle as specified by the autopilot. This should match the commands sent in a SET_ATTITUDE_TARGET message if the vehicle is being controlled this way.
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_PARAM_VALUE:
+                    {
+                        
+                    }
+                    case MAVLINK_MSG_ID_HIGHRES_IMU://#105
+                    {
+                        mavlink_highres_imu_t highimu;
+                        mavlink_msg_highres_imu_decode(&msg,&highimu);
+                        //COUT_INFO("HighResIMU");
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_GPS_RAW_INT://#24
+                    {
+                        mavlink_gps_raw_int_t rgpsint;
+                        mavlink_msg_gps_raw_int_decode(&msg,&rgpsint);
+                        //COUT_INFO("HighResIMU");
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_ESTIMATOR_STATUS://#230
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_HOME_POSITION://#242
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_VIBRATION://#241
+                    {
+                        break;
+                    }
+                    case 85:
+                    case 36:
+                        break;
+                    default:
+                    {
+                        COUT_INFO("Msg:"<<msg.msgid);
+                        break;
+                    }
+                    //#85
+                    //#36
                 }
             }         
         }

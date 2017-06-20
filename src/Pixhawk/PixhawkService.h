@@ -146,8 +146,12 @@ protected:
     bool m_bServer{true};
     std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;
     bool m_isTerminate{false};//read thread terminate
-    
+    int64_t m_CurrentWaypoint{-1};
+    mavlink_attitude_t m_Attitude;
+    double m_Airspeed{0.0};
     std::shared_ptr<afrl::cmasi::AirVehicleState> m_ptr_CurrentAirVehicleState;
+    std::mutex m_AirvehicleStateMutex;
+
 };
 
 }; //namespace service
