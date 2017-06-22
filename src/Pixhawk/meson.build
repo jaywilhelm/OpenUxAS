@@ -1,7 +1,5 @@
 srcs_pixhawk = [
-  'PixhawkService.cpp',
-  'TestME.cpp',
-  'foo.hpp'
+  'PixhawkService.cpp'
 ]
 
 incs_pixhawk = [

@@ -15,6 +15,7 @@
             <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/Pixhawk/PixhawkService.h</file>
             <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/Pixhawk/PixhawkService.cpp</file>
             <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/Pixhawk/mavlinkc/mavlink_helpers.h</file>
+            <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/Pixhawk/mavlinkc/common/mavlink_msg_attitude.h</file>
         </group>
     </open-files>
 </project-private>

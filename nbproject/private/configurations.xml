@@ -37771,9 +37771,6 @@
           </df>
           <in>PixhawkService.cpp</in>
           <in>PixhawkService.h</in>
-          <in>TestME.cpp</in>
-          <in>TestME.h</in>
-          <in>foo.hpp</in>
         </df>
         <df name="Plans">
           <in>Assignment.h</in>

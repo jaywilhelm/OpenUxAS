@@ -449,8 +449,6 @@
         </df>
         <df name="Pixhawk">
           <in>PixhawkService.cpp</in>
-          <in>TestME.cpp</in>
-          <in>foo.hpp</in>
         </df>
         <df name="Plans">
           <in>CGrid.cpp</in>
@@ -3133,10 +3131,6 @@
             <pElem>build_debug</pElem>
           </incDir>
         </ccTool>
-      </item>
-      <item path="src/Pixhawk/TestME.cpp" ex="false" tool="1" flavor2="4">
-      </item>
-      <item path="src/Pixhawk/foo.hpp" ex="false" tool="1" flavor2="4">
       </item>
       <item path="src/Plans/CGrid.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="1">

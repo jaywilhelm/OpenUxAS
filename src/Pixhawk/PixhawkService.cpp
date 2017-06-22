@@ -1,6 +1,7 @@
 
 // include header for this service
 #include "PixhawkService.h"
+#include "uxas/messages/uxnative/AutopilotKeepAlive.h"
 
 
 #warning "Building with Pixhawk"
@@ -49,13 +50,15 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
     // subscribe to messages
     ////////////////////////////////////////////////////////
     addSubscriptionAddress(afrl::cmasi::MissionCommand::Subscription);
-    //addSubscriptionAddress(uxas::messages::uxnative::AutopilotKeepAlive::Subscription);
-    //addSubscriptionAddress(afrl::cmasi::VehicleActionCommand::Subscription);
+    addSubscriptionAddress(uxas::messages::uxnative::AutopilotKeepAlive::Subscription);
+    addSubscriptionAddress(afrl::cmasi::VehicleActionCommand::Subscription);
     //addSubscriptionAddress(afrl::cmasi::GimbalStareAction::Subscription);
     //addSubscriptionAddress(afrl::cmasi::GimbalAngleAction::Subscription);
     //addSubscriptionAddress(afrl::cmasi::CameraAction::Subscription);
-    std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
-    m_ptr_CurrentAirVehicleState.reset(new afrl::cmasi::AirVehicleState());
+    {
+        std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
+        m_ptr_CurrentAirVehicleState.reset(new afrl::cmasi::AirVehicleState());
+    }
     //sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
     return (isSuccess);
 }
@@ -87,10 +90,11 @@ bool PixhawkService::initialize()
     {
         COUT_INFO("serial");
         // 0) initialize the serial connection
-        //m_serialConnectionPiccolo.reset(new serial::Serial(m_strTTyDevice, m_ui32Baudrate, serial::Timeout::simpleTimeout(m_serialTimeout_ms)));
-        //if (!m_serialConnectionPiccolo->isOpen())
+        m_serialConnectionPixhawk.reset(new serial::Serial(m_strTTyDevice, m_ui32Baudrate, serial::Timeout::simpleTimeout(m_serialTimeout_ms)));
+        if (!m_serialConnectionPixhawk->isOpen())
         {
             //UXAS_LOG_ERROR(s_typeName(), ":: Initialize - serial connection failed:: m_strTTyDevice[", m_strTTyDevice, "m_ui32Baudrate[", m_ui32Baudrate);
+            COUT_INFO("Serial open failed:"<<m_strTTyDevice);
             bSuccess = false;
         }
     }
@@ -141,6 +145,7 @@ bool PixhawkService::terminate()
 
 bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communications::data::LmcpMessage> receivedLmcpMessage)
 {
+    COUT_INFO("LMCP " << receivedLmcpMessage->m_object->getLmcpTypeName());
     if (afrl::cmasi::isKeyValuePair(receivedLmcpMessage->m_object))
     {
         //receive message
@@ -177,7 +182,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
     {
         //m_tcpConnectionSocket->connect(m_tcpAddress.c_str());
     }
-    char buf[1024];
+    uint8_t buf[1024];
     int recv_len=0;
 
     while (!m_isTerminate)
@@ -204,6 +209,15 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         }
         else
         {
+            assert(m_serialConnectionPixhawk);
+            int read_ret = m_serialConnectionPixhawk->read(buf,sizeof(buf));
+            if(read_ret < 0)
+            {
+                COUT_INFO("Serial read error:"<<read_ret);
+            }
+            else
+                COUT_INFO("Serial read length:" << read_ret);
+
             //assert(m_serialConnectionPiccolo);
             //strInputFromPiccolo = m_serialConnectionPiccolo->read(m_serialReadSize);
             //UXAS_LOG_DEBUG_VERBOSE("PiccoloAutopilotAdapterService::executePiccoloAutopilotSerialProcessing", " bytes on serial port: ", strInputFromPiccolo.length());
@@ -246,7 +260,6 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         //COUT_INFO("GLOBAL POS INT " << newAlt_m); 
                         if(m_AirvehicleStateMutex.try_lock())
                         {
-                            //Need airspeed
                             if(m_Attitude.time_boot_ms!=0)
                             {
                                 m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
@@ -279,7 +292,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         mavlink_mission_current_t mcur;
                         mavlink_msg_mission_current_decode(&msg,&mcur);
-                        COUT_INFO("Mission Curr: "<<mcur.seq);
+                        //COUT_INFO("Mission Curr: "<<mcur.seq);
                         m_CurrentWaypoint=mcur.seq;
                         break;
                     }
@@ -287,8 +300,10 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         mavlink_vfr_hud_t vfr;
                         mavlink_msg_vfr_hud_decode(&msg,&vfr);
-                        COUT_INFO("Speed VFR "<<vfr.airspeed);
-                        m_Airspeed = vfr.airspeed;
+                        //COUT_INFO("Speed VFR "<<vfr.airspeed);
+                        //m_Airspeed = vfr.airspeed;
+                        m_Airspeed = vfr.groundspeed;
+                        #warning "Using ground speed"
                         break;
                     }
                     case MAVLINK_MSG_ID_WIND_COV://#231
@@ -366,8 +381,8 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         break;
                     }
-                    case 85:
-                    case 36:
+                    case MAVLINK_MSG_ID_POSITION_TARGET_LOCAL_NED:
+                    case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:
                         break;
                     default:
                     {

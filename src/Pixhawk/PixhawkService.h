@@ -152,6 +152,12 @@ protected:
     std::shared_ptr<afrl::cmasi::AirVehicleState> m_ptr_CurrentAirVehicleState;
     std::mutex m_AirvehicleStateMutex;
 
+    
+    //Serial
+    std::shared_ptr<serial::Serial> m_serialConnectionPixhawk;
+    std::string m_strTTyDevice{"/dev/tty.usbmodem"};
+    uint32_t m_ui32Baudrate{57600};
+    uint32_t m_serialTimeout_ms{5000};
 };
 
 }; //namespace service
