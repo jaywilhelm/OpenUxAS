@@ -123,14 +123,13 @@ private:
     
 private:
     /** brief The timer calls this function periodically to send out messages */
-    //void OnSendMessage();
-    void
-    executePixhawkAutopilotCommProcessing();
+    void executePixhawkAutopilotCommProcessing();
+    void SafetyTimer();
     
 protected:
     std::string m_stringToSend = std::string("PixhawkService String");
     int64_t m_sendPeriod_ms{1000};
-    uint64_t m_sendMessageTimerId{0};
+    uint64_t m_SafetyTimerId{0};
     
     bool m_useNetConnection{true};
     ///// TCP/IP

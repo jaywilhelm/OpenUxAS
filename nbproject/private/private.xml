@@ -9,13 +9,6 @@
     </data>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/Services/01_HelloWorld.cpp</file>
-            <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/UxAS_Main.cpp</file>
-            <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/Pixhawk/PixhawkService.h</file>
-            <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/Pixhawk/PixhawkService.cpp</file>
-            <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/Pixhawk/mavlinkc/mavlink_helpers.h</file>
-            <file>file:/Users/jaywilhelm/uxas/OpenUxAS/src/Pixhawk/mavlinkc/common/mavlink_msg_attitude.h</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

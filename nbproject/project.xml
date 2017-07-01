@@ -4,9 +4,9 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>OpenUxAS</name>
-            <c-extensions>c,m</c-extensions>
-            <cpp-extensions>cc,cpp,cxx,mm</cpp-extensions>
-            <header-extensions>code,h,hpp,inc,inc_c,ipp,SUNWCCh</header-extensions>
+            <c-extensions>c</c-extensions>
+            <cpp-extensions>cc,cpp</cpp-extensions>
+            <header-extensions>code,h,hpp,inc,inc_c</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>

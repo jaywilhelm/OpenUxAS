@@ -32,7 +32,7 @@ PixhawkService::~PixhawkService() { }
 bool PixhawkService::configure(const pugi::xml_node& ndComponent)
 {
     bool isSuccess(true);
-    std::cout <<  "PX Configure"<<std::endl;
+    COUT_INFO("PX Configure");
 
     // process options from the XML configuration node:
     /*if (!ndComponent.attribute(STRING_XML_STRING_TO_SEND).empty())
@@ -66,8 +66,8 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
 bool PixhawkService::initialize()
 {
     // create send timer
-    //m_sendMessageTimerId = uxas::common::TimerManager::getInstance().createTimer(
-    //    std::bind(&HelloWorld::OnSendMessage, this), "HelloWorld::OnSendMessage");
+    m_SafetyTimerId = uxas::common::TimerManager::getInstance().createTimer(
+        std::bind(&PixhawkService::SafetyTimer, this), "PixhawkService::SafetyTimer");
     bool bSuccess(true);
 
     std::cout <<  "PX init"<<std::endl;
@@ -105,17 +105,17 @@ bool PixhawkService::start()
 {
     std::cout <<  "PX start"<<std::endl;
     m_receiveFromPixhawkProcessingThread = uxas::stduxas::make_unique<std::thread>(&PixhawkService::executePixhawkAutopilotCommProcessing, this);
-    return (true);
+    //return (true);
     // start the timer
-    return true;
-    //return (uxas::common::TimerManager::getInstance().startPeriodicTimer(m_sendMessageTimerId,0,m_sendPeriod_ms));
+    //return true;
+    return (uxas::common::TimerManager::getInstance().startPeriodicTimer(m_SafetyTimerId,0,m_sendPeriod_ms));
 };
 
 bool PixhawkService::terminate()
 {
     // kill the timer
-    //uint64_t delayTime_ms{1000};
-    //if (m_sendMessageTimerId && !uxas::common::TimerManager::getInstance().destroyTimer(m_sendMessageTimerId, delayTime_ms))
+    uint64_t delayTime_ms{1000};
+    if (m_SafetyTimerId && !uxas::common::TimerManager::getInstance().destroyTimer(m_SafetyTimerId, delayTime_ms))
     {
         //UXAS_LOG_WARN(s_typeName(), "::HelloWorld::terminate() failed to destroy message send timer ",
          //        "with timer ID ", m_sendMessageTimerId, " within ", delayTime_ms, " millisecond timeout");
@@ -154,7 +154,45 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
     }
     return false;
 }
+void PixhawkService::SafetyTimer()
+{
+    {
+        std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
 
+        /*if(m_Attitude.time_boot_ms!=0)
+        {
+            m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
+            m_ptr_CurrentAirVehicleState->setRoll(m_Attitude.roll);
+        }
+        m_ptr_CurrentAirVehicleState->setAirspeed(m_Airspeed);//m/s
+
+        m_ptr_CurrentAirVehicleState->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);
+        m_ptr_CurrentAirVehicleState->getLocation()->setAltitude(newAlt_m);
+        m_ptr_CurrentAirVehicleState->getLocation()->setLatitude(lat_d);
+        m_ptr_CurrentAirVehicleState->getLocation()->setLongitude(lon_d);
+        m_ptr_CurrentAirVehicleState->setCourse(cog_d);
+        // u, v, w, udot, vdot, wdot
+        m_ptr_CurrentAirVehicleState->setU(0.0);
+        m_ptr_CurrentAirVehicleState->setV(0.0);
+        m_ptr_CurrentAirVehicleState->setW(0.0);
+        m_ptr_CurrentAirVehicleState->setUdot(0.0);
+        m_ptr_CurrentAirVehicleState->setVdot(0.0);
+        m_ptr_CurrentAirVehicleState->setWdot(0.0);
+         // ActualEnergyRate, EnergyAvailable
+        m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0);
+        m_ptr_CurrentAirVehicleState->setEnergyAvailable(0.0);*/
+
+        m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint);
+        afrl::cmasi::Location3D* where = m_ptr_CurrentAirVehicleState->getLocation();
+        double lat = where->getLatitude();
+        double lon = where->getLongitude();
+        auto alt = where->getAltitude();
+        std::cout.precision(8);
+        COUT_INFO("(lat,lon,alt): " << lat << ", " << lon << ", " << alt);
+    }
+    //else
+    //    COUT_INFO("Failed mAVS lock");
+}
 void
 PixhawkService::executePixhawkAutopilotCommProcessing()
 {
@@ -183,7 +221,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         //m_tcpConnectionSocket->connect(m_tcpAddress.c_str());
     }
     uint8_t buf[1024];
-    int recv_len=0;
+    int32_t recv_len=0;
 
     while (!m_isTerminate)
     {
@@ -232,7 +270,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         mavlink_message_t msg;
         mavlink_status_t status;
         //std::cout << std::hex << (uint16_t) 0xFD << std::endl;
-        for(uint32_t i=0;i<recv_len;i++)
+        for(int32_t i=0;i<recv_len;i++)
         {
             uint8_t mvp_ret = mavlink_parse_char(chan,buf[i],&msg,&status);
             uint16_t data = 0x00FF & buf[i];
@@ -258,8 +296,10 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         double lon_d = (double)gpsi.lon/10000000.0;//deg
 
                         //COUT_INFO("GLOBAL POS INT " << newAlt_m); 
-                        if(m_AirvehicleStateMutex.try_lock())
+                        //m_AirvehicleStateMutex.lock();
                         {
+                            std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
+
                             if(m_Attitude.time_boot_ms!=0)
                             {
                                 m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
@@ -285,7 +325,11 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                             
                             m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint);
                             sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
+                            //COUT_INFO("Broadcasting AVS");
                         }
+                        //else
+                        //    COUT_INFO("Failed mAVS lock");
+                        //m_AirvehicleStateMutex.unlock();
                         break;
                     }
                     case MAVLINK_MSG_ID_MISSION_CURRENT:
@@ -366,7 +410,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         mavlink_gps_raw_int_t rgpsint;
                         mavlink_msg_gps_raw_int_decode(&msg,&rgpsint);
-                        //COUT_INFO("HighResIMU");
+                        //COUT_INFO("GPS RAW INT");
                         break;
                     }
                     case MAVLINK_MSG_ID_ESTIMATOR_STATUS://#230
@@ -378,6 +422,19 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         break;
                     }
                     case MAVLINK_MSG_ID_VIBRATION://#241
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_POSITION_TARGET_GLOBAL_INT:
+                    {
+                        //COUT_INFO("TARGET GLOBAL INT");
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_STATUSTEXT:
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_COMMAND_LONG:
                     {
                         break;
                     }
