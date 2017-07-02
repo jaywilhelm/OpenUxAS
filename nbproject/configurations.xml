@@ -59,6 +59,13 @@
             <in>zuuid.c</in>
           </df>
         </df>
+        <df name="googletest-release-1.8.0">
+          <df name="googletest">
+            <df name="src">
+              <in>gtest-all.cc</in>
+            </df>
+          </df>
+        </df>
         <df name="minizip-1.1">
           <in>ioapi.c</in>
           <in>ioapi_buf.c</in>
@@ -530,6 +537,21 @@
         </df>
         <in>UxAS_Main.cpp</in>
       </df>
+      <df name="tests">
+        <df name="Test_Services">
+          <df name="00_ExampleTests">
+            <df name="01_Test_HelloWorld">
+              <in>HelloWorld_test01.cpp</in>
+            </df>
+            <df name="02_Test_Example_WaterwaySearch">
+              <in>WaterwaySearch_test01.cpp</in>
+            </df>
+            <df name="03_Test_Example_DistributedCooperation">
+              <in>DistributedCooperation_test01.cpp</in>
+            </df>
+          </df>
+        </df>
+      </df>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -563,7 +585,8 @@
                  commonFlags="-mtune=generic -march=x86-64 -g -std=c11 -fPIC -fstack-protector-strong"/>
         <element flagsID="6"
                  commonFlags="-mtune=generic -march=x86-64 -std=c++11 -fPIC -fstack-protector-strong"/>
-        <element flagsID="7" commonFlags="-std=c++11"/>
+        <element flagsID="7"
+                 commonFlags="-mtune=generic -march=x86-64 -std=c++11 -fstack-protector-strong"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -821,6 +844,13 @@
       <item path="3rd/czmq-3.0.1/src/zuuid.c" ex="false" tool="0" flavor2="3">
         <cTool flags="5">
         </cTool>
+      </item>
+      <item path="3rd/googletest-release-1.8.0/googletest/src/gtest-all.cc"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="7">
+        </ccTool>
       </item>
       <item path="3rd/minizip-1.1/ioapi.c" ex="false" tool="0" flavor2="3">
         <cTool flags="4">
@@ -1580,6 +1610,18 @@
           </incDir>
         </cTool>
       </folder>
+      <folder path="0/3rd/googletest-release-1.8.0">
+        <ccTool>
+          <incDir>
+            <pElem>3rd/googletest-release-1.8.0/googletest/include/gtest/internal</pElem>
+            <pElem>3rd/googletest-release-1.8.0/googletest/include/gtest</pElem>
+            <pElem>3rd/googletest-release-1.8.0/googletest/src</pElem>
+            <pElem>3rd/googletest-release-1.8.0/googletest/include</pElem>
+            <pElem>3rd/googletest-release-1.8.0/googletest</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
       <folder path="0/3rd/minizip-1.1">
         <cTool>
           <incDir>
@@ -1690,129 +1732,23 @@
       <folder path="0/src/Pixhawk">
         <ccTool>
           <incDir>
-            <pElem>build_debug/src/Pixhawk/pixhawk@sta</pElem>
-            <pElem>build_debug/src/Pixhawk</pElem>
+            <pElem>src/Pixhawk/mavlinkc</pElem>
+            <pElem>src/Pixhawk/mavlinkc/common</pElem>
+            <pElem>3rd/serial-1.2.1/include/serial</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
             <pElem>src/Pixhawk</pElem>
-            <pElem>build_debug/3rd/zlib-1.2.8</pElem>
-            <pElem>3rd/zlib-1.2.8</pElem>
-            <pElem>3rd/zlib-1.2.8/contrib/minizip</pElem>
-            <pElem>build_debug/3rd/TinyGPS</pElem>
-            <pElem>3rd/TinyGPS</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP</pElem>
             <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>build_debug/3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>build_debug/src/Tasks</pElem>
-            <pElem>src/Tasks</pElem>
-            <pElem>build_debug/src/DPSS</pElem>
-            <pElem>src/DPSS</pElem>
-            <pElem>build_debug/src/Plans</pElem>
-            <pElem>src/Plans</pElem>
-            <pElem>build_debug/src/VisilibityLib</pElem>
-            <pElem>src/VisilibityLib</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Includes</pElem>
-            <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>resources/AutomationDiagramDataService</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
-            <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="0/src/Services">
-        <ccTool>
-          <incDir>
-            <pElem>build_debug/src/Services/services@sta</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/3rd/zlib-1.2.8</pElem>
-            <pElem>3rd/zlib-1.2.8</pElem>
-            <pElem>3rd/zlib-1.2.8/contrib/minizip</pElem>
-            <pElem>build_debug/3rd/TinyGPS</pElem>
-            <pElem>3rd/TinyGPS</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>build_debug/3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>build_debug/src/Tasks</pElem>
-            <pElem>src/Tasks</pElem>
-            <pElem>build_debug/src/DPSS</pElem>
-            <pElem>src/DPSS</pElem>
-            <pElem>build_debug/src/Plans</pElem>
-            <pElem>src/Plans</pElem>
-            <pElem>build_debug/src/VisilibityLib</pElem>
-            <pElem>src/VisilibityLib</pElem>
-            <pElem>build_debug/src/Includes</pElem>
-            <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>resources/AutomationDiagramDataService</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
-            <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
-            <pElem>build_debug</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
-        </ccTool>
-      </folder>
-      <folder path="0/src/Tasks">
-        <ccTool>
-          <incDir>
-            <pElem>build_debug/src/Tasks/tasks@sta</pElem>
-            <pElem>build_debug/src/Tasks</pElem>
-            <pElem>src/Tasks</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>build_debug/src/VisilibityLib</pElem>
-            <pElem>src/VisilibityLib</pElem>
-            <pElem>build_debug/src/DPSS</pElem>
-            <pElem>src/DPSS</pElem>
-            <pElem>build_debug/src/Plans</pElem>
-            <pElem>src/Plans</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
-            <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Includes</pElem>
-            <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
-            <pElem>build_debug</pElem>
-          </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </folder>
       <folder path="0/src/Utilities/localcoords">
@@ -1835,36 +1771,97 @@
           </incDir>
         </ccTool>
       </folder>
+      <folder path="0/tests">
+        <ccTool>
+          <incDir>
+            <pElem>3rd/googletest-release-1.8.0/googletest/include/gtest/internal</pElem>
+            <pElem>3rd/googletest-release-1.8.0/googletest/include/gtest</pElem>
+            <pElem>src/Utilities</pElem>
+            <pElem>3rd/SQLiteCpp-1.3.1/include/SQLiteCpp</pElem>
+            <pElem>tests/Test_Utilities</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/tests/Test_Services/00_ExampleTests/01_Test_HelloWorld">
+        <ccTool>
+          <incDir>
+            <pElem>tests/Test_Services/00_ExampleTests/01_Test_HelloWorld</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>3rd/googletest-release-1.8.0/googletest/include</pElem>
+            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/tests/Test_Services/00_ExampleTests/02_Test_Example_WaterwaySearch">
+        <ccTool>
+          <incDir>
+            <pElem>tests/Test_Services/00_ExampleTests/02_Test_Example_WaterwaySearch</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>3rd/googletest-release-1.8.0/googletest/include</pElem>
+            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
+      <folder path="0/tests/Test_Services/00_ExampleTests/03_Test_Example_DistributedCooperation">
+        <ccTool>
+          <incDir>
+            <pElem>tests/Test_Services/00_ExampleTests/03_Test_Example_DistributedCooperation</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>3rd/googletest-release-1.8.0/googletest/include</pElem>
+            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
+        </ccTool>
+      </folder>
       <item path="src/Communications/AddressStringMessageReceiverPipe.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
             <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
-            <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/Utilities</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/AddressStringMessageSenderPipe.cpp"
@@ -1886,288 +1883,172 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
             <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
             <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
-            <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/ImpactSubscribePushBridge.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectMessageReceiverPipe.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectMessageSenderPipe.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
             <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
-            <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>src/Utilities</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectMessageTcpReceiverSenderPipe.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectNetworkBridgeManager.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>3rd/serial-1.2.1/include/serial</pElem>
+            <pElem>3rd/czmq-3.0.1/include</pElem>
+            <pElem>3rd/zyre-1.1.0/include</pElem>
             <pElem>src/LMCP</pElem>
+            <pElem>3rd/serial-1.2.1/include</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectNetworkClientBase.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectNetworkPublishPullBridge.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectNetworkSerialBridge.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>3rd/serial-1.2.1/include/serial</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>3rd/serial-1.2.1/include</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectNetworkServer.cpp"
@@ -2206,96 +2087,58 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectNetworkTcpBridge.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/LmcpObjectNetworkZeroMqZyreBridge.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>3rd/czmq-3.0.1/include</pElem>
+            <pElem>3rd/zyre-1.1.0/include</pElem>
             <pElem>src/LMCP</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/TransportReceiverBase.cpp"
@@ -2343,224 +2186,113 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
             <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/czmq-3.0.1/include</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/ZeroMqAddressedAttributedMessageSender.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
             <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/ZeroMqAddressedAttributedMessageTcpReceiverSender.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
             <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/czmq-3.0.1/include</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/ZeroMqFabric.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
             <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/ZeroMqReceiverBase.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
             <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
             <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
-            <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/ZeroMqSenderBase.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
             <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
             <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
-            <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Communications/ZeroMqZyreBridge.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Communications/uxas_messages@sta</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>3rd/serial-1.2.1/include</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zyre-1.1.0/include</pElem>
-            <pElem>3rd/czmq-3.0.1/include</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Communications</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
-            <pElem>src/LMCP</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>3rd/czmq-3.0.1/include</pElem>
+            <pElem>3rd/zyre-1.1.0/include</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/DPSS/CoordinateConversions.cpp" ex="false" tool="1" flavor2="8">
@@ -4557,7 +4289,7 @@
         </ccTool>
       </item>
       <item path="src/Pixhawk/PixhawkService.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
         </ccTool>
       </item>
       <item path="src/Plans/CGrid.cpp" ex="false" tool="1" flavor2="8">
@@ -4696,238 +4428,1230 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/01_HelloWorld.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/AssignmentTreeBranchBoundBase.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/date_time</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/date_time/gregorian</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/algorithm/string</pElem>
+            <pElem>/usr/include/boost/algorithm/string/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion</pElem>
+            <pElem>/usr/include/boost/container</pElem>
+            <pElem>/usr/include/boost/math/tools</pElem>
+            <pElem>/usr/include/boost/math/policies</pElem>
+            <pElem>/usr/include/boost/date_time/posix_time</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/AssignmentTreeBranchBoundService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/AutomationDiagramDataService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>resources/AutomationDiagramDataService</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/date_time</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/date_time/gregorian</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/algorithm/string</pElem>
+            <pElem>/usr/include/boost/algorithm/string/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion</pElem>
+            <pElem>/usr/include/boost/container</pElem>
+            <pElem>/usr/include/boost/math/tools</pElem>
+            <pElem>/usr/include/boost/math/policies</pElem>
+            <pElem>/usr/include/boost/date_time/posix_time</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/AutomationRequestValidatorService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/smart_ptr/detail</pElem>
+            <pElem>/usr/include/boost/date_time</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/date_time/gregorian</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/algorithm/string</pElem>
+            <pElem>/usr/include/boost/algorithm/string/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion</pElem>
+            <pElem>/usr/include/boost/container</pElem>
+            <pElem>/usr/include/boost/math/tools</pElem>
+            <pElem>/usr/include/boost/math/policies</pElem>
+            <pElem>/usr/include/boost/date_time/posix_time</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/BatchSummaryService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>/usr/include/GL</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/MessageLoggerDataService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>3rd/SQLiteCpp-1.3.1/include/SQLiteCpp</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/OperatingRegionStateService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/OsmPlannerService.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>/usr/include/boost/tuple/detail</pElem>
+            <pElem>/usr/include/boost/property_map</pElem>
+            <pElem>/usr/include/boost/smart_ptr/detail</pElem>
+            <pElem>/usr/include/boost/smart_ptr</pElem>
+            <pElem>/usr/include/boost/parameter/aux_</pElem>
+            <pElem>/usr/include/boost/graph</pElem>
+            <pElem>/usr/include/boost/graph/detail</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/parameter</pElem>
+            <pElem>/usr/include/boost/pending</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost/dynamic_bitset</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/integer</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/utility/detail</pElem>
+            <pElem>/usr/include/boost/move</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/iterator/detail</pElem>
+            <pElem>/usr/include/boost/unordered/detail</pElem>
+            <pElem>/usr/include/boost/functional/hash/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/multi_index/detail</pElem>
+            <pElem>/usr/include/boost/archive</pElem>
+            <pElem>/usr/include/boost/serialization</pElem>
+            <pElem>/usr/include/boost/optional</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/PlanBuilderService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/RouteAggregatorService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>/usr/include/GL</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/RoutePlannerService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>/usr/include/GL</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/RoutePlannerVisibilityService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>/usr/include/boost/dynamic_bitset</pElem>
+            <pElem>/usr/include/boost/graph</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/GL</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/integer</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/graph/detail</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/move</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/tuple/detail</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/iterator/detail</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/pending</pElem>
+            <pElem>/usr/include/boost/unordered/detail</pElem>
+            <pElem>/usr/include/boost/functional/hash/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/multi_index/detail</pElem>
+            <pElem>/usr/include/boost/archive</pElem>
+            <pElem>/usr/include/boost/serialization</pElem>
+            <pElem>/usr/include/boost/optional</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/parameter/aux_</pElem>
+            <pElem>/usr/include/boost/parameter</pElem>
+            <pElem>/usr/include/boost/smart_ptr</pElem>
+            <pElem>/usr/include/boost/smart_ptr/detail</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/SendMessagesService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/date_time</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/date_time/gregorian</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/algorithm/string</pElem>
+            <pElem>/usr/include/boost/algorithm/string/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion</pElem>
+            <pElem>/usr/include/boost/container</pElem>
+            <pElem>/usr/include/boost/math/tools</pElem>
+            <pElem>/usr/include/boost/math/policies</pElem>
+            <pElem>/usr/include/boost/date_time/posix_time</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/SensorManagerService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/SerialAutomationRequestTestService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/smart_ptr/detail</pElem>
+            <pElem>/usr/include/boost/date_time</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/date_time/gregorian</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/algorithm/string</pElem>
+            <pElem>/usr/include/boost/algorithm/string/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion</pElem>
+            <pElem>/usr/include/boost/container</pElem>
+            <pElem>/usr/include/boost/math/tools</pElem>
+            <pElem>/usr/include/boost/math/policies</pElem>
+            <pElem>/usr/include/boost/date_time/posix_time</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/ServiceBase.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/ServiceManager.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>/usr/include/boost/graph</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>3rd/serial-1.2.1/include/serial</pElem>
+            <pElem>3rd/SQLiteCpp-1.3.1/include/SQLiteCpp</pElem>
+            <pElem>src/DPSS</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost/dynamic_bitset</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/integer</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/move</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/tuple/detail</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/unordered/detail</pElem>
+            <pElem>/usr/include/boost/functional/hash/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/multi_index/detail</pElem>
+            <pElem>/usr/include/boost/archive</pElem>
+            <pElem>/usr/include/boost/serialization</pElem>
+            <pElem>/usr/include/boost/optional</pElem>
+            <pElem>/usr/include/boost/pending</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/parameter/aux_</pElem>
+            <pElem>/usr/include/boost/parameter</pElem>
+            <pElem>src/Pixhawk/mavlinkc</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/TcpBridge.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/zeromq-4.1.1/include</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/date_time</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/date_time/gregorian</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/algorithm/string</pElem>
+            <pElem>/usr/include/boost/algorithm/string/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion</pElem>
+            <pElem>/usr/include/boost/container</pElem>
+            <pElem>/usr/include/boost/math/tools</pElem>
+            <pElem>/usr/include/boost/math/policies</pElem>
+            <pElem>/usr/include/boost/date_time/posix_time</pElem>
+            <pElem>3rd/czmq-3.0.1/include</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/Test_SimulationTime.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Services/WaypointPlanManagerService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/00_TaskTemplate.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/AngledAreaSearchTaskService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>/usr/include/boost/dynamic_bitset</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>/usr/include/GL</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost/move</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/AssignmentCoordinatorTaskService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/BlockadeTaskService.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/DPSS</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/CmasiAreaSearchTaskService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>/usr/include/boost/dynamic_bitset</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>/usr/include/GL</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost/move</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/CmasiLineSearchTaskService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/DPSS</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/CmasiPointSearchTaskService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/CommRelayTaskService.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/DPSS</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/date_time</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/date_time/gregorian</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/algorithm/string</pElem>
+            <pElem>/usr/include/boost/algorithm/string/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion</pElem>
+            <pElem>/usr/include/boost/container</pElem>
+            <pElem>/usr/include/boost/math/tools</pElem>
+            <pElem>/usr/include/boost/math/policies</pElem>
+            <pElem>/usr/include/boost/date_time/posix_time</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/CordonTaskService.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/EscortTaskService.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/DPSS</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/date_time</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/date_time/gregorian</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/algorithm/string</pElem>
+            <pElem>/usr/include/boost/algorithm/string/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion</pElem>
+            <pElem>/usr/include/boost/container</pElem>
+            <pElem>/usr/include/boost/math/tools</pElem>
+            <pElem>/usr/include/boost/math/policies</pElem>
+            <pElem>/usr/include/boost/date_time/posix_time</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/ImpactLineSearchTaskService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/DPSS</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/ImpactPointSearchTaskService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/MultiVehicleWatchTaskService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/DPSS</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/OverwatchTaskService.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/PatternSearchTaskService.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Plans</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/DPSS</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>/usr/include/GL</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost/dynamic_bitset</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/move</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/TaskManagerService.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/TaskServiceBase.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Communications</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/uxas/messages/uxnative</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Tasks/TaskTrackerService.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
+          <incDir>
+            <pElem>src/Utilities</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>src/Tasks</pElem>
+            <pElem>src/LMCP/uxas/messages/task</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/LMCP/uxas/messages/route</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>src/LMCP/afrl/cmasi/perceive</pElem>
+            <pElem>/usr/include/GL</pElem>
+            <pElem>src/VisilibityLib</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>src/LMCP</pElem>
+            <pElem>build_debug</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="src/Utilities/Algebra.cpp" ex="false" tool="1" flavor2="8">
@@ -4976,26 +5700,48 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Utilities/utilities@sta</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
+            <pElem>/usr/include/boost/smart_ptr/detail</pElem>
+            <pElem>/usr/include/boost/smart_ptr</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
-            <pElem>build_debug/3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Includes/Constants</pElem>
+            <pElem>/usr/include/boost/system</pElem>
+            <pElem>/usr/include/boost/filesystem</pElem>
+            <pElem>/usr/include/boost/iterator</pElem>
             <pElem>src/Includes</pElem>
+            <pElem>/usr/include/boost/regex/v4</pElem>
+            <pElem>/usr/include/boost/core</pElem>
+            <pElem>/usr/include/boost/config</pElem>
+            <pElem>/usr/include/boost</pElem>
+            <pElem>/usr/include/boost/detail</pElem>
+            <pElem>/usr/include/boost/type_traits/detail</pElem>
+            <pElem>/usr/include/boost/type_traits</pElem>
+            <pElem>/usr/include/boost/integer</pElem>
+            <pElem>/usr/include/boost/date_time</pElem>
+            <pElem>/usr/include/boost/exception</pElem>
+            <pElem>/usr/include/boost/mpl/aux_</pElem>
+            <pElem>/usr/include/boost/mpl/aux_/preprocessed/gcc</pElem>
+            <pElem>/usr/include/boost/mpl</pElem>
+            <pElem>/usr/include/boost/date_time/gregorian</pElem>
+            <pElem>/usr/include/boost/iterator/detail</pElem>
+            <pElem>/usr/include/boost/range</pElem>
+            <pElem>/usr/include/boost/range/detail</pElem>
+            <pElem>/usr/include/boost/concept/detail</pElem>
+            <pElem>/usr/include/boost/algorithm/string</pElem>
+            <pElem>/usr/include/boost/algorithm/string/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion/detail</pElem>
+            <pElem>/usr/include/boost/numeric/conversion</pElem>
+            <pElem>/usr/include/boost/container</pElem>
+            <pElem>/usr/include/boost/math/tools</pElem>
+            <pElem>/usr/include/boost/math/policies</pElem>
+            <pElem>/usr/include/boost/date_time/posix_time</pElem>
+            <pElem>/usr/include/boost/regex/pending</pElem>
+            <pElem>/usr/include/boost/regex</pElem>
+            <pElem>/usr/include/boost/functional/hash/detail</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Utilities/Permute.cpp" ex="false" tool="1" flavor2="8">
@@ -5041,12 +5787,12 @@
         </ccTool>
       </item>
       <item path="src/Utilities/UnitConversions.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="6">
           <incDir>
-            <pElem>src/Utilities</pElem>
             <pElem>src/Includes/Constants</pElem>
+            <pElem>src/Utilities</pElem>
             <pElem>src/Includes</pElem>
-            <pElem>src/Utilities/localcoords</pElem>
+            <pElem>build_debug</pElem>
           </incDir>
         </ccTool>
       </item>
@@ -5054,26 +5800,15 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Utilities/utilities@sta</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
-            <pElem>build_debug/3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Includes</pElem>
+            <pElem>src/Includes/Constants</pElem>
             <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>3rd/SQLiteCpp-1.3.1/include/SQLiteCpp</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Utilities/UxAS_ConsoleLogger.cpp"
@@ -5151,75 +5886,36 @@
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Utilities/utilities@sta</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
-            <pElem>build_debug/3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Includes</pElem>
             <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Utilities/UxAS_Time.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Utilities/utilities@sta</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
-            <pElem>build_debug/3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Includes</pElem>
             <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Utilities/UxAS_TimerManager.cpp"
             ex="false"
             tool="1"
             flavor2="8">
-        <ccTool flags="1">
+        <ccTool flags="6">
           <incDir>
-            <pElem>build_debug/src/Utilities/utilities@sta</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
-            <pElem>build_debug/3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Includes</pElem>
             <pElem>src/Includes</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
             <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/Utilities/UxAS_ZeroMQ.cpp" ex="false" tool="1" flavor2="8">
@@ -5242,38 +5938,45 @@
       <item path="src/UxAS_Main.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="7">
           <incDir>
-            <pElem>build_debug/uxas@exe</pElem>
-            <pElem>build_debug</pElem>
-            <pElem>.</pElem>
-            <pElem>build_debug/src/Pixhawk</pElem>
-            <pElem>src/Pixhawk</pElem>
-            <pElem>3rd/SQLiteCpp-1.3.1/include</pElem>
-            <pElem>build_debug/3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/sqlite-amalgamation-3120200</pElem>
-            <pElem>3rd/PugiXML/src</pElem>
-            <pElem>3rd/zeromq-4.1.1/include</pElem>
-            <pElem>build_debug/3rd/cppzmq-4.2.1</pElem>
-            <pElem>3rd/cppzmq-4.2.1</pElem>
-            <pElem>build_debug/src/Services</pElem>
-            <pElem>src/Services</pElem>
-            <pElem>build_debug/src/Includes</pElem>
-            <pElem>src/Includes</pElem>
-            <pElem>build_debug/src/Communications</pElem>
-            <pElem>src/Communications</pElem>
-            <pElem>build_debug/src/Utilities</pElem>
             <pElem>src/Utilities</pElem>
-            <pElem>build_debug/src/LMCP</pElem>
+            <pElem>src/Services</pElem>
+            <pElem>src</pElem>
+            <pElem>src/Includes</pElem>
+            <pElem>src/LMCP/avtas/lmcp</pElem>
+            <pElem>src/LMCP/afrl/cmasi</pElem>
+            <pElem>src/LMCP/afrl/impact</pElem>
+            <pElem>3rd/PugiXML/src</pElem>
+            <pElem>src/Communications</pElem>
+            <pElem>3rd/cppzmq-4.2.1</pElem>
+            <pElem>3rd/SQLiteCpp-1.3.1/include/SQLiteCpp</pElem>
             <pElem>src/LMCP</pElem>
-            <pElem>/usr/include/libdrm</pElem>
+            <pElem>build_debug</pElem>
           </incDir>
-          <preprocessorList>
-            <Elem>LINUX</Elem>
-            <Elem>_FILE_OFFSET_BITS=64</Elem>
-          </preprocessorList>
         </ccTool>
       </item>
       <item path="src/VisilibityLib/visilibity.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="6">
+        </ccTool>
+      </item>
+      <item path="tests/Test_Services/00_ExampleTests/01_Test_HelloWorld/HelloWorld_test01.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="7">
+        </ccTool>
+      </item>
+      <item path="tests/Test_Services/00_ExampleTests/02_Test_Example_WaterwaySearch/WaterwaySearch_test01.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="7">
+        </ccTool>
+      </item>
+      <item path="tests/Test_Services/00_ExampleTests/03_Test_Example_DistributedCooperation/DistributedCooperation_test01.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="7">
         </ccTool>
       </item>
     </conf>

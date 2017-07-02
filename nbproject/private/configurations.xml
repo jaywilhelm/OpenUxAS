@@ -1335,89 +1335,9 @@
             <df name="tasks">
             </df>
           </df>
-          <df name="RUNDIR_WaterwaySearch">
-            <df name="datawork">
-              <df name="AutomationDiagramDataService">
-                <df name="0001_AutomationDiagram_ID0100_2017_06_03__19_22_23.581823">
-                </df>
-              </df>
-              <df name="SavedMessages">
-              </df>
-            </df>
-            <df name="Tasks">
-              <df name="CmasiLineSearchTaskService">
-                <df name="0001_CmasiLineSearchTaskService_2017_06_03__19_22_20.952317">
-                </df>
-              </df>
-            </df>
-          </df>
         </df>
         <df name="03_Example_DistributedCooperation">
           <df name="MessagesToSend">
-          </df>
-          <df name="UAV_1000">
-            <df name="datawork">
-              <df name="AutomationDiagramDataService">
-              </df>
-              <df name="SavedMessages">
-              </df>
-            </df>
-            <df name="Tasks">
-              <df name="AngledAreaSearchTaskService">
-                <df name="0001_AngledAreaSearchTaskService_2017_06_30__18_55_39.304679">
-                </df>
-              </df>
-              <df name="AssignmentCoordinatorTask">
-                <df name="0001_AssignmentCoordinatorTask_2017_06_30__18_55_39.319092">
-                </df>
-              </df>
-              <df name="CmasiAreaSearchTaskService">
-                <df name="0001_CmasiAreaSearchTaskService_2017_06_30__18_55_39.302616">
-                </df>
-              </df>
-              <df name="CmasiLineSearchTaskService">
-                <df name="0001_CmasiLineSearchTaskService_2017_06_30__18_55_39.313110">
-                </df>
-                <df name="0002_CmasiLineSearchTaskService_2017_06_30__18_55_39.316361">
-                </df>
-              </df>
-              <df name="ImpactLineSearchTaskService">
-                <df name="0001_ImpactLineSearchTaskService_2017_06_30__18_55_39.312382">
-                </df>
-              </df>
-            </df>
-          </df>
-          <df name="UAV_2000">
-            <df name="datawork">
-              <df name="AutomationDiagramDataService">
-              </df>
-              <df name="SavedMessages">
-              </df>
-            </df>
-            <df name="Tasks">
-              <df name="AngledAreaSearchTaskService">
-                <df name="0001_AngledAreaSearchTaskService_2017_06_30__18_55_39.306246">
-                </df>
-              </df>
-              <df name="AssignmentCoordinatorTask">
-                <df name="0001_AssignmentCoordinatorTask_2017_06_30__18_55_39.308879">
-                </df>
-              </df>
-              <df name="CmasiAreaSearchTaskService">
-                <df name="0001_CmasiAreaSearchTaskService_2017_06_30__18_55_39.305209">
-                </df>
-              </df>
-              <df name="CmasiLineSearchTaskService">
-                <df name="0001_CmasiLineSearchTaskService_2017_06_30__18_55_39.307561">
-                </df>
-                <df name="0002_CmasiLineSearchTaskService_2017_06_30__18_55_39.308196">
-                </df>
-              </df>
-              <df name="ImpactLineSearchTaskService">
-                <df name="0001_ImpactLineSearchTaskService_2017_06_30__18_55_39.306884">
-                </df>
-              </df>
-            </df>
           </df>
         </df>
         <df name="05_AssignTasks">
@@ -2114,40 +2034,6 @@
         </df>
         <df name="Pixhawk">
           <df name="mavlinkc">
-          </df>
-          <in>PixhawkService.cpp</in>
-          <in>PixhawkService.h</in>
-        </df>
-        <df name="Plans">
-          <in>Assignment.h</in>
-          <in>BaseObject.h</in>
-          <in>CGrid.cpp</in>
-          <in>CGrid.h</in>
-          <in>Circle.h</in>
-          <in>Edge.cpp</in>
-          <in>Edge.h</in>
-          <in>HeadingParameters.h</in>
-          <in>PathInformation.h</in>
-          <in>PlanningParameters.h</in>
-          <in>Polygon.cpp</in>
-          <in>Polygon.h</in>
-          <in>Position.cpp</in>
-          <in>Position.h</in>
-          <in>SensorType.h</in>
-          <in>TaskAssignment.h</in>
-          <in>Trajectory.cpp</in>
-          <in>Trajectory.h</in>
-          <in>TrajectoryParameters.h</in>
-          <in>VehicleBase.h</in>
-          <in>VehicleParameters.h</in>
-          <in>VisibilityGraph.cpp</in>
-          <in>VisibilityGraph.h</in>
-          <in>Waypoint.cpp</in>
-          <in>Waypoint.h</in>
-          <in>rasSensorParameters.h</in>
-        </df>
-        <df name="Services">
-          <df name="mavlinkc">
             <df name="ardupilotmega">
               <in>ardupilotmega.h</in>
               <in>mavlink.h</in>
@@ -2491,6 +2377,204 @@
             <in>mavlink_types.h</in>
             <in>protocol.h</in>
           </df>
+          <in>PixhawkService.cpp</in>
+          <in>PixhawkService.h</in>
+        </df>
+        <df name="Plans">
+          <in>Assignment.h</in>
+          <in>BaseObject.h</in>
+          <in>CGrid.cpp</in>
+          <in>CGrid.h</in>
+          <in>Circle.h</in>
+          <in>Edge.cpp</in>
+          <in>Edge.h</in>
+          <in>HeadingParameters.h</in>
+          <in>PathInformation.h</in>
+          <in>PlanningParameters.h</in>
+          <in>Polygon.cpp</in>
+          <in>Polygon.h</in>
+          <in>Position.cpp</in>
+          <in>Position.h</in>
+          <in>SensorType.h</in>
+          <in>TaskAssignment.h</in>
+          <in>Trajectory.cpp</in>
+          <in>Trajectory.h</in>
+          <in>TrajectoryParameters.h</in>
+          <in>VehicleBase.h</in>
+          <in>VehicleParameters.h</in>
+          <in>VisibilityGraph.cpp</in>
+          <in>VisibilityGraph.h</in>
+          <in>Waypoint.cpp</in>
+          <in>Waypoint.h</in>
+          <in>rasSensorParameters.h</in>
+        </df>
+        <df name="Services">
+          <df name="mavlinkc">
+            <df name="common">
+              <in>common.h</in>
+              <in>mavlink.h</in>
+              <in>mavlink_msg_actuator_control_target.h</in>
+              <in>mavlink_msg_adsb_vehicle.h</in>
+              <in>mavlink_msg_altitude.h</in>
+              <in>mavlink_msg_att_pos_mocap.h</in>
+              <in>mavlink_msg_attitude.h</in>
+              <in>mavlink_msg_attitude_quaternion.h</in>
+              <in>mavlink_msg_attitude_quaternion_cov.h</in>
+              <in>mavlink_msg_attitude_target.h</in>
+              <in>mavlink_msg_auth_key.h</in>
+              <in>mavlink_msg_autopilot_version.h</in>
+              <in>mavlink_msg_battery_status.h</in>
+              <in>mavlink_msg_button_change.h</in>
+              <in>mavlink_msg_camera_capture_status.h</in>
+              <in>mavlink_msg_camera_image_captured.h</in>
+              <in>mavlink_msg_camera_information.h</in>
+              <in>mavlink_msg_camera_settings.h</in>
+              <in>mavlink_msg_camera_trigger.h</in>
+              <in>mavlink_msg_change_operator_control.h</in>
+              <in>mavlink_msg_change_operator_control_ack.h</in>
+              <in>mavlink_msg_collision.h</in>
+              <in>mavlink_msg_command_ack.h</in>
+              <in>mavlink_msg_command_int.h</in>
+              <in>mavlink_msg_command_long.h</in>
+              <in>mavlink_msg_control_system_state.h</in>
+              <in>mavlink_msg_data_stream.h</in>
+              <in>mavlink_msg_data_transmission_handshake.h</in>
+              <in>mavlink_msg_debug.h</in>
+              <in>mavlink_msg_debug_vect.h</in>
+              <in>mavlink_msg_distance_sensor.h</in>
+              <in>mavlink_msg_encapsulated_data.h</in>
+              <in>mavlink_msg_estimator_status.h</in>
+              <in>mavlink_msg_extended_sys_state.h</in>
+              <in>mavlink_msg_file_transfer_protocol.h</in>
+              <in>mavlink_msg_flight_information.h</in>
+              <in>mavlink_msg_follow_target.h</in>
+              <in>mavlink_msg_global_position_int.h</in>
+              <in>mavlink_msg_global_position_int_cov.h</in>
+              <in>mavlink_msg_global_vision_position_estimate.h</in>
+              <in>mavlink_msg_gps2_raw.h</in>
+              <in>mavlink_msg_gps2_rtk.h</in>
+              <in>mavlink_msg_gps_global_origin.h</in>
+              <in>mavlink_msg_gps_inject_data.h</in>
+              <in>mavlink_msg_gps_input.h</in>
+              <in>mavlink_msg_gps_raw_int.h</in>
+              <in>mavlink_msg_gps_rtcm_data.h</in>
+              <in>mavlink_msg_gps_rtk.h</in>
+              <in>mavlink_msg_gps_status.h</in>
+              <in>mavlink_msg_heartbeat.h</in>
+              <in>mavlink_msg_high_latency.h</in>
+              <in>mavlink_msg_highres_imu.h</in>
+              <in>mavlink_msg_hil_actuator_controls.h</in>
+              <in>mavlink_msg_hil_controls.h</in>
+              <in>mavlink_msg_hil_gps.h</in>
+              <in>mavlink_msg_hil_optical_flow.h</in>
+              <in>mavlink_msg_hil_rc_inputs_raw.h</in>
+              <in>mavlink_msg_hil_sensor.h</in>
+              <in>mavlink_msg_hil_state.h</in>
+              <in>mavlink_msg_hil_state_quaternion.h</in>
+              <in>mavlink_msg_home_position.h</in>
+              <in>mavlink_msg_landing_target.h</in>
+              <in>mavlink_msg_local_position_ned.h</in>
+              <in>mavlink_msg_local_position_ned_cov.h</in>
+              <in>mavlink_msg_local_position_ned_system_global_offset.h</in>
+              <in>mavlink_msg_log_data.h</in>
+              <in>mavlink_msg_log_entry.h</in>
+              <in>mavlink_msg_log_erase.h</in>
+              <in>mavlink_msg_log_request_data.h</in>
+              <in>mavlink_msg_log_request_end.h</in>
+              <in>mavlink_msg_log_request_list.h</in>
+              <in>mavlink_msg_logging_ack.h</in>
+              <in>mavlink_msg_logging_data.h</in>
+              <in>mavlink_msg_logging_data_acked.h</in>
+              <in>mavlink_msg_manual_control.h</in>
+              <in>mavlink_msg_manual_setpoint.h</in>
+              <in>mavlink_msg_memory_vect.h</in>
+              <in>mavlink_msg_message_interval.h</in>
+              <in>mavlink_msg_mission_ack.h</in>
+              <in>mavlink_msg_mission_clear_all.h</in>
+              <in>mavlink_msg_mission_count.h</in>
+              <in>mavlink_msg_mission_current.h</in>
+              <in>mavlink_msg_mission_item.h</in>
+              <in>mavlink_msg_mission_item_int.h</in>
+              <in>mavlink_msg_mission_item_reached.h</in>
+              <in>mavlink_msg_mission_request.h</in>
+              <in>mavlink_msg_mission_request_int.h</in>
+              <in>mavlink_msg_mission_request_list.h</in>
+              <in>mavlink_msg_mission_request_partial_list.h</in>
+              <in>mavlink_msg_mission_set_current.h</in>
+              <in>mavlink_msg_mission_write_partial_list.h</in>
+              <in>mavlink_msg_mount_orientation.h</in>
+              <in>mavlink_msg_named_value_float.h</in>
+              <in>mavlink_msg_named_value_int.h</in>
+              <in>mavlink_msg_nav_controller_output.h</in>
+              <in>mavlink_msg_optical_flow.h</in>
+              <in>mavlink_msg_optical_flow_rad.h</in>
+              <in>mavlink_msg_param_map_rc.h</in>
+              <in>mavlink_msg_param_request_list.h</in>
+              <in>mavlink_msg_param_request_read.h</in>
+              <in>mavlink_msg_param_set.h</in>
+              <in>mavlink_msg_param_value.h</in>
+              <in>mavlink_msg_ping.h</in>
+              <in>mavlink_msg_play_tune.h</in>
+              <in>mavlink_msg_position_target_global_int.h</in>
+              <in>mavlink_msg_position_target_local_ned.h</in>
+              <in>mavlink_msg_power_status.h</in>
+              <in>mavlink_msg_protocol_version.h</in>
+              <in>mavlink_msg_radio_status.h</in>
+              <in>mavlink_msg_raw_imu.h</in>
+              <in>mavlink_msg_raw_pressure.h</in>
+              <in>mavlink_msg_rc_channels.h</in>
+              <in>mavlink_msg_rc_channels_override.h</in>
+              <in>mavlink_msg_rc_channels_raw.h</in>
+              <in>mavlink_msg_rc_channels_scaled.h</in>
+              <in>mavlink_msg_request_data_stream.h</in>
+              <in>mavlink_msg_resource_request.h</in>
+              <in>mavlink_msg_safety_allowed_area.h</in>
+              <in>mavlink_msg_safety_set_allowed_area.h</in>
+              <in>mavlink_msg_scaled_imu.h</in>
+              <in>mavlink_msg_scaled_imu2.h</in>
+              <in>mavlink_msg_scaled_imu3.h</in>
+              <in>mavlink_msg_scaled_pressure.h</in>
+              <in>mavlink_msg_scaled_pressure2.h</in>
+              <in>mavlink_msg_scaled_pressure3.h</in>
+              <in>mavlink_msg_serial_control.h</in>
+              <in>mavlink_msg_servo_output_raw.h</in>
+              <in>mavlink_msg_set_actuator_control_target.h</in>
+              <in>mavlink_msg_set_attitude_target.h</in>
+              <in>mavlink_msg_set_gps_global_origin.h</in>
+              <in>mavlink_msg_set_home_position.h</in>
+              <in>mavlink_msg_set_mode.h</in>
+              <in>mavlink_msg_set_position_target_global_int.h</in>
+              <in>mavlink_msg_set_position_target_local_ned.h</in>
+              <in>mavlink_msg_set_video_stream_settings.h</in>
+              <in>mavlink_msg_setup_signing.h</in>
+              <in>mavlink_msg_sim_state.h</in>
+              <in>mavlink_msg_statustext.h</in>
+              <in>mavlink_msg_storage_information.h</in>
+              <in>mavlink_msg_sys_status.h</in>
+              <in>mavlink_msg_system_time.h</in>
+              <in>mavlink_msg_terrain_check.h</in>
+              <in>mavlink_msg_terrain_data.h</in>
+              <in>mavlink_msg_terrain_report.h</in>
+              <in>mavlink_msg_terrain_request.h</in>
+              <in>mavlink_msg_timesync.h</in>
+              <in>mavlink_msg_v2_extension.h</in>
+              <in>mavlink_msg_vfr_hud.h</in>
+              <in>mavlink_msg_vibration.h</in>
+              <in>mavlink_msg_vicon_position_estimate.h</in>
+              <in>mavlink_msg_video_stream_information.h</in>
+              <in>mavlink_msg_vision_position_estimate.h</in>
+              <in>mavlink_msg_vision_speed_estimate.h</in>
+              <in>mavlink_msg_wind_cov.h</in>
+              <in>version.h</in>
+            </df>
+            <in>checksum.h</in>
+            <in>mavlink_conversions.h</in>
+            <in>mavlink_get_info.h</in>
+            <in>mavlink_helpers.h</in>
+            <in>mavlink_sha256.h</in>
+            <in>mavlink_types.h</in>
+            <in>protocol.h</in>
+          </df>
           <in>00_ServiceList.h</in>
           <in>00_ServiceTemplate.cpp</in>
           <in>00_ServiceTemplate.h</in>
@@ -2701,11 +2785,9 @@
         <gdb_interceptlist>
           <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
         </gdb_interceptlist>
-        <gdb_signals>
-        </gdb_signals>
         <gdb_options>
           <DebugOptions>
-            <option name="debug_dir" value="/home/jay/uxas/OpenUxAS/examples/Px4Test"/>
+            <option name="debug_dir" value="/home/jay/uxas/OpenUxAS/examples/01_HelloWorld"/>
           </DebugOptions>
         </gdb_options>
         <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
@@ -2716,11 +2798,11 @@
       <runprofile version="9">
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -cfgPath cfg_HelloWorld.xml</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -cfgPath cfg_PX4_Test.xml</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -cfgPath cfg_HelloWorld.xml</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -cfgPath cfg_PX4_Test.xml</runcommand>
-        <rundir>/home/jay/uxas/OpenUxAS/examples/Px4Test</rundir>
+        <runcommand>"${OUTPUT_PATH}" -cfgPath cfg_HelloWorld.xml</runcommand>
+        <rundir>/home/jay/uxas/OpenUxAS/examples/01_HelloWorld</rundir>
         <buildfirst>false</buildfirst>
         <terminal-type>0</terminal-type>
         <remove-instrumentation>0</remove-instrumentation>

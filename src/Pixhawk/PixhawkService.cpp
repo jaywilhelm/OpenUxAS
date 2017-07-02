@@ -446,8 +446,6 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         COUT_INFO("Msg:"<<msg.msgid);
                         break;
                     }
-                    //#85
-                    //#36
                 }
             }         
         }
