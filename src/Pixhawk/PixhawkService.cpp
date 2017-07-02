@@ -2,6 +2,7 @@
 // include header for this service
 #include "PixhawkService.h"
 #include "uxas/messages/uxnative/AutopilotKeepAlive.h"
+#include "uxas/messages/uxnative/StartupComplete.h"
 
 
 #warning "Building with Pixhawk"
@@ -52,6 +53,7 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
     addSubscriptionAddress(afrl::cmasi::MissionCommand::Subscription);
     addSubscriptionAddress(uxas::messages::uxnative::AutopilotKeepAlive::Subscription);
     addSubscriptionAddress(afrl::cmasi::VehicleActionCommand::Subscription);
+    addSubscriptionAddress(uxas::messages::uxnative::StartupComplete::Subscription);
     //addSubscriptionAddress(afrl::cmasi::GimbalStareAction::Subscription);
     //addSubscriptionAddress(afrl::cmasi::GimbalAngleAction::Subscription);
     //addSubscriptionAddress(afrl::cmasi::CameraAction::Subscription);
@@ -105,8 +107,6 @@ bool PixhawkService::start()
 {
     COUT_INFO("PX start");
     m_receiveFromPixhawkProcessingThread = uxas::stduxas::make_unique<std::thread>(&PixhawkService::executePixhawkAutopilotCommProcessing, this);
-    //return (true);
-    // start the timer
     //return true;
     return (uxas::common::TimerManager::getInstance().startPeriodicTimer(m_SafetyTimerId,0,m_sendPeriod_ms));
 };
@@ -145,7 +145,7 @@ bool PixhawkService::terminate()
 
 bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communications::data::LmcpMessage> receivedLmcpMessage)
 {
-    COUT_INFO("LMCP " << receivedLmcpMessage->m_object->getLmcpTypeName());
+    COUT_INFO("LMCP ");//<< receivedLmcpMessage->m_object->getLmcpTypeName());
     if (afrl::cmasi::isKeyValuePair(receivedLmcpMessage->m_object))
     {
         //receive message
@@ -159,30 +159,6 @@ void PixhawkService::SafetyTimer()
     {
         std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
 
-        /*if(m_Attitude.time_boot_ms!=0)
-        {
-            m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
-            m_ptr_CurrentAirVehicleState->setRoll(m_Attitude.roll);
-        }
-        m_ptr_CurrentAirVehicleState->setAirspeed(m_Airspeed);//m/s
-
-        m_ptr_CurrentAirVehicleState->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);
-        m_ptr_CurrentAirVehicleState->getLocation()->setAltitude(newAlt_m);
-        m_ptr_CurrentAirVehicleState->getLocation()->setLatitude(lat_d);
-        m_ptr_CurrentAirVehicleState->getLocation()->setLongitude(lon_d);
-        m_ptr_CurrentAirVehicleState->setCourse(cog_d);
-        // u, v, w, udot, vdot, wdot
-        m_ptr_CurrentAirVehicleState->setU(0.0);
-        m_ptr_CurrentAirVehicleState->setV(0.0);
-        m_ptr_CurrentAirVehicleState->setW(0.0);
-        m_ptr_CurrentAirVehicleState->setUdot(0.0);
-        m_ptr_CurrentAirVehicleState->setVdot(0.0);
-        m_ptr_CurrentAirVehicleState->setWdot(0.0);
-         // ActualEnergyRate, EnergyAvailable
-        m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0);
-        m_ptr_CurrentAirVehicleState->setEnergyAvailable(0.0);*/
-
-        m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint);
         afrl::cmasi::Location3D* where = m_ptr_CurrentAirVehicleState->getLocation();
         double lat = where->getLatitude();
         double lon = where->getLongitude();
@@ -305,6 +281,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                                 m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
                                 m_ptr_CurrentAirVehicleState->setRoll(m_Attitude.roll);
                             }
+                            m_ptr_CurrentAirVehicleState->setID(400);
                             m_ptr_CurrentAirVehicleState->setAirspeed(m_Airspeed);//m/s
                             
                             m_ptr_CurrentAirVehicleState->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);
@@ -446,6 +423,8 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         COUT_INFO("Msg:"<<msg.msgid);
                         break;
                     }
+                    //#85
+                    //#36
                 }
             }         
         }

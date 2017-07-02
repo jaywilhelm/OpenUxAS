@@ -75,7 +75,6 @@ LmcpObjectNetworkServer::executeNetworkServer()
         std::unique_ptr<uxas::communications::data::AddressedAttributedMessage> receivedLmcpMessage 
                 = m_lmcpObjectMessageReceiverPipe.getNextSerializedMessage();
 
-
         if (receivedLmcpMessage)
         {
             UXAS_LOG_DEBUG_VERBOSE_MESSAGING("LmcpObjectNetworkServer::executeNetworkServer RECEIVED serialized message");
