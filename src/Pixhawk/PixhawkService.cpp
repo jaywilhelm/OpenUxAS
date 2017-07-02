@@ -24,7 +24,7 @@ PixhawkService::PixhawkService() : ServiceBase(PixhawkService::s_typeName(), Pix
     uint8_t res = mavlink_parse_char(0,newc, &r_message, &r_mavlink_status);
     
     
-    std::cout << "PixhawkService called";
+    COUT_INFO("PixhawkService called");
     std::memset(&m_Attitude,0,sizeof(m_Attitude));
 }
 
@@ -103,7 +103,7 @@ bool PixhawkService::initialize()
 
 bool PixhawkService::start()
 {
-    std::cout <<  "PX start"<<std::endl;
+    COUT_INFO("PX start");
     m_receiveFromPixhawkProcessingThread = uxas::stduxas::make_unique<std::thread>(&PixhawkService::executePixhawkAutopilotCommProcessing, this);
     //return (true);
     // start the timer
@@ -120,7 +120,7 @@ bool PixhawkService::terminate()
         //UXAS_LOG_WARN(s_typeName(), "::HelloWorld::terminate() failed to destroy message send timer ",
          //        "with timer ID ", m_sendMessageTimerId, " within ", delayTime_ms, " millisecond timeout");
     }
-    std::cout <<  "PX terminate"<<std::endl;
+    COUT_INFO("PX terminate");
 
     if (m_useNetConnection)
     {
@@ -134,11 +134,11 @@ bool PixhawkService::terminate()
     if (m_receiveFromPixhawkProcessingThread && m_receiveFromPixhawkProcessingThread->joinable())
     {
         m_receiveFromPixhawkProcessingThread->join();
-        std::cout <<  "PX ::terminate calling thread completed m_receiveFromPixhawkProcessingThread join"<<std::endl;
+        COUT_INFO("PX ::terminate calling thread completed m_receiveFromPixhawkProcessingThread join");
     }
     else
     {
-        std::cout << "PX::terminate unexpectedly could not join m_receiveFromPiccoloProcessingThread"<<std::endl;
+        COUT_INFO("PX::terminate unexpectedly could not join m_receiveFromPiccoloProcessingThread");
     }
     return (true);
 }

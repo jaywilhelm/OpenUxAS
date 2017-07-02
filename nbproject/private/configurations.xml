@@ -1425,6 +1425,12 @@
           </df>
         </df>
         <df name="Px4Test">
+          <df name="datawork">
+            <df name="AutomationDiagramDataService">
+            </df>
+            <df name="SavedMessages">
+            </df>
+          </df>
           <df name="MessagesToSend">
             <df name="tasks">
             </df>
@@ -2699,7 +2705,7 @@
         </gdb_signals>
         <gdb_options>
           <DebugOptions>
-            <option name="debug_dir" value="/home/jay/uxas/OpenUxAS/examples/01_HelloWorld"/>
+            <option name="debug_dir" value="/home/jay/uxas/OpenUxAS/examples/Px4Test"/>
           </DebugOptions>
         </gdb_options>
         <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
@@ -2711,9 +2717,10 @@
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -cfgPath cfg_HelloWorld.xml</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -cfgPath cfg_PX4_Test.xml</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -cfgPath cfg_HelloWorld.xml</runcommand>
-        <rundir>/home/jay/uxas/OpenUxAS/examples/01_HelloWorld</rundir>
+        <runcommand>"${OUTPUT_PATH}" -cfgPath cfg_PX4_Test.xml</runcommand>
+        <rundir>/home/jay/uxas/OpenUxAS/examples/Px4Test</rundir>
         <buildfirst>false</buildfirst>
         <terminal-type>0</terminal-type>
         <remove-instrumentation>0</remove-instrumentation>
