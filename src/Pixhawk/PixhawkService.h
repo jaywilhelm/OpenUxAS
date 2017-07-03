@@ -150,7 +150,7 @@ protected:
     double m_Airspeed{0.0};
     std::shared_ptr<afrl::cmasi::AirVehicleState> m_ptr_CurrentAirVehicleState;
     std::mutex m_AirvehicleStateMutex;
-
+    bool    bAVSReady=false;
     
     //Serial
     std::shared_ptr<serial::Serial> m_serialConnectionPixhawk;

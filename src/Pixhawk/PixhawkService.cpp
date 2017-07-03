@@ -152,19 +152,28 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
         //auto keyValuePairIn = std::static_pointer_cast<afrl::cmasi::KeyValuePair> (receivedLmcpMessage->m_object);
         //std::cout << "*** RECEIVED:: Received Id[" << m_serviceId << "] Sent Id[" << keyValuePairIn->getKey() << "] Message[" << keyValuePairIn->getValue() << "] *** " << std::endl;
     }
+    else if(uxas::messages::uxnative::StartupComplete::TypeName == receivedLmcpMessage->m_object->getLmcpTypeName())
+    {
+        COUT_INFO("Startup Complete");
+    }
     return false;
 }
 void PixhawkService::SafetyTimer()
 {
     {
         std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
-
-        afrl::cmasi::Location3D* where = m_ptr_CurrentAirVehicleState->getLocation();
-        double lat = where->getLatitude();
-        double lon = where->getLongitude();
-        auto alt = where->getAltitude();
-        std::cout.precision(8);
-        COUT_INFO("(lat,lon,alt): " << lat << ", " << lon << ", " << alt);
+        if(bAVSReady)
+        {
+            afrl::cmasi::Location3D* where = m_ptr_CurrentAirVehicleState->getLocation();
+            double lat = where->getLatitude();
+            double lon = where->getLongitude();
+            auto alt = where->getAltitude();
+            std::cout.precision(8);
+            COUT_INFO("Broadcast (lat,lon,alt): " << lat << ", " << lon << ", " << alt);
+            sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
+            bAVSReady=false;
+            m_ptr_CurrentAirVehicleState.reset(new afrl::cmasi::AirVehicleState());
+        }
     }
     //else
     //    COUT_INFO("Failed mAVS lock");
@@ -302,6 +311,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                             
                             m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint);
                             sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
+                            bAVSReady=true;
                             //COUT_INFO("Broadcasting AVS");
                         }
                         //else
