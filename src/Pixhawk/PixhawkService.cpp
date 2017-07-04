@@ -156,6 +156,51 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
     {
         COUT_INFO("Startup Complete");
     }
+    else if (afrl::cmasi::isVehicleActionCommand(receivedLmcpMessage->m_object))
+    {
+        COUT_INFO("VehicleActionCommand");
+    }
+    else if (afrl::cmasi::isMissionCommand(receivedLmcpMessage->m_object))
+    {
+        COUT_INFO("Mission Command: " << receivedLmcpMessage->m_object->getLmcpTypeName());
+        auto missionCmd = std::static_pointer_cast<afrl::cmasi::MissionCommand> (receivedLmcpMessage->m_object);
+        if (missionCmd)
+        {
+            //if (missionCmd->getVehicleID() != m_ui16AutopilotID)
+            //    return;
+
+            //DEBUG
+            std::cout << "HandleMissionCommand with size " << missionCmd->getWaypointList().size() << std::endl;
+            afrl::cmasi::Waypoint* wp;
+            for (int i = 0; i < missionCmd->getWaypointList().size(); i++)
+            {
+                wp = missionCmd->getWaypointList().at(i);
+                std::cout << "waypoint[" << i << "]:" << std::endl;
+                std::cout << "CMASI ID: " << (int) wp->getNumber() << std::endl;
+                std::cout << "Next ID: " << (int) wp->getNextWaypoint() << std::endl;
+                std::cout << "lat: " << wp->getLatitude() << std::endl;
+                std::cout << "lon: " << wp->getLongitude() << std::endl;
+            }
+            wp = NULL;
+            std::cout << "Start at C#" << (int) missionCmd->getFirstWaypoint() << std::endl;    
+        }
+    }
+    /*else if (afrl::cmasi::isAutomationResponse(receivedLmcpMessage->m_object))//isAutomationResponse(receivedLmcpMessage->m_object))
+    {
+        auto automationResponse = std::static_pointer_cast<afrl::cmasi::AutomationResponse> (receivedLmcpMessage->m_object);
+        if (automationResponse && automationResponse->getMissionCommandList().empty())
+        {
+            for (auto& missionCommand : automationResponse->getMissionCommandList())
+            {
+                std::shared_ptr<avtas::lmcp::Object> obj(missionCommand->clone());
+                COUT_INFO("Mission: " << obj->getLmcpTypeName());
+                //HandleMissionCommand(obj);
+                break;
+            }
+        }
+    }*/
+    else
+        COUT_INFO("Type: " << receivedLmcpMessage->m_object->getLmcpTypeName());
     return false;
 }
 void PixhawkService::SafetyTimer()

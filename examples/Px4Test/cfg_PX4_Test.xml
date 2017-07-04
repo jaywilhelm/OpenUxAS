@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <UxAS FormatVersion="1.0" EntityID="100"  EntityType="Aircraft">
+    <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://127.0.0.1:5555" Server="FALSE">
+        <SubscribeToMessage MessageType="afrl.cmasi.MissionCommand" />
+        <SubscribeToMessage MessageType="afrl.cmasi.LineSearchTask" />
+        <SubscribeToMessage MessageType="afrl.cmasi.VehicleActionCommand" />
+    </Bridge>
     <Service Type="Test_SimulationTime"/>
     <Service Type="TaskManagerService"/>
     <Service Type="AutomationRequestValidatorService"/>
