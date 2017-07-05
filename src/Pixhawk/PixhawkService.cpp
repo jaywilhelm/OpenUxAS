@@ -350,9 +350,32 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                             m_ptr_CurrentAirVehicleState->setUdot(0.0);
                             m_ptr_CurrentAirVehicleState->setVdot(0.0);
                             m_ptr_CurrentAirVehicleState->setWdot(0.0);
+
+                            // heading, pitch, roll
+                            //m_ptr_CurrentAirVehicleState->setHeading((telemetryPkt->GetYaw() / 10000.0) * RAD_TO_DEG); // heading = yaw
+                            //m_ptr_CurrentAirVehicleState->setPitch((telemetryPkt->GetPitch() / 10000.0) * RAD_TO_DEG);
+                            //m_ptr_CurrentAirVehicleState->setRoll((telemetryPkt->GetRoll() / 10000.0) * RAD_TO_DEG);
+
+                            // yaw, pitch, roll rates
+                            //m_ptr_CurrentAirVehicleState->setR((telemetryPkt->GetYawRate() / 10000.0) * RAD_TO_DEG); // from (1/10,000)r/s -> rad/s
+                            //m_ptr_CurrentAirVehicleState->setQ((telemetryPkt->GetPitchRate() / 10000.0) * RAD_TO_DEG);
+                            //m_ptr_CurrentAirVehicleState->setP((telemetryPkt->GetRollRate() / 10000.0) * RAD_TO_DEG);
                              // ActualEnergyRate, EnergyAvailable
-                            m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0);
-                            m_ptr_CurrentAirVehicleState->setEnergyAvailable(0.0);
+                            //m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0);
+                            //m_ptr_CurrentAirVehicleState->setEnergyAvailable(0.0);
+                            
+                            // wind speed/heading
+                            //m_ptr_CurrentAirVehicleState->setWindSpeed(telemetryPkt->GetWindSpeed()); // m/s
+                            //m_ptr_CurrentAirVehicleState->setWindDirection(telemetryPkt->GetWindFromDirection()); // degrees from north (wind is coming from)
+
+                            // ground speed, ground track
+                            //m_ptr_CurrentAirVehicleState->setGroundspeed(telemetryPkt->GetGroundSpeed()); // m/s
+                            
+                            //float vEast_mps = static_cast<float> (telemetryPkt->GetVEast()) / 100.0;
+                            //float vNorth_mps = static_cast<float> (telemetryPkt->GetVNorth()) / 100.0;
+                            //float vDown_mps = static_cast<float> (telemetryPkt->GetVDown()) / 100.0;
+                            //m_ptr_CurrentAirVehicleState->setCourse(atan2(vEast_mps, vNorth_mps) * RAD_TO_DEG);
+                            
                             
                             m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint);
                             sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
