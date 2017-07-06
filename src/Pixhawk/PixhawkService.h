@@ -1,3 +1,4 @@
+//#define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 #include "mavlinkc/common/mavlink.h"
 
 // include header for this service
@@ -141,7 +142,7 @@ protected:
     sockaddr_in m_listenSocket;
     sockaddr_in m_remoteSocket;
     //std::string m_tcpAddress{"udp://localhost:14501"};
-    uint16_t m_netPort{14552};
+    uint16_t m_netPort{14551};
     bool m_bServer{true};
     std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;
     bool m_isTerminate{false};//read thread terminate
@@ -157,6 +158,23 @@ protected:
     std::string m_strTTyDevice{"/dev/tty.usbmodem"};
     uint32_t m_ui32Baudrate{57600};
     uint32_t m_serialTimeout_ms{5000};
+    
+    bool m_bStartupComplete{false};
+    
+    int32_t m_missionSendState{0};
+    enum Mission_States{
+        SENT_COUNT,
+        SENT_WAYPOINT,
+        SENT_LAST_WAYPOINT
+    };
+    int32_t m_wpIterator{0};
+    int32_t m_newWaypointCount{0};
+    //std::vector<afrl::cmasi::Waypoint*> m_newWaypointList;
+    std::vector<std::shared_ptr<afrl::cmasi::Waypoint>> m_newWaypointList;
+    //std::shared_ptr<afrl::cmasi::MissionCommand> m_newMissionCommand;
+    void MissionUpdate_SendNewWayPointCount(void);
+    void MissionUpdate_SendWayPoint(void);
+
 };
 
 }; //namespace service
