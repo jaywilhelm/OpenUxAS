@@ -5,6 +5,7 @@ import array
 import time
 import os
 import sys
+import pickle
 class fifo(object):
     def __init__(self):
         self.buf = []
@@ -13,6 +14,55 @@ class fifo(object):
         return len(data)
     def read(self):
         return self.buf.pop(0)
+
+def GetWPList(mav,savefile):
+    mav.mav.mission_request_list_send(target_system, target_component, mission_type)
+
+    if(savefile is not None):
+        fileout = open(savefile,'wb')
+
+    num_wp = -1
+    print("Requesting WP List")
+    while True:
+        msg = mav.recv_msg()
+        if msg is None:
+            continue
+        skip_msg=False
+        for strnames in ignore_list:
+            if(msg.name is strnames):
+                skip_msg = True
+        if(skip_msg is True):
+            continue
+
+        if msg.name is "MISSION_COUNT":
+            num_wp=msg.count
+            print("#WP:" + str(num_wp))
+            if(num_wp == 0):
+                mav.mav.mission_ack_send(target_system, target_component, type=0)#, mission_type=0)#type=msg.seq, mission_type=0)
+                break;
+            else:
+                mav.mav.mission_request_send(target_system, target_component, seq=0)#, mission_type=0)
+            if (savefile is not None):
+                pickle.dump(msg,fileout)
+        elif msg.name is "MISSION_ITEM":
+            print(msg)
+            if (savefile is not None):
+                pickle.dump(msg,fileout)
+
+            if(msg.seq >= 0 and msg.seq+1 < num_wp):
+                print("--> REQ # " + str(msg.seq))
+                mav.mav.mission_request_send(target_system, target_component, seq=msg.seq+1)#, mission_type=0)
+            elif(msg.seq+1 == num_wp):
+                mav.mav.mission_ack_send(target_system, target_component, type=0)#, mission_type=0)#type=msg.seq, mission_type=0)
+                if (savefile is not None):
+                    fileout.close()
+                break
+        elif msg.name is "MISSION_CURRENT":
+            #print(msg)
+            i=1
+        else:
+            print(msg)
+
 
 f = fifo()
 
@@ -86,16 +136,55 @@ num_wp = -1
 #             num_wp=msg.count
 #             break
 
-seq=0
-#################mav.mav.mission_request_send(target_system, target_component,seq, mission_type)
-mav.mav.mission_request_list_send(target_system, target_component, mission_type)
-##############mav.mav.mission_request_partial_list_send(target_system,target_component,start_index=0,end_index=5,mission_type=0)
+# seq=0
+# #################mav.mav.mission_request_send(target_system, target_component,seq, mission_type)
+# mav.mav.mission_request_list_send(target_system, target_component, mission_type)
+# ##############mav.mav.mission_request_partial_list_send(target_system,target_component,start_index=0,end_index=5,mission_type=0)
 ignore_list = ["ATTITUDE_QUATERNION","HIGHRES_IMU","ATTITUDE","GLOBAL_POSITION_INT","LOCAL_POSITION_NED",
-               "POSITION_TARGET_LOCAL_NED","HIGHRES_IMU","ATTITUDE_TARGET","POSITION_TARGET_GLOBAL_INT","VFR_HUD",
-               "SYS_STATUS","BATTERY_STATUS","HEARTBEAT","GPS_RAW_INT","ALTITUDE","WIND_COV","EXTENDED_SYS_STATE",
-               "ESTIMATOR_STATUS","VIBRATION","HOME_POSITION"]
+                "POSITION_TARGET_LOCAL_NED","HIGHRES_IMU","ATTITUDE_TARGET","POSITION_TARGET_GLOBAL_INT","VFR_HUD",
+                "SYS_STATUS","BATTERY_STATUS","HEARTBEAT","GPS_RAW_INT","ALTITUDE","WIND_COV","EXTENDED_SYS_STATE",
+                "ESTIMATOR_STATUS","VIBRATION","HOME_POSITION"]
+GetWPList(mav,savefile=None)
+# fileout = open('waypots.pckl','wb')
+# MAV_MISSION_ACCEPTED = 1
+# while True:
+#     msg = mav.recv_msg()
+#     if msg is None:
+#         continue
+#     skip_msg=False
+#     for strnames in ignore_list:
+#         if(msg.name is strnames):
+#             skip_msg = True
+#     if(skip_msg is True):
+#         continue
+#
+#
+#
+#     if msg.name is "MISSION_COUNT":
+#         num_wp=msg.count
+#         print("#WP:" + str(num_wp))
+#         mav.mav.mission_request_send(target_system, target_component, seq=0)#, mission_type=0)
+#         pickle.dump(msg,fileout)
+#     elif msg.name is "MISSION_ITEM":
+#         print(msg)
+#         pickle.dump(msg,fileout)
+#
+#         if(msg.seq >= 0 and msg.seq+1 < num_wp):
+#             print("--> REQ # " + str(msg.seq))
+#             mav.mav.mission_request_send(target_system, target_component, seq=msg.seq+1)#, mission_type=0)
+#         elif(msg.seq+1 == num_wp):
+#             mav.mav.mission_ack_send(target_system, target_component, type=0)#, mission_type=0)#type=msg.seq, mission_type=0)
+#             break
+#     elif msg.name is "MISSION_CURRENT":
+#         #print(msg)
+#         i=1
+#     else:
+#         print(msg)
 
-MAV_MISSION_ACCEPTED = 1
+
+#fileout.close()
+
+mav.mav.mission_clear_all_send(target_system, target_component, mission_type)
 while True:
     msg = mav.recv_msg()
     if msg is None:
@@ -107,25 +196,76 @@ while True:
     if(skip_msg is True):
         continue
 
+    if msg.name is "MISSION_ACK":
+        print(msg.name + "->CLEAR")
+        break
 
-
-    if msg.name is "MISSION_COUNT":
-        num_wp=msg.count
-        print("#WP:" + str(num_wp))
-        mav.mav.mission_request_send(target_system, target_component, seq=0)#, mission_type=0)
-    elif msg.name is "MISSION_ITEM":
+fileout = open('waypots.pckl','rb')
+wp_count = pickle.load(fileout)
+savemsg = None
+for i in range(0,wp_count.count):
+    msg = pickle.load(fileout)
+    #print(str(msg.seq) + " " + str(msg.x) + " " + str(msg.y) + " f " + str(msg.frame) + " cmd " + str(msg.command))
+    if(i == 0):
         print(msg)
-        if(msg.seq >= 0 and msg.seq+1 < num_wp):
-            print("--> REQ # " + str(msg.seq))
-            mav.mav.mission_request_send(target_system, target_component, seq=msg.seq+1)#, mission_type=0)
-        elif(msg.seq+1 == num_wp):
-            mav.mav.mission_ack_send(target_system, target_component, type=0)#, mission_type=0)#type=msg.seq, mission_type=0)
+        savemsg = msg
+        break
 
-    elif msg.name is "MISSION_CURRENT":
-        #print(msg)
-        i=1
+fileout.close()
+
+MAV_FRAME_MISSION = 2 #last WP
+MAV_FRAME_GLOBAL_RELATIVE_ALT = 3 #normal WP
+
+MAV_CMD_NAV_TAKEOFF = 22 # Takeoff from ground / hand
+MAV_CMD_NAV_WAYPOINT = 16 # Navigate to MISSION.
+MAV_CMD_DO_JUMP = 177 # Jump to the desired command in the mission list.  Repeat this action
+
+####action
+seq=savemsg.seq#1
+frame=savemsg.frame#MAV_FRAME_GLOBAL_RELATIVE_ALT
+command=savemsg.command#MAV_CMD_NAV_TAKEOFF
+current = savemsg.current#0
+autocontinue = savemsg.autocontinue#1
+param1=savemsg.param1#0
+param2=savemsg.param2#0
+param3=savemsg.param3#0
+param4=savemsg.param4#0
+x=savemsg.x#1
+y=savemsg.y#2
+z=savemsg.z#0
+
+
+
+count = 1
+mav.mav.mission_count_send(target_system, target_component, count)
+print("Send count" + str(count))
+MAV_MISSION_ACCEPTED = 0 # mission accepted OK
+
+while True:
+    msg = mav.recv_msg()
+    if msg is None:
+        continue
+    skip_msg=False
+    for strnames in ignore_list:
+        if(msg.name is strnames):
+            skip_msg = True
+    if(skip_msg is True):
+        continue
+    if msg.name is "MISSION_ACK":
+        print(msg.name+"->GOOD")
+        break
+    elif msg.name is "MISSION_REQUEST":
+        print(msg.name)
+        #mav.mav.mission_ack_send(target_system, target_component, type=MAV_MISSION_ACCEPTED)  # , mission_type=0)#type=msg.seq, mission_type=0)
+        mav.mav.mission_item_send(target_system, target_component, seq, frame, command, current,
+                            autocontinue, param1, param2,
+                            param3, param4, x, y, z,)
+
+    elif msg.name is "STATUSTEXT":
+        print(msg.name + " " + msg.text)
+        break
     else:
-        print(msg)
+        print(msg.name)
 #"COMMAND_ACK"
 
 

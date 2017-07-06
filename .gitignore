@@ -35,3 +35,4 @@ examples/**/datawork/**
 /regen-temp
 
 nbproject/
+*.pckl
