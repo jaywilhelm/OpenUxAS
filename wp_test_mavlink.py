@@ -67,7 +67,7 @@ def GetWPList(mav,savefile):
 f = fifo()
 
 
-mav = mavutil.mavlink_connection('udpin::14550')
+mav = mavutil.mavlink_connection('udpin::14551')
 #mav = mavutil.mavlink_connection("COM7",baud=115200)
 print(mav.address)
 print('wait')
@@ -183,7 +183,7 @@ GetWPList(mav,savefile=None)
 
 
 #fileout.close()
-
+print("Clearing")
 mav.mav.mission_clear_all_send(target_system, target_component, mission_type)
 while True:
     msg = mav.recv_msg()
@@ -202,6 +202,8 @@ while True:
 
 fileout = open('waypots.pckl','rb')
 wp_count = pickle.load(fileout)
+print("File WP "+str(wp_count.count))
+
 savemsg = None
 for i in range(0,wp_count.count):
     msg = pickle.load(fileout)
@@ -221,26 +223,28 @@ MAV_CMD_NAV_WAYPOINT = 16 # Navigate to MISSION.
 MAV_CMD_DO_JUMP = 177 # Jump to the desired command in the mission list.  Repeat this action
 
 ####action
-seq=savemsg.seq#1
-frame=savemsg.frame#MAV_FRAME_GLOBAL_RELATIVE_ALT
-command=savemsg.command#MAV_CMD_NAV_TAKEOFF
-current = savemsg.current#0
-autocontinue = savemsg.autocontinue#1
-param1=savemsg.param1#0
-param2=savemsg.param2#0
-param3=savemsg.param3#0
-param4=savemsg.param4#0
-x=savemsg.x#1
-y=savemsg.y#2
-z=savemsg.z#0
+# seq=savemsg.seq#1
+# frame=savemsg.frame#MAV_FRAME_GLOBAL_RELATIVE_ALT
+# command=savemsg.command#MAV_CMD_NAV_TAKEOFF
+# current = savemsg.current#0
+# autocontinue = savemsg.autocontinue#1
+# param1=savemsg.param1#0
+# param2=savemsg.param2#0
+# param3=savemsg.param3#0
+# param4=savemsg.param4#0
+# x=savemsg.x#1
+# y=savemsg.y#2
+# z=savemsg.z#0
 
 
+fileout = open('waypots.pckl','rb')
+wp_count = pickle.load(fileout)
+count = wp_count.count
 
-count = 1
 mav.mav.mission_count_send(target_system, target_component, count)
-print("Send count" + str(count))
+print("Send count " + str(count))
 MAV_MISSION_ACCEPTED = 0 # mission accepted OK
-
+seqNUM = 0
 while True:
     msg = mav.recv_msg()
     if msg is None:
@@ -257,9 +261,26 @@ while True:
     elif msg.name is "MISSION_REQUEST":
         print(msg.name)
         #mav.mav.mission_ack_send(target_system, target_component, type=MAV_MISSION_ACCEPTED)  # , mission_type=0)#type=msg.seq, mission_type=0)
+        msg = pickle.load(fileout)
+        #target_system = msg.target_system
+        target_component = msg.target_component
+        seq = seqNUM
+        frame = msg.frame
+        command = msg.command
+        current = msg.current
+        autocontinue = msg.autocontinue
+        param1 = msg.param1
+        param2 = msg.param2
+        param3 = msg.param3
+        param4 = msg.param4
+        x = msg.x
+        y = msg.y
+        z = msg.z
+        print("Send SEQ "+str(seqNUM))
         mav.mav.mission_item_send(target_system, target_component, seq, frame, command, current,
                             autocontinue, param1, param2,
-                            param3, param4, x, y, z,)
+                            param3, param4, x, y, z)
+        seqNUM = seqNUM+1
 
     elif msg.name is "STATUSTEXT":
         print(msg.name + " " + msg.text)
@@ -269,7 +290,7 @@ while True:
 #"COMMAND_ACK"
 
 
-
+fileout.close()
 
 
 
