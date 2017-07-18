@@ -224,6 +224,13 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
             std::cout << "HandleMissionCommand with size " << missionCmd->getWaypointList().size() << std::endl;
             afrl::cmasi::Waypoint* wp;
             m_newWaypointList.clear();
+            
+            //todo slip home position + takeoff command (for quads)
+            //PX4 in quad mode ignores the first two if not home + takeoff
+            
+            //home = current position
+            //takeoff at home position
+            
             for (int i = 0; i < (int)missionCmd->getWaypointList().size(); i++)
             {
                 wp = missionCmd->getWaypointList().at(i);
@@ -845,7 +852,6 @@ void PixhawkService::MissionUpdate_SetActiveWaypoint(uint32_t newWP_px)
 
     uint8_t target_system=1;
     uint8_t target_component=0;
-    uint8_t mission_type=0;
 
     //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
     //                           uint8_t target_system, uint8_t target_component, uint16_t seq
