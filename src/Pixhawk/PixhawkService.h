@@ -163,18 +163,21 @@ protected:
     
     int32_t m_missionSendState{0};
     enum Mission_States{
+        SENT_CLEAR,
         SENT_COUNT,
         SENT_WAYPOINT,
-        SENT_LAST_WAYPOINT
+        SENT_LAST_WAYPOINT,
+        SENT_ACTIVE_WAYPOINT
     };
     int32_t m_wpIterator{0};
     int32_t m_newWaypointCount{0};
     //std::vector<afrl::cmasi::Waypoint*> m_newWaypointList;
     std::vector<std::shared_ptr<afrl::cmasi::Waypoint>> m_newWaypointList;
     //std::shared_ptr<afrl::cmasi::MissionCommand> m_newMissionCommand;
+    void MissionUpdate_ClearAutopilotWaypoints(void);
     void MissionUpdate_SendNewWayPointCount(void);
     void MissionUpdate_SendWayPoint(void);
-
+    void MissionUpdate_SetActiveWaypoint(uint32_t newWP_px);
 };
 
 }; //namespace service
