@@ -163,6 +163,8 @@ protected:
     
     int32_t m_missionSendState{0};
     enum Mission_States{
+        NULL_STATE,
+        WAIT_HOME_POSITION,
         SENT_CLEAR,
         SENT_COUNT,
         SENT_WAYPOINT,
@@ -178,6 +180,8 @@ protected:
     void MissionUpdate_SendNewWayPointCount(void);
     void MissionUpdate_SendWayPoint(void);
     void MissionUpdate_SetActiveWaypoint(uint32_t newWP_px);
+    
+    mavlink_home_position_t m_SavedHomePositionMsg;
 };
 
 }; //namespace service

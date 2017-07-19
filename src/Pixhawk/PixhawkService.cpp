@@ -29,6 +29,8 @@ PixhawkService::PixhawkService() : ServiceBase(PixhawkService::s_typeName(), Pix
     
     COUT_INFO("PixhawkService called");
     std::memset(&m_Attitude,0,sizeof(m_Attitude));
+    std::memset(&m_SavedHomePositionMsg,0,sizeof(m_SavedHomePositionMsg));
+
 }
 
 PixhawkService::~PixhawkService() { }
@@ -224,13 +226,46 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
             std::cout << "HandleMissionCommand with size " << missionCmd->getWaypointList().size() << std::endl;
             afrl::cmasi::Waypoint* wp;
             m_newWaypointList.clear();
+            std::shared_ptr<afrl::cmasi::Waypoint> newTWP(new afrl::cmasi::Waypoint);
+
+            bool saved_takeoff_pos = false;
+            double lat,lon,alt;
+            {
+                std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
+                if(this->m_ptr_CurrentAirVehicleState && this->m_ptr_CurrentAirVehicleState->getLocation())
+                {
+                    lat = this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude(); 
+                    lon = this->m_ptr_CurrentAirVehicleState->getLocation()->getLongitude();
+                    alt =  this->m_ptr_CurrentAirVehicleState->getLocation()->getAltitude();
+                    saved_takeoff_pos=true;
+                }
+            }
+            if(!saved_takeoff_pos && this->m_SavedHomePositionMsg.altitude != 0)
+            {
+                saved_takeoff_pos=true;
+                //for the home position
+                lat = m_SavedHomePositionMsg.latitude;
+                lat /= 10000000.0;
+                lon = m_SavedHomePositionMsg.longitude;
+                lon /= 10000000.0;
+                alt = m_SavedHomePositionMsg.altitude;
+                alt /= 1000;
+            }
             
-            //todo slip home position + takeoff command (for quads)
-            //PX4 in quad mode ignores the first two if not home + takeoff
+            if(saved_takeoff_pos)
+            {
+                newTWP->setLatitude(lat);
+                newTWP->setLongitude(lon);
+                newTWP->setAltitude(alt);
+                newTWP->setNumber(0);
+                m_newWaypointList.push_back(newTWP);
+            }
+            else
+            {
+                COUT_INFO("NO home position for WP list");
+            }
             
-            //home = current position
-            //takeoff at home position
-            
+
             for (int i = 0; i < (int)missionCmd->getWaypointList().size(); i++)
             {
                 wp = missionCmd->getWaypointList().at(i);
@@ -239,8 +274,8 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
                 std::cout << "Next ID: " << (int) wp->getNextWaypoint() << std::endl;
                 std::cout << "lat: " << wp->getLatitude() << std::endl;
                 std::cout << "lon: " << wp->getLongitude() << std::endl;*/
-                
                 std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
+
                 newWP->setLatitude(wp->getLatitude());
                 newWP->setLongitude(wp->getLongitude());
                 newWP->setAltitude(wp->getAltitude());
@@ -248,11 +283,24 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
                 m_newWaypointList.push_back(newWP);
             }
             wp = NULL;
+            COUT_INFO("Saved " << m_newWaypointList.size() << " new waypoints");
+            //dump list
+            /*for (int i = 0; i < (int)m_newWaypointList.size(); i++)
+            {
+                auto wp = m_newWaypointList[i];
+                std::cout << "waypoint[" << i << "]:" << std::endl;
+                std::cout << "CMASI ID: " << (int) wp->getNumber() << std::endl;
+                std::cout << "Next ID: " << (int) wp->getNextWaypoint() << std::endl;
+                std::cout << "lat: " << wp->getLatitude() << std::endl;
+                std::cout << "lon: " << wp->getLongitude() << std::endl;
+            }*/
             //std::cout << "Start at C#" << (int) missionCmd->getFirstWaypoint() << std::endl;   
             
             //start the waypoint update process to Pixhawk
-            this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
-
+            if(saved_takeoff_pos)
+                this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
+            else
+                COUT_INFO("Waiting on home position");
         }
     }
     /*else if (afrl::cmasi::isAutomationResponse(receivedLmcpMessage->m_object))//isAutomationResponse(receivedLmcpMessage->m_object))
@@ -607,6 +655,40 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     }
                     case MAVLINK_MSG_ID_HOME_POSITION://#242
                     {
+                        mavlink_home_position_t homet;
+                        mavlink_msg_home_position_decode(&msg,&homet);
+                        if(m_SavedHomePositionMsg.latitude != homet.latitude &&
+                            m_SavedHomePositionMsg.longitude != homet.longitude &&
+                            m_SavedHomePositionMsg.altitude != homet.altitude)
+                        {
+                            //COUT_INFO("New HP? "<< m_SavedHomePositionMsg.latitude<<"/"<<homet.latitude);
+
+                            std::memset(&this->m_SavedHomePositionMsg,0,sizeof(homet));
+                            std::memcpy(&this->m_SavedHomePositionMsg,&homet,sizeof(homet));
+                            COUT_INFO("Saved NEW HOME POSITION");
+                            if(m_missionSendState == WAIT_HOME_POSITION)
+                            {
+                                std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
+
+                                double lat,lon,alt;
+                                lat = m_SavedHomePositionMsg.latitude;
+                                lat /= 10000000.0;
+                                lon = m_SavedHomePositionMsg.longitude;
+                                lon /= 10000000.0;
+                                alt = m_SavedHomePositionMsg.altitude;
+                                alt /= 1000;
+                                //for the takeoff position...
+                                newWP->setLatitude(lat);
+                                newWP->setLatitude(lon);
+                                newWP->setAltitude(alt);
+                                newWP->setNumber(0);
+                                m_newWaypointList.insert(m_newWaypointList.begin(),newWP);
+                                //for the takeoff position...
+                                COUT_INFO("GOT HOME, Starting WP send");
+
+                                this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
+                            }
+                        }                        
                         break;
                     }
                     case MAVLINK_MSG_ID_VIBRATION://#241
@@ -649,7 +731,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         {
                             COUT_INFO("Finished waypoint write, got ACK");
                             //Set active waypoint here
-                            MissionUpdate_SetActiveWaypoint(0);
+                            MissionUpdate_SetActiveWaypoint(2);
                         }
                         break;
                     }
@@ -793,22 +875,27 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
     float   y=wp->getLongitude(); 
     float   z=wp->getAltitude();
     uint8_t mission_type=0;
-    
+    //179	MAV_CMD_DO_SET_HOME
+    //22	MAV_CMD_NAV_TAKEOFF
     m_missionSendState = SENT_WAYPOINT;
 
     if(m_wpIterator == 0)
     {
-        command = 22;
-        current = 1;
+        command = MAV_CMD_NAV_TAKEOFF;
+        current = 0;
         param1 = 15.0;
-        COUT_INFO("About to send 1st WP");
+        COUT_INFO("About to send Takeoff WP");
+    }   
+    else if(m_wpIterator == 1)
+    {
+        current = 1;
+        COUT_INFO("About to send Active WP");
     }
     else if(m_wpIterator == this->m_newWaypointCount-1)
     {
         //frame = MAV_FRAME_MISSION;
         m_missionSendState = SENT_LAST_WAYPOINT;
         COUT_INFO("About to send LAST WP");
-
     }
     else 
     {
@@ -831,7 +918,7 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
     }
     else
     {
-        COUT_INFO("New WP sent " << send_len << " (x,y,z) " << x << ", " << y << ", " << z);
+        COUT_INFO("New WP sent #" << m_wpIterator << " (x,y,z) " << x << ", " << y << ", " << z);
     }
 }
 void PixhawkService::MissionUpdate_SetActiveWaypoint(uint32_t newWP_px)

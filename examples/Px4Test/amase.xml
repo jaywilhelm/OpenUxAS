@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <AMASE>
   <ScenarioData>
-    <SimulationView LongExtent="0.11" Latitude="45.323" Longitude="-120.9645"/>
+    <SimulationView LongExtent="0.11" Latitude="47.3977411" Longitude="8.5455937"/>
     <ScenarioName>Waterway Search Example</ScenarioName>
     <Date>1/1/2020:16:50:18</Date>
     <ScenarioDuration>7200.0</ScenarioDuration>
@@ -91,8 +91,8 @@
          <Location>
          <Location3D Series="CMASI">
           <Altitude>700</Altitude><AltitudeType>MSL</AltitudeType>           
-          <Latitude>45.3171</Latitude>
-          <Longitude>-120.9923</Longitude>
+          <Latitude>47.3977411</Latitude>
+          <Longitude>8.5455937</Longitude>
          </Location3D>
         </Location>
         <u>0</u>
@@ -163,8 +163,8 @@
               <Location>
                <Location3D Series="CMASI">
                  <Altitude>700</Altitude><AltitudeType>MSL</AltitudeType>           
-                 <Latitude>45.3171</Latitude>
-                 <Longitude>-120.9923</Longitude>
+                 <Latitude>47.3977411</Latitude>
+                 <Longitude>8.5455937</Longitude>
                </Location3D>
               </Location>
               <AssociatedTaskList>
@@ -175,8 +175,8 @@
            <AssociatedTasks>
            </AssociatedTasks>
           <Altitude>700</Altitude><AltitudeType>MSL</AltitudeType>           
-          <Latitude>45.3171</Latitude>
-          <Longitude>-120.9923</Longitude>
+          <Latitude>47.3977411</Latitude>
+          <Longitude>8.5455937</Longitude>
          </Waypoint>
         </WaypointList>
         <FirstWaypoint>1</FirstWaypoint>
