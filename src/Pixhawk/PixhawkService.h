@@ -164,7 +164,7 @@ protected:
     int32_t m_missionSendState{0};
     enum Mission_States{
         NULL_STATE,
-        WAIT_HOME_POSITION,
+        WAIT_GLOBAL_POSITION,
         SENT_CLEAR,
         SENT_COUNT,
         SENT_WAYPOINT,

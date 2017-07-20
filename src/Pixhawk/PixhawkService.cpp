@@ -1,3 +1,4 @@
+#include <fstream>      // std::ifstream
 
 // include header for this service
 #include "PixhawkService.h"
@@ -160,6 +161,87 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
     {
         COUT_INFO("Startup Complete");
         m_bStartupComplete=true;
+        
+        //test only
+        /*m_newWaypointList.clear();
+        bool saved_takeoff_pos = false;
+        double lat,lon,alt;
+        {
+            std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
+            if(this->m_ptr_CurrentAirVehicleState && this->m_ptr_CurrentAirVehicleState->getLocation()
+                    && this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude() != 0.0)
+            {
+                lat = this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude(); 
+                lon = this->m_ptr_CurrentAirVehicleState->getLocation()->getLongitude();
+                alt =  this->m_ptr_CurrentAirVehicleState->getLocation()->getAltitude();
+                saved_takeoff_pos=true;
+                std::shared_ptr<afrl::cmasi::Waypoint> newTWP(new afrl::cmasi::Waypoint);
+
+                newTWP->setLatitude(lat);
+                newTWP->setLongitude(lon);
+                newTWP->setAltitude(alt);
+                newTWP->setNumber(0);
+                m_newWaypointList.push_back(newTWP);
+            }
+        }
+        
+        
+        std::ifstream infile ("Set1.csav", std::ifstream::in);
+
+        std::string line;
+        //WP Count
+        getline(infile, line);
+        int wpcounti=-1;
+        std::istringstream swpc(line);  // note we use istringstream, we don't need the o part of stringstream
+
+        swpc >> wpcounti;
+        
+        std::cout.precision(5);
+
+        for(int i=0;i<wpcounti;i++)
+        {
+            getline(infile, line);
+
+            std::istringstream ss(line);  // note we use istringstream, we don't need the o part of stringstream
+
+            char c1, c2, c3, c4, c5;  // to eat the commas
+
+            double lat,lon,alt,param1;
+            int cmd;
+            ss >> lat >> c1 >>
+                  lon >> c2 >>
+                  alt >> c3 >>
+                  cmd >> c4 >>
+                  param1;
+            std::cout << lat << "\t" << lon << "\t\t" << alt << "\t" << cmd << "\t" << param1 << std::endl;
+            std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
+
+            newWP->setLatitude(lat);
+            newWP->setLongitude(lon);
+            newWP->setAltitude(alt);
+            newWP->setNumber(i+1);
+            m_newWaypointList.push_back(newWP);
+            //COUT_INFO(lat);
+        }
+        COUT_INFO("Test sending WPs #"<<m_newWaypointList.size());
+        for (int i = 0; i < (int)m_newWaypointList.size(); i++)
+        {
+            auto wp = m_newWaypointList[i];
+            std::cout << "waypoint[" << i << "]:" << std::endl;
+            //std::cout << "CMASI ID: " << (int) wp->getNumber() << std::endl;
+            //std::cout << "Next ID: " << (int) wp->getNextWaypoint() << std::endl;
+            std::cout << "Lat: " << wp->getLatitude() << "\t";
+            std::cout << "Lon: " << wp->getLongitude() << "\t";
+            std::cout << "Alt: " << wp->getAltitude() << std::endl;
+
+        }
+        if(saved_takeoff_pos)
+            this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
+        else
+        {
+            m_missionSendState = WAIT_GLOBAL_POSITION;
+            COUT_INFO("Waiting on global position");
+        }*/
     }
     else if (afrl::cmasi::isVehicleActionCommand(receivedLmcpMessage->m_object))
     {
@@ -232,24 +314,14 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
             double lat,lon,alt;
             {
                 std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
-                if(this->m_ptr_CurrentAirVehicleState && this->m_ptr_CurrentAirVehicleState->getLocation())
+                if(this->m_ptr_CurrentAirVehicleState && this->m_ptr_CurrentAirVehicleState->getLocation()
+                        && this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude() != 0.0)
                 {
                     lat = this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude(); 
                     lon = this->m_ptr_CurrentAirVehicleState->getLocation()->getLongitude();
                     alt =  this->m_ptr_CurrentAirVehicleState->getLocation()->getAltitude();
                     saved_takeoff_pos=true;
                 }
-            }
-            if(!saved_takeoff_pos && this->m_SavedHomePositionMsg.altitude != 0)
-            {
-                saved_takeoff_pos=true;
-                //for the home position
-                lat = m_SavedHomePositionMsg.latitude;
-                lat /= 10000000.0;
-                lon = m_SavedHomePositionMsg.longitude;
-                lon /= 10000000.0;
-                alt = m_SavedHomePositionMsg.altitude;
-                alt /= 1000;
             }
             
             if(saved_takeoff_pos)
@@ -262,7 +334,7 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
             }
             else
             {
-                COUT_INFO("NO home position for WP list");
+                COUT_INFO("NO GLOBAL position for WP list");
             }
             
 
@@ -279,7 +351,7 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
                 newWP->setLatitude(wp->getLatitude());
                 newWP->setLongitude(wp->getLongitude());
                 newWP->setAltitude(wp->getAltitude());
-                newWP->setNumber(wp->getNumber());
+                newWP->setNumber(wp->getNumber()+1);
                 m_newWaypointList.push_back(newWP);
             }
             wp = NULL;
@@ -300,7 +372,10 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
             if(saved_takeoff_pos)
                 this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
             else
-                COUT_INFO("Waiting on home position");
+            {
+                m_missionSendState = WAIT_GLOBAL_POSITION;
+                COUT_INFO("Waiting on global position");
+            }
         }
     }
     /*else if (afrl::cmasi::isAutomationResponse(receivedLmcpMessage->m_object))//isAutomationResponse(receivedLmcpMessage->m_object))
@@ -562,6 +637,27 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                             //sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
                             bAVSReady=true;
                             //COUT_INFO("Broadcasting AVS");
+                            if(m_missionSendState == WAIT_GLOBAL_POSITION)
+                            {
+                                std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
+
+                                double lat,lon,alt;
+                                
+                                lat = this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude(); 
+                                lon = this->m_ptr_CurrentAirVehicleState->getLocation()->getLongitude();
+                                alt =  this->m_ptr_CurrentAirVehicleState->getLocation()->getAltitude();
+
+                                //for the takeoff position...
+                                newWP->setLatitude(lat);
+                                newWP->setLongitude(lon);
+                                newWP->setAltitude(alt);
+                                newWP->setNumber(0);
+                                m_newWaypointList.insert(m_newWaypointList.begin(),newWP);
+                                //for the takeoff position...
+                                COUT_INFO("GOT Global POS, Starting WP send");
+
+                                this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
+                            }
                         }
                         //else
                         //    COUT_INFO("Failed mAVS lock");
@@ -666,28 +762,6 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                             std::memset(&this->m_SavedHomePositionMsg,0,sizeof(homet));
                             std::memcpy(&this->m_SavedHomePositionMsg,&homet,sizeof(homet));
                             COUT_INFO("Saved NEW HOME POSITION");
-                            if(m_missionSendState == WAIT_HOME_POSITION)
-                            {
-                                std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
-
-                                double lat,lon,alt;
-                                lat = m_SavedHomePositionMsg.latitude;
-                                lat /= 10000000.0;
-                                lon = m_SavedHomePositionMsg.longitude;
-                                lon /= 10000000.0;
-                                alt = m_SavedHomePositionMsg.altitude;
-                                alt /= 1000;
-                                //for the takeoff position...
-                                newWP->setLatitude(lat);
-                                newWP->setLatitude(lon);
-                                newWP->setAltitude(alt);
-                                newWP->setNumber(0);
-                                m_newWaypointList.insert(m_newWaypointList.begin(),newWP);
-                                //for the takeoff position...
-                                COUT_INFO("GOT HOME, Starting WP send");
-
-                                this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
-                            }
                         }                        
                         break;
                     }
@@ -863,19 +937,19 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
     uint8_t     target_system=1;
     uint8_t     target_component=0; 
     uint16_t    seq=m_wpIterator;
-    uint8_t     frame=MAV_FRAME_GLOBAL_RELATIVE_ALT;
+    uint8_t     frame=MAV_FRAME_GLOBAL_RELATIVE_ALT;//MAV_FRAME_GLOBAL
     uint16_t    command=MAV_CMD_NAV_WAYPOINT;
     uint8_t     current=0; 
     uint8_t     autocontinue=1;
-    float   param1=0.0f;
-    float   param2=0.0f;
-    float   param3=0.0f; 
-    float   param4=0.0f; 
-    float   x=wp->getLatitude();
-    float   y=wp->getLongitude();
+    float       param1=0.0f;
+    float       param2=0.0f;
+    float       param3=0.0f; 
+    float       param4=0.0f; 
+    float       x=wp->getLatitude();
+    float       y=wp->getLongitude();
     //float   def_alt = this->m_SavedHomePositionMsg.altitude;
     //def_alt /= 1000.0;
-    float   z=10.0;//wp->getAltitude();
+    float       z = 50;//wp->getAltitude()+10;
     uint8_t mission_type=0;
     //179	MAV_CMD_DO_SET_HOME
     //22	MAV_CMD_NAV_TAKEOFF

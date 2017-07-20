@@ -63,6 +63,29 @@ def GetWPList(mav,savefile):
         else:
             print(msg)
 
+def GetHomePositionWait(mav):
+    while True:
+        msg = mav.recv_msg()
+        if msg is None:
+            continue
+
+        if msg.name is "HOME_POSITION":
+            return msg
+        else:
+            print(msg)
+
+def GetCurrentGlobalPositionWait(mav):
+    print("Waiting on Global Position")
+    while True:
+        msg = mav.recv_msg()
+        if msg is None:
+            continue
+
+        if msg.name is "GLOBAL_POSITION_INT":
+            return msg
+        else:
+            print(msg)
+
 
 f = fifo()
 
@@ -145,6 +168,16 @@ ignore_list = ["ATTITUDE_QUATERNION","HIGHRES_IMU","ATTITUDE","GLOBAL_POSITION_I
                 "SYS_STATUS","BATTERY_STATUS","HEARTBEAT","GPS_RAW_INT","ALTITUDE","WIND_COV","EXTENDED_SYS_STATE",
                 "ESTIMATOR_STATUS","VIBRATION","HOME_POSITION"]
 GetWPList(mav,savefile=None)
+#sys.exit(1)
+#GetWPList(mav,savefile="Set2")
+SendFile = 'Set1'
+SendFile = 'Set2'
+
+
+globalpos = GetCurrentGlobalPositionWait(mav)
+print(globalpos)
+#sys.exit(1)
+
 # fileout = open('waypots.pckl','wb')
 # MAV_MISSION_ACCEPTED = 1
 # while True:
@@ -200,21 +233,32 @@ while True:
         print(msg.name + "->CLEAR")
         break
 
-fileout = open('waypots.pckl','rb')
+filesav = open(SendFile+'.csav','wb')
+
+
+fileout = open(SendFile,'rb')
 wp_count = pickle.load(fileout)
 print("File WP "+str(wp_count.count))
-
+if(filesav is not None):
+    filesav.write(str(wp_count.count)+"\n")
 savemsg = None
 for i in range(0,wp_count.count):
     msg = pickle.load(fileout)
-    #print(str(msg.seq) + " " + str(msg.x) + " " + str(msg.y) + " f " + str(msg.frame) + " cmd " + str(msg.command))
-    if(i == 0):
-        print(msg)
-        savemsg = msg
-        break
+    dataline = str(msg.x) + "," + str(msg.y) + "," + str(msg.z) + "," + str(msg.command) + "," + str(msg.param1)+'\n'
+    if (filesav is not None):
+        filesav.write(dataline)
+    print(dataline)
+    #if(i == 0):
+    #    print(msg)
+    #    savemsg = msg
+    #    break
 
 fileout.close()
 
+if (filesav is not None):
+    filesav.close()
+
+sys.exit(1)
 MAV_FRAME_MISSION = 2 #last WP
 MAV_FRAME_GLOBAL_RELATIVE_ALT = 3 #normal WP
 
@@ -237,8 +281,11 @@ MAV_CMD_DO_JUMP = 177 # Jump to the desired command in the mission list.  Repeat
 # z=savemsg.z#0
 
 
-fileout = open('waypots.pckl','rb')
+fileout = open(SendFile,'rb')
 wp_count = pickle.load(fileout)
+
+
+
 count = wp_count.count
 
 mav.mav.mission_count_send(target_system, target_component, count)
@@ -262,10 +309,20 @@ while True:
         print(msg.name)
         #mav.mav.mission_ack_send(target_system, target_component, type=MAV_MISSION_ACCEPTED)  # , mission_type=0)#type=msg.seq, mission_type=0)
         msg = pickle.load(fileout)
+
+
+        if(msg.command == 22):
+            msg.x = globalpos.lat/1e7
+            msg.y = globalpos.lon/1e7
+            msg.z = globalpos.alt/1000
+
         #target_system = msg.target_system
         target_component = msg.target_component
         seq = seqNUM
         frame = msg.frame
+        #if(SendFile=='Set2'):
+        #    command = 16
+        #else:
         command = msg.command
         current = msg.current
         autocontinue = msg.autocontinue
@@ -275,8 +332,8 @@ while True:
         param4 = msg.param4
         x = msg.x
         y = msg.y
-        z = msg.z
-        print("Send SEQ "+str(seqNUM))
+        z = 10 #msg.z
+        print("Send SEQ "+str(seqNUM) + " " + str(msg))
         mav.mav.mission_item_send(target_system, target_component, seq, frame, command, current,
                             autocontinue, param1, param2,
                             param3, param4, x, y, z)
@@ -288,7 +345,6 @@ while True:
     else:
         print(msg.name)
 #"COMMAND_ACK"
-
 
 fileout.close()
 
