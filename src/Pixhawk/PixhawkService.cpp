@@ -731,7 +731,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         {
                             COUT_INFO("Finished waypoint write, got ACK");
                             //Set active waypoint here
-                            MissionUpdate_SetActiveWaypoint(2);
+                            //MissionUpdate_SetActiveWaypoint(2);
                         }
                         break;
                     }
@@ -872,8 +872,10 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
     float   param3=0.0f; 
     float   param4=0.0f; 
     float   x=wp->getLatitude();
-    float   y=wp->getLongitude(); 
-    float   z=wp->getAltitude();
+    float   y=wp->getLongitude();
+    //float   def_alt = this->m_SavedHomePositionMsg.altitude;
+    //def_alt /= 1000.0;
+    float   z=10.0;//wp->getAltitude();
     uint8_t mission_type=0;
     //179	MAV_CMD_DO_SET_HOME
     //22	MAV_CMD_NAV_TAKEOFF
