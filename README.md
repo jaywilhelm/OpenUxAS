@@ -1,6 +1,6 @@
 Modified fork of OpenUxAS to communicate with the PX4/Pixhawk Autopilot.
 
-Developed by: Jay Wilhelm (Assistant Professor, Mechanical Engineering, Ohio University)
+Developed by: Jay Wilhelm [jwilhelm@ohio.edu] (Assistant Professor, Mechanical Engineering, Ohio University)
 
 Tested using SITL PX4 and JMAVSIM using built-in mission of waterway search for UxAS that removed second aircraft.
 
