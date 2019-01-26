@@ -20,6 +20,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
 namespace uxas
 {
@@ -52,14 +53,11 @@ private:
 
 public:
 
-    void
-    setZyreEnterMessageHandler(std::function<void(const std::string& zyreRemoteUuid, const std::unordered_map<std::string, std::string>& headerKeyValuePairs)>&& zyreEnterMessageHandler);
+    void setZyreEnterMessageHandler(std::function<void(const std::string& zyreRemoteUuid, const std::unordered_map<std::string, std::string>& headerKeyValuePairs)>&& zyreEnterMessageHandler);
 
-    void
-    setZyreExitMessageHandler(std::function<void(const std::string& zyreRemoteUuid)>&& zyreExitMessageHandler);
+    void setZyreExitMessageHandler(std::function<void(const std::string& zyreRemoteUuid)>&& zyreExitMessageHandler);
 
-    void
-    setZyreWhisperMessageHandler(std::function<void(const std::string& zyreRemoteUuid, const std::string& messagePayload)>&& zyreWhisperMessageHandler);
+    void setZyreWhisperMessageHandler(std::function<void(const std::string& zyreRemoteUuid, const std::string& messagePayload)>&& zyreWhisperMessageHandler);
 
     /**
      * Starts (or re-starts) Zyre node
