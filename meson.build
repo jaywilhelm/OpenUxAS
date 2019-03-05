@@ -181,6 +181,7 @@ libs = [
   lib_visilibity,
   lib_plans,
   lib_dpss,
+  lib_pixhawk,
 ]
 
 if get_option('afrl_internal')
