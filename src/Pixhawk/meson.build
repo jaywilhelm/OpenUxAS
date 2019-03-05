@@ -31,19 +31,14 @@ incs_pixhawk = [
 
 cpp_args = []
 cpp = meson.get_compiler('cpp')
+cpp_args_services = cpp_args
 
 if cpp.get_id() == 'msvc'
-  cpp_args += [
-  	'/std:c++14',
+  cpp_args_services += [
+    '/std:c++14',
 	'-DZMQ_DEFINED_STDINT',
-    '-DZMQ_STATIC',
+        '-DZMQ_STATIC',
 	'-DLIBCZMQ_STATIC',
-  ]
-else
-  cpp_args += [
-    '-std=c++11',
-    '-Wno-unused-function',
-    '-Wno-unused-variable',
   ]
 endif
 
@@ -53,6 +48,6 @@ lib_pixhawk = static_library(
   dependencies: [
     dep_boost,
   ],
-  cpp_args: cpp_args,
+  cpp_args: cpp_args_services,
   include_directories: incs_pixhawk,
 )
