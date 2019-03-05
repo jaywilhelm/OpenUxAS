@@ -94,10 +94,10 @@ namespace task
  *  - afrl::cmasi::EntityConfiguration
  *  - afrl::cmasi::AirVehicleState
  *  - afrl::cmasi::AirVehicleConfiguration
- *  - afrl::impact::GroundVehicleState
- *  - afrl::impact::GroundVehicleConfiguration
- *  - afrl::impact::SurfaceVehicleState
- *  - afrl::impact::SurfaceVehicleConfiguration
+ *  - afrl::vehicles::GroundVehicleState
+ *  - afrl::vehicles::GroundVehicleConfiguration
+ *  - afrl::vehicles::SurfaceVehicleState
+ *  - afrl::vehicles::SurfaceVehicleConfiguration
  *  - uxas::messages::task::UniqueAutomationRequest
  *  - uxas::messages::task::UniqueAutomationResponse
  *  - uxas::messages::route::RoutePlanResponse
@@ -126,7 +126,7 @@ public:
     static const std::vector<std::string>
     s_registryServiceTypeNames()
     {
-        std::vector<std::string> registryServiceTypeNames = {s_typeName(), "afrl.cmasi.PointSearchTask"};
+        std::vector<std::string> registryServiceTypeNames = {s_typeName(), "afrl.cmasi.PointSearchTask", "afrl.famus.PointSearchTask"};
         return (registryServiceTypeNames);
     };
     
@@ -166,16 +166,12 @@ public: //virtual
 
 private:
     bool isCalculateOption(const int64_t& taskId, int64_t& optionId, const double& wedgeHeading_rad);
-private:
+
+    bool isProcessTaskImplementationRouteResponse(std::shared_ptr<uxas::messages::task::TaskImplementationResponse>& taskImplementationResponse,
+                std::shared_ptr<TaskOptionClass>& taskOptionClass,
+                int64_t& waypointId, std::shared_ptr<uxas::messages::route::RoutePlan>& route) override;
+
     std::shared_ptr<afrl::cmasi::PointSearchTask> m_pointSearchTask;
-
-public:
-
-
-private:
-
-
-
 
 };
 

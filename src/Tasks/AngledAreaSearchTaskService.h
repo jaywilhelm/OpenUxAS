@@ -53,10 +53,10 @@ namespace task
  *  - afrl::cmasi::EntityConfiguration
  *  - afrl::cmasi::AirVehicleState
  *  - afrl::cmasi::AirVehicleConfiguration
- *  - afrl::impact::GroundVehicleState
- *  - afrl::impact::GroundVehicleConfiguration
- *  - afrl::impact::SurfaceVehicleState
- *  - afrl::impact::SurfaceVehicleConfiguration
+ *  - afrl::vehicles::GroundVehicleState
+ *  - afrl::vehicles::GroundVehicleConfiguration
+ *  - afrl::vehicles::SurfaceVehicleState
+ *  - afrl::vehicles::SurfaceVehicleConfiguration
  *  - uxas::messages::task::UniqueAutomationRequest
  *  - uxas::messages::task::UniqueAutomationResponse
  *  - uxas::messages::route::RoutePlanResponse
@@ -136,7 +136,7 @@ public: //virtual
     virtual void buildTaskPlanOptions() override;
 
 private:
-    bool isCalculateOption(const std::vector<int64_t>& eligibleEntities,
+    bool isCalculateOption(const int64_t& eligibleEntity,
                            const double& nominalAltitude_m, const double& nominalSpeed_mps,
                            const double& searchHeading_rad, const double& elevationLookAngle_rad,
                            int64_t& optionId, std::string & algebraString); //NOTE:: optionId can be returned, changed, algebra string is returned
@@ -149,6 +149,12 @@ private:
 
 private:
     std::shared_ptr<afrl::impact::AngledAreaSearchTask> m_angledAreaSearchTask;
+    std::shared_ptr<afrl::impact::AreaOfInterest> m_areaOfInterest;
+
+    int64_t lane_spacing_min_m = -1;
+    int64_t lane_spacing_max_m = -1;
+
+    std::unordered_map<int64_t, std::set<int64_t>> m_entityIDsVsTaskOptions;
 
 public:
 

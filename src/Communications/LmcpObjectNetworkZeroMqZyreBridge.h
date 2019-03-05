@@ -233,6 +233,12 @@ private:
     ZeroMqZyreBridge m_zeroMqZyreBridge;
     
 	std::string m_zyreNetworkDevice = std::string("wlan0");
+   // the zyre endpoint for use with gossip. If not empty, gossip will be used for discovery
+	std::string m_zyreEndpoint = std::string();
+    // the "well known" gossip end point
+	std::string m_gossipEndpoint = std::string();
+    // should this instance of zyre bind (or connect) to the gossip endpoint
+	bool m_isGossipBind{false};
     std::unique_ptr<std::unordered_map<std::string, std::string>> m_headerKeyValuePairs;
 	std::string m_extSubAddressDelimiter = std::string(";");
     
@@ -244,6 +250,7 @@ private:
     std::set<std::string> m_initialPersistentLocalSubscriptionAddresses;
     std::set<std::string> m_nonImportForwardAddresses;
     std::set<std::string> m_nonExportForwardAddresses;
+    bool m_isConsideredSelfGenerated{false};
 };
 
 }; //namespace communications

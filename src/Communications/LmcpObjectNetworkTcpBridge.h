@@ -16,6 +16,7 @@
 #include <atomic>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <mutex>
 #include <thread>
 #include <set>
@@ -140,8 +141,9 @@ private:
      * than the external sender. This can be used when connected directly to a vehicle 
      * simulation where the messages received would be considered self-generated in
      * normal operation. */
-    bool m_isConsideredSelfGenerated{false};
+    bool m_isConsideredSelfGenerated{true};
     
+    std::map<std::string, std::string> m_messageAddressToAlias;
 };
 
 }; //namespace communications

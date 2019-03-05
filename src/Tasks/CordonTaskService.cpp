@@ -220,12 +220,11 @@ CordonTaskService::processReceivedLmcpMessageTask(std::shared_ptr<avtas::lmcp::O
             if (egressRouteResponse->getResponseID() == m_task->getTaskID())
             {
                 // set/reset task plan options
-                m_taskPlanOptions = std::make_shared<uxas::messages::task::TaskPlanOptions>();
                 m_taskPlanOptions->setTaskID(m_task->getTaskID());
                 m_optionIdVsTaskOptionClass.clear();
 
                 int64_t locationId = 1;
-                int64_t optionId = 1;
+                int64_t optionId = TaskOptionClass::m_firstOptionId;
                 std::vector<int64_t> locationIds;
                 for (auto& location : egressRouteResponse->getNodeLocations())
                 {
@@ -296,7 +295,7 @@ void CordonTaskService::calculateOption(const std::vector<int64_t>& eligibleEnti
         taskOption->setStartHeading(0.0); // TODO: use heading from egress route response
         taskOption->setEndLocation(location->clone());
         taskOption->setEndHeading(0.0);
-        auto pTaskOption = std::shared_ptr<uxas::messages::task::TaskOption>(taskOption);
+        auto pTaskOption = std::shared_ptr<uxas::messages::task::TaskOption>(taskOption->clone());
         m_optionIdVsTaskOptionClass.insert(std::make_pair(optionId, std::make_shared<TaskOptionClass>(pTaskOption)));
         m_taskPlanOptions->getOptions().push_back(taskOption);
 

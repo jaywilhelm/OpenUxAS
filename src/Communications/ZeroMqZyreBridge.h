@@ -13,6 +13,7 @@
 #include "UxAS_Zyre.h"
 
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -20,7 +21,6 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <functional>
 
 namespace uxas
 {
@@ -53,21 +53,28 @@ private:
 
 public:
 
-    void setZyreEnterMessageHandler(std::function<void(const std::string& zyreRemoteUuid, const std::unordered_map<std::string, std::string>& headerKeyValuePairs)>&& zyreEnterMessageHandler);
+    void
+    setZyreEnterMessageHandler(std::function<void(const std::string& zyreRemoteUuid, const std::unordered_map<std::string, std::string>& headerKeyValuePairs)>&& zyreEnterMessageHandler);
 
-    void setZyreExitMessageHandler(std::function<void(const std::string& zyreRemoteUuid)>&& zyreExitMessageHandler);
+    void
+    setZyreExitMessageHandler(std::function<void(const std::string& zyreRemoteUuid)>&& zyreExitMessageHandler);
 
-    void setZyreWhisperMessageHandler(std::function<void(const std::string& zyreRemoteUuid, const std::string& messagePayload)>&& zyreWhisperMessageHandler);
+    void
+    setZyreWhisperMessageHandler(std::function<void(const std::string& zyreRemoteUuid, const std::string& messagePayload)>&& zyreWhisperMessageHandler);
 
     /**
      * Starts (or re-starts) Zyre node
      * @param zyreNetworkDevice
+     * @param zyreEndpoint
+     * @param gossipEndpoint
+     * @param isGossipBind
      * @param zyreNodeId
      * @param headerKeyValuePairs
      * @return 
      */
     bool
-    start(const std::string& zyreNetworkDevice, const std::string& zyreNodeId, const std::unique_ptr<std::unordered_map<std::string, std::string>>& headerKeyValuePairs);
+    start(const std::string& zyreNetworkDevice, const std::string& zyreEndpoint, const std::string& gossipEndpoint, const bool& isGossipBind,
+                         const std::string& zyreNodeId, const std::unique_ptr<std::unordered_map<std::string, std::string>>& headerKeyValuePairs);
     
     bool
     terminate();
@@ -109,6 +116,12 @@ private:
 
     /** \brief Specifies network device used by zyre for communication */
 	std::string m_zyreNetworkDevice = std::string("wlan0");
+   // the zyre endpoint for use with gossip. If not empty, gossip will be used for discovery
+	std::string m_zyreEndpoint = std::string();
+    // the "well known" gossip end point
+	std::string m_gossipEndpoint = std::string();
+    // should this instance of zyre bind (or connect) to the gossip endpoint
+	bool m_isGossipBind{false};
     std::string m_zyreNodeId;
     zyre_t* m_zyreNode{nullptr};
     

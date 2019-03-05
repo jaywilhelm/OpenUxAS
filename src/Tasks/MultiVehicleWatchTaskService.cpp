@@ -27,8 +27,8 @@
 #include "afrl/cmasi/MissionCommand.h"
 #include "afrl/cmasi/GimbalConfiguration.h"
 #include "afrl/cmasi/AirVehicleConfiguration.h"
-#include "afrl/impact/GroundVehicleConfiguration.h"
-#include "afrl/impact/SurfaceVehicleConfiguration.h"
+#include "afrl/vehicles/GroundVehicleConfiguration.h"
+#include "afrl/vehicles/SurfaceVehicleConfiguration.h"
 #include "uxas/messages/task/TaskImplementationResponse.h"
 #include "uxas/messages/task/TaskOption.h"
 #include "uxas/messages/route/RouteRequest.h"
@@ -96,28 +96,9 @@ MultiVehicleWatchTaskService::configureTask(const pugi::xml_node& ndComponent)
     } //isSuccessful
     if (isSuccessful)
     {
-        pugi::xml_node entityStates = ndComponent.child(STRING_XML_ENTITY_STATES);
-        if (entityStates)
+        if (m_entityStates.find(m_MultiVehicleWatchTask->getWatchedEntityID()) != m_entityStates.end())
         {
-            for (auto ndEntityState = entityStates.first_child(); ndEntityState; ndEntityState = ndEntityState.next_sibling())
-            {
-
-                std::shared_ptr<afrl::cmasi::EntityState> entityState;
-                std::stringstream stringStream;
-                ndEntityState.print(stringStream);
-                avtas::lmcp::Object* object = avtas::lmcp::xml::readXML(stringStream.str());
-                if (object != nullptr)
-                {
-                    entityState.reset(static_cast<afrl::cmasi::EntityState*> (object));
-                    object = nullptr;
-
-                    if (entityState->getID() == m_MultiVehicleWatchTask->getWatchedEntityID())
-                    {
-                        m_watchedEntityStateLast = entityState;
-                    }
-                    m_idVsEntityState[entityState->getID()] = entityState;
-                }
-            }
+            m_watchedEntityStateLast = m_entityStates[m_MultiVehicleWatchTask->getWatchedEntityID()];
         }
 
     } //if(isSuccessful)
@@ -246,19 +227,19 @@ void MultiVehicleWatchTaskService::activeEntityState(const std::shared_ptr<afrl:
 std::shared_ptr<afrl::cmasi::VehicleActionCommand> MultiVehicleWatchTaskService::CalculateGimbalActions(const std::shared_ptr<afrl::cmasi::EntityState>& entityState, double lat, double lon)
 {
     std::shared_ptr<afrl::cmasi::VehicleActionCommand> caction(new afrl::cmasi::VehicleActionCommand);
-
+    caction->setVehicleID(entityState->getID());
     double surveyRadius = 300.0; // default 300 meters, circular
     double surveySpeed = entityState->getGroundspeed();
     auto surveyType = afrl::cmasi::LoiterType::Circular;
     std::vector<int64_t> gimbalId;
 
-    if (m_idVsEntityConfiguration.find(entityState->getID()) != m_idVsEntityConfiguration.end())
+    if (m_entityConfigurations.find(entityState->getID()) != m_entityConfigurations.end())
     {
-        surveySpeed = m_idVsEntityConfiguration[entityState->getID()]->getNominalSpeed();
+        surveySpeed = m_entityConfigurations[entityState->getID()]->getNominalSpeed();
         // find all gimbals to steer
-        for (size_t a = 0; a < m_idVsEntityConfiguration[entityState->getID()]->getPayloadConfigurationList().size(); a++)
+        for (size_t a = 0; a < m_entityConfigurations[entityState->getID()]->getPayloadConfigurationList().size(); a++)
         {
-            auto payload = m_idVsEntityConfiguration[entityState->getID()]->getPayloadConfigurationList().at(a);
+            auto payload = m_entityConfigurations[entityState->getID()]->getPayloadConfigurationList().at(a);
             if (afrl::cmasi::isGimbalConfiguration(payload))
             {
                 gimbalId.push_back(payload->getPayloadID());
@@ -266,15 +247,15 @@ std::shared_ptr<afrl::cmasi::VehicleActionCommand> MultiVehicleWatchTaskService:
         }
 
         // calculate proper radius
-        if (afrl::impact::isGroundVehicleConfiguration(m_idVsEntityConfiguration[entityState->getID()].get()) ||
-                afrl::impact::isSurfaceVehicleConfiguration(m_idVsEntityConfiguration[entityState->getID()].get()))
+        if (afrl::vehicles::isGroundVehicleConfiguration(m_entityConfigurations[entityState->getID()].get()) ||
+                afrl::vehicles::isSurfaceVehicleConfiguration(m_entityConfigurations[entityState->getID()].get()))
         {
             surveyRadius = 0.0;
             surveyType = afrl::cmasi::LoiterType::Hover;
         }
-        else if (afrl::cmasi::isAirVehicleConfiguration(m_idVsEntityConfiguration[entityState->getID()].get()))
+        else if (afrl::cmasi::isAirVehicleConfiguration(m_entityConfigurations[entityState->getID()].get()))
         {
-            double speed = m_idVsEntityConfiguration[entityState->getID()]->getNominalSpeed();
+            double speed = m_entityConfigurations[entityState->getID()]->getNominalSpeed();
             double bank = 25.0 * n_Const::c_Convert::dDegreesToRadians();
             // Note: R = V/omega for coordinated turn omega = g*tan(phi)/V
             // Therefore: R = V^2/(g*tan(phi))
