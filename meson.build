@@ -1,10 +1,23 @@
 project('UxAS', 'c', 'cpp', subproject_dir: '3rd')
 
+cpp = meson.get_compiler('cpp')
 conf = configuration_data()
+os = target_machine.system()
+
+if cpp.get_id() == 'msvc'
+  cpp_args = [
+    '/std:c++14',
+  ]
+else
+  cpp_args = [
+    '-std=c++11',
+    '-Wno-unused-function',
+    '-Wno-unused-variable',
+  ]
+endif
 
 link_args = []
 
-os = target_machine.system()
 if os.startswith('linux')
   add_project_arguments('-DLINUX', language: ['c', 'cpp'])
   link_args += ['-lrt', '-ldl']
@@ -14,64 +27,130 @@ elif os == 'windows'
   link_args += []
 endif
 
-if get_option('afrl_internal')
-  subdir('UxAS-afrl_internal')
+# handle boost carefully, require version >= 1.67
+if os == 'windows'
+  # require windows install of boost, no fallback
+  dep_boost = dependency(
+    'boost',
+    modules: ['date_time', 'filesystem', 'regex', 'system'],
+  )
+elif get_option('force_dep_download')
+  dep_boost = subproject('boost').get_variable('dep')
+elif not cpp.has_header('boost/contract.hpp')
+  dep_boost = subproject('boost').get_variable('dep')
+else
+  dep_boost = dependency(
+    'boost',
+    modules: ['date_time', 'filesystem', 'regex', 'system'],
+    fallback: ['boost', 'dep'],
+  )
 endif
 
-# https://github.com/zeromq/{zeromq, czmq, cppzmq, zyre}
-sub_zeromq              = subproject('zeromq')
-lib_zeromq              = sub_zeromq.get_variable('lib')
+if get_option('force_dep_download')
+  dep_zeromq    = subproject('zeromq').get_variable('dep')
+  dep_czmq      = subproject('czmq').get_variable('dep')
+  dep_cppzmq    = subproject('cppzmq').get_variable('dep')
+  dep_zyre      = subproject('zyre').get_variable('dep')
+  dep_sqlite3   = subproject('sqlite3').get_variable('dep')
+  dep_sqlitecpp = subproject('sqlitecpp').get_variable('dep')
+  dep_zlib      = subproject('zlib').get_variable('dep')
+  dep_minizip   = subproject('minizip').get_variable('dep')
+else
+  # https://github.com/zeromq/{zeromq, czmq, cppzmq, zyre}
+  dep_zeromq = dependency(
+    'libzmq',
+    fallback: ['zeromq', 'dep'],
+  )
 
-sub_czmq                = subproject('czmq')
-lib_czmq                = sub_czmq.get_variable('lib')
+  dep_czmq = dependency(
+    'libczmq',
+    fallback: ['czmq', 'dep'],
+  )
 
-sub_cppzmq              = subproject('cppzmq')
-lib_cppzmq              = sub_cppzmq.get_variable('lib')
+  if cpp.has_header('zmq.hpp')
+    # cppzmq is a header-only dependency, so if we already have the
+    # header in place, we don't need to actually change anything
+    dep_cppzmq = [] #declare_dependency()
+  else
+    dep_cppzmq = subproject('cppzmq').get_variable('dep')
+  endif
 
-sub_zyre                = subproject('zyre')
-lib_zyre                = sub_zyre.get_variable('lib')
+  dep_zyre = dependency(
+    'libzyre',
+    fallback: ['zyre', 'dep'],
+  )
 
-# Windows-only:
-# https://github.com/jedisct1/libsodium
+  # https://www.sqlite.org/src
+  dep_sqlite3 = dependency(
+    'sqlite3',
+    static: true,
+    required: false,
+  )
 
-# https://www.sqlite.org/src
-sub_sqlite3             = subproject('sqlite3')
-lib_sqlite3             = sub_sqlite3.get_variable('lib')
+  # force native build of SQLite3 if load extension function is unavailable
+  # required for SQLiteCpp
+  if not dep_sqlite3.found() or not cpp.has_function('sqlite3_enable_load_extension', dependencies: dep_sqlite3)
+    dep_sqlite3 = subproject('sqlite3').get_variable('dep')
+  endif
 
-# https://github.com/SRombauts/SQLiteCpp
-sub_sqlitecpp           = subproject('sqlitecpp')
-lib_sqlitecpp           = sub_sqlitecpp.get_variable('lib')
+  # SQLiteCpp is unfortunately not packaged with pkg-config
+  lib_sqlitecpp = cpp.find_library('SQLiteCpp', required: false)
+  if lib_sqlitecpp.found() and cpp.has_header('SQLiteCpp/SQLiteCpp.h')
+    dep_sqlitecpp = lib_sqlitecpp
+  else
+    # https://github.com/SRombauts/SQLiteCpp
+    dep_sqlitecpp = subproject('sqlitecpp').get_variable('dep')
+  endif
 
-# https://github.com/madler/zlib
-sub_zlib                = subproject('zlib')
-lib_zlib                = sub_zlib.get_variable('lib')
+  # https://github.com/madler/zlib
+  dep_zlib = dependency(
+    'zlib',
+    fallback: ['zlib', 'dep'],
+  )
 
-# https://github.com/nmoinvaz/minizip
-sub_minizip             = subproject('minizip')
-lib_minizip             = sub_minizip.get_variable('lib')
-
-dep_boost = dependency(
-  'boost',
-  modules: ['filesystem', 'regex', 'system'],
-  static: true,
-  fallback: ['boost', 'dep_boost'],
-)
+  # https://github.com/nmoinvaz/minizip
+  dep_minizip = dependency(
+    'minizip',
+    fallback: ['minizip', 'dep'],
+  )
+endif
 
 # https://github.com/mikalhart/TinyGPS
 # The TinyGPS repo captured by UxAS does not seem to be available.
 # The repo contains *only* version 13, while UxAS uses what appears
 # to be version 12. Perhaps contact the author...?
-sub_tinygps             = subproject('TinyGPS')
-lib_tinygps             = sub_tinygps.get_variable('lib')
+dep_tinygps = subproject('TinyGPS').get_variable('dep')
 
 # https://github.com/wjwwood/serial
-sub_serial              = subproject('serial')
-lib_serial              = sub_serial.get_variable('lib')
+dep_serial = subproject('serial-1.2.1').get_variable('dep')
 
 # https://github.com/zeux/pugixml
 # No versions of this pugixml repo are compatible.
-sub_pugixml             = subproject('PugiXML')
-lib_pugixml             = sub_pugixml.get_variable('lib')
+dep_pugixml = subproject('PugiXML').get_variable('dep')
+
+if get_option('afrl_internal')
+  add_project_arguments('-DAFRL_INTERNAL_ENABLED', language: ['c', 'cpp'])
+endif
+
+if get_option('afrl_internal')
+  subdir('UxAS-afrl_internal')
+endif
+
+deps = [
+  dependency('threads'),
+  dep_boost,
+  dep_zeromq,
+  dep_czmq,
+  dep_cppzmq,
+  dep_zyre,
+  dep_sqlite3,
+  dep_sqlitecpp,
+  dep_zlib,
+  dep_minizip,
+  dep_tinygps,
+  dep_serial,
+  dep_pugixml,
+]
 
 subdir('src/DPSS')
 
@@ -93,29 +172,16 @@ subdir('src/Plans')
 
 subdir('src/Pixhawk')
 
-dep_thread              = dependency('threads')
-
 libs = [
   lib_services,
   lib_tasks,
   lib_lmcp,
   lib_uxas_communications,
-  lib_zeromq,
-  lib_zyre,
-  lib_czmq,
-  lib_cppzmq,
   lib_utilities,
-  lib_sqlitecpp,
-  lib_sqlite3,
-  lib_pugixml,
   lib_visilibity,
-  lib_serial,
   lib_plans,
-  lib_tinygps,
-  lib_minizip,
-  lib_zlib,
   lib_dpss,
-  lib_pixhawk
+  lib_pixhawk,
 ]
 
 if get_option('afrl_internal')
@@ -125,24 +191,9 @@ endif
 # creates src/Includes/config.h
 subdir('src/Includes')
 
-deps = [
-  dep_thread,
-  dep_boost,
-]
-
-# OpenGL, specifically the GLU library
-deps += [dependency('gl')]
-if os.startswith('linux')
-  deps += [dependency('glu')]
-elif os == 'windows'
-  deps += [cpp.find_library('glu32')]
-endif
-
-cpp_args = []
-if cpp.get_id() == 'msvc'
-  cpp_args += ['/std:c++14']
-else
-  cpp_args += ['-std=c++11']
+if get_option('afrl_internal')
+  deps += deps_internal
+  link_args += link_args_internal
 endif
 
 executable(
@@ -157,12 +208,7 @@ executable(
       'src/Communications',
       'src/Includes',
       'src/Services',
-      '3rd/cppzmq-4.2.1',
-      '3rd/zeromq-4.1.1/include',
-      '3rd/PugiXML/src',
-      '3rd/sqlite-amalgamation-3120200',
-      '3rd/SQLiteCpp-1.3.1/include',
-      'src/Pixhawk'
+      'src/Pixhawk',
     ),
     incs_lmcp,
   ],
@@ -171,3 +217,7 @@ executable(
 )
 
 subdir('tests')
+
+if get_option('afrl_internal')
+  subdir('UxAS-afrl_internal/tests')
+endif

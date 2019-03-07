@@ -12,6 +12,8 @@
 // print outs
 #include <iostream>     // std::cout, cerr, etc
 #include "serial/serial.h"
+//#include "SerialHelper.h"
+
 // convenience definitions for the option strings
 #define STRING_XML_STRING_TO_SEND "StringToSend"
 #define STRING_XML_SEND_PERIOD_MS "SendPeriod_ms"

@@ -12,16 +12,16 @@
 
 #include "UxAS_LogManager.h"
 
-#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_BRIDGE
-#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_CCA
-#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_KESTREL
-#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_MESSAGING
-#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_TESTFRAMEWORK
-#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_TIME
+//#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_BRIDGE
+//#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_CCA
+//#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_KESTREL
+//#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_MESSAGING
+//#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_TESTFRAMEWORK
+//#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED_TIME
 
-#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED
-#define UXAS_DEBUG_LOGGING_ENABLED
-#define UXAS_INFO_LOGGING_ENABLED
+//#define UXAS_DEBUG_VERBOSE_LOGGING_ENABLED
+//#define UXAS_DEBUG_LOGGING_ENABLED
+//#define UXAS_INFO_LOGGING_ENABLED
 #define UXAS_WARN_LOGGING_ENABLED
 #define UXAS_ERROR_LOGGING_ENABLED
 
@@ -166,10 +166,12 @@
  * class and function name (e.g., ServiceBase::initialize).
  */
 #define UXAS_LOG_INFORM uxas::common::log::LogManager::getInstance().log<uxas::common::log::LogSeverityLevel::UXASINFO>
+#define IMPACT_INFORM uxas::common::log::LogManager::getInstance().log<uxas::common::log::LogSeverityLevel::UXASINFO>
 #else
 /** \brief Log information message function disabled.
  */
 #define UXAS_LOG_INFORM(...)
+#define IMPACT_INFORM uxas::common::log::LogManager::getInstance().log<uxas::common::log::LogSeverityLevel::UXASINFO>
 #endif
 
 #ifdef UXAS_WARN_LOGGING_ENABLED

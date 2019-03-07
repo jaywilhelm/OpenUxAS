@@ -487,11 +487,46 @@ ServiceManager::processReceivedLmcpMessage(std::unique_ptr<uxas::communications:
     if (uxas::messages::uxnative::isCreateNewService(receivedLmcpMessage->m_object.get()))
     {
         auto createNewService = std::static_pointer_cast<uxas::messages::uxnative::CreateNewService>(receivedLmcpMessage->m_object);
-        std::string xmlConfig = "";
-        for (auto& xmlmsg : createNewService->getXmlConfiguration())
+        std::string xmlConfig = createNewService->getXmlConfiguration() + "\n";
+        uxas::common::StringUtil::ReplaceAll(xmlConfig, "&lt;", "<");
+        uxas::common::StringUtil::ReplaceAll(xmlConfig, "&gt;", ">");
+        for (auto& msg : createNewService->getEntityConfigurations())
         {
-            xmlConfig += xmlmsg;
+            xmlConfig += msg->toXML() + "\n";
         }
+        for (auto& msg : createNewService->getEntityStates())
+        {
+            xmlConfig += msg->toXML() + "\n";
+        }
+        for (auto& msg : createNewService->getMissionCommands())
+        {
+            xmlConfig += msg->toXML() + "\n";
+        }
+        for (auto& msg : createNewService->getAreas())
+        {
+            xmlConfig += msg->toXML() + "\n";
+        }
+        for (auto& msg : createNewService->getLines())
+        {
+            xmlConfig += msg->toXML() + "\n";
+        }
+        for (auto& msg : createNewService->getPoints())
+        {
+            xmlConfig += msg->toXML() + "\n";
+        }
+        for (auto& msg : createNewService->getKeepInZones())
+        {
+            xmlConfig += msg->toXML() + "\n";
+        }
+        for (auto& msg : createNewService->getKeepOutZones())
+        {
+            xmlConfig += msg->toXML() + "\n";
+        }
+        for (auto& msg : createNewService->getOperatingRegions())
+        {
+            xmlConfig += msg->toXML() + "\n";
+        }
+        xmlConfig += "</Service>";
         if (createService(xmlConfig,createNewService->getServiceID()))
         {
             UXAS_LOG_INFORM(s_typeName(), "::processReceivedLmcpMessage created service using XML configuration from message payload");

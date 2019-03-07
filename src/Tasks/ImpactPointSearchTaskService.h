@@ -27,6 +27,9 @@
 #include "uxas/messages/task/TaskPlanOptions.h"
 #include "uxas/messages/task/TaskImplementationRequest.h"
 #include "uxas/messages/route/RoutePlan.h"
+#include "afrl/cmasi/KeepOutZone.h"
+#include <afrl/vehicles/SurfaceVehicleState.h>
+#include "visilibity.h"
 
 #include <cstdint> // int64_t
 #include <unordered_set>
@@ -94,10 +97,10 @@ namespace task
  *  - afrl::cmasi::EntityConfiguration
  *  - afrl::cmasi::AirVehicleState
  *  - afrl::cmasi::AirVehicleConfiguration
- *  - afrl::impact::GroundVehicleState
- *  - afrl::impact::GroundVehicleConfiguration
- *  - afrl::impact::SurfaceVehicleState
- *  - afrl::impact::SurfaceVehicleConfiguration
+ *  - afrl::vehicles::GroundVehicleState
+ *  - afrl::vehicles::GroundVehicleConfiguration
+ *  - afrl::vehicles::SurfaceVehicleState
+ *  - afrl::vehicles::SurfaceVehicleConfiguration
  *  - uxas::messages::task::UniqueAutomationRequest
  *  - uxas::messages::task::UniqueAutomationResponse
  *  - uxas::messages::route::RoutePlanResponse
@@ -174,7 +177,8 @@ private:
     bool isCalculateOption(const int64_t& taskId, int64_t& optionId, const double& wedgeHeading_rad);
 private:
     std::shared_ptr<afrl::impact::ImpactPointSearchTask> m_pointSearchTask;
-
+    std::shared_ptr<afrl::impact::PointOfInterest> m_pointOfInterest;
+    std::unordered_map < int64_t, std::shared_ptr<VisiLibity::Polygon > > m_KeepOutZoneIDVsPolygon;
 };
 
 }; //namespace task

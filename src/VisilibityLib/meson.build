@@ -3,7 +3,8 @@ lib_visilibity = static_library(
   [
     'visilibity.cpp',
   ],
-  cpp_args: [
-    '-std=c++11',
+  dependencies: [
+    dep_boost,
   ],
+  cpp_args: cpp_args,
 )

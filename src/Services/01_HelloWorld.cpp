@@ -16,6 +16,7 @@
  * <Service Type="HelloWorld" StringToSend="Option_01" SendPeriod_ms="36" />
  * 
  */
+
 // include header for this service
 #include "01_HelloWorld.h"
 
@@ -44,10 +45,7 @@ HelloWorld::s_registrar(HelloWorld::s_registryServiceTypeNames());
 
 // service constructor
 HelloWorld::HelloWorld()
-: ServiceBase(HelloWorld::s_typeName(), HelloWorld::s_directoryName()) 
-{ 
-    int x=4;
-};
+: ServiceBase(HelloWorld::s_typeName(), HelloWorld::s_directoryName()) { };
 
 // service destructor
 HelloWorld::~HelloWorld() { };

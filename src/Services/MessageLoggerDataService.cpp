@@ -21,15 +21,6 @@
 #include <thread>
 #include <cstdint>
 
-#define STRING_XML_LOG_PATH "LogPath"
-#define DEFAULT_LOG_PATH "LogFiles"
-#define DEFAULT_SUB_DIRECTORY_PREFIX "Log"
-#define STRING_XML_FILES_PER_SUBDIRECTORY "FilesPerSubDirectory"
-#define DEFAULT_FILES_PER_SUBDIRECTORY (500)
-
-#define STRING_XML_LOG_MESSAGE "LogMessage"
-#define STRING_XML_MESSAGES_TO_SKIP "NumberMessagesToSkip"
-
 namespace uxas
 {
 namespace service
@@ -77,7 +68,7 @@ MessageLoggerDataService::configure(const pugi::xml_node& serviceXmlNode)
     
     for (pugi::xml_node currentXmlNode = serviceXmlNode.first_child(); currentXmlNode; currentXmlNode = currentXmlNode.next_sibling())
     {
-        if (std::string(STRING_XML_LOG_MESSAGE) == currentXmlNode.name())
+        if (std::string("LogMessage") == currentXmlNode.name())
         {
             std::string messageType = currentXmlNode.attribute(uxas::common::StringConstant::MessageType().c_str()).value();
             if (!messageType.empty())
@@ -94,10 +85,12 @@ bool
 MessageLoggerDataService::initialize()
 {
     bool isDatabaseLoggerSuccess{true};
+    auto isTimeStamp = uxas::common::ConfigurationManager::getIsDataTimeStamp();
+
     if (isDatabaseLogger)
     {
         m_databaseLogger = uxas::common::log::LoggerBase::instantiateLogger(uxas::common::log::DatabaseLogger::s_typeName());
-        isDatabaseLoggerSuccess = m_databaseLogger->configure(m_workDirectoryPath + "messageLog", m_isDataTimestamp, false, m_logDatabaseMessageCountLimit);
+        isDatabaseLoggerSuccess = m_databaseLogger->configure(m_workDirectoryPath + "messageLog", isTimeStamp, false, m_logDatabaseMessageCountLimit);
 
         if (isDatabaseLoggerSuccess)
         {
@@ -136,7 +129,7 @@ MessageLoggerDataService::initialize()
     if (isFileLogger)
     {
         m_fileLogger = uxas::common::log::LoggerBase::instantiateLogger(uxas::common::log::FileLogger::s_typeName());
-        isFileLoggerSuccess = m_fileLogger->configure(m_workDirectoryPath + "messageLog", m_isDataTimestamp, m_logFileMessageCountLimit);
+        isFileLoggerSuccess = m_fileLogger->configure(m_workDirectoryPath + "messageLog", isTimeStamp, m_logFileMessageCountLimit);
 
         if (isFileLoggerSuccess)
         {

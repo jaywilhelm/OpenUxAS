@@ -45,7 +45,9 @@ using namespace std;
 //using std::ostream;
 #include <map>
 
+// TODO: remove all waypoint mangling
 #define TASK_ID_MULTIPLIER 10000    // use this to make the waypoint index visible in the mangeled id (up to 9999 waypoints)
+
 namespace n_FrameworkLib
 {
     
@@ -69,7 +71,7 @@ public:    //constructors
                     double reNorth=0.0,double reEast=0.0,double reAltitude=0.0,
                     double rePhi=0.0,double reTheta=0.0,double rePsi=0.0,
                     double reVelocity=50.0)
-        :   CPosition(reNorth,reEast,m_altitude_m),
+        :   CPosition(reNorth,reEast,reAltitude),
 			m_reTime_sec(reTime),
             m_rePhi_deg(rePhi),m_reTheta_deg(reTheta),m_rePsi_deg(rePsi),
             m_speed_mps(reVelocity)
@@ -614,33 +616,6 @@ public:    //constructors
         }
     };
 
-#ifdef STEVETEST
-    int64_t dwObjID_IndexToWptID(const int& iObjectiveID,const int& iIndex)
-    {
-        return(MAKELONG_l(iIndex,static_cast<WORD_t>(iObjectiveID)));
-    };
-
-    const int64_t dwObjID_IndexToWptID(const int& iObjectiveID,const int& iIndex) const
-    {
-        return(MAKELONG_l(iIndex,static_cast<WORD_t>(iObjectiveID)));
-    };
-
-    int iWptID_ToIndex(const int64_t& dwID)
-    {
-        return(static_cast<int>(LOWWORD_l(dwID)));
-    };
-
-    int iWptID_ToObjectiveID(const int64_t& dwID)
-    {
-        return(static_cast<int>(HIWORD_l(dwID)));
-    };
-#else    //stevetest
-    //int64_t dwObjID_IndexToWptID(const int& iObjectiveID,const int& iIndex)
-    //{
-    //    int64_t dwReturn = (iObjectiveID*TASK_ID_MULTIPLIER) + iIndex;
-    //    return(dwReturn);
-    //};
-
     const int64_t dwObjID_IndexToWptID(const int& iObjectiveID, const int& iIndex) const
     {
 
@@ -663,7 +638,6 @@ public:    //constructors
         int iReturn = static_cast<int>(dwID / TASK_ID_MULTIPLIER);
         return(iReturn);
     };
-#endif    // STEVETEST
 
 
 public:

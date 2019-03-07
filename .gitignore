@@ -36,3 +36,5 @@ examples/**/datawork/**
 
 nbproject/
 *.pckl
+
+3rd/boost_1_67_0

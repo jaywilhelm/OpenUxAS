@@ -82,6 +82,22 @@ public:
             return (m_isValid);
         }
    };
+   
+   bool
+   updateSourceAttributes(const std::string sourceGroup, const std::string sourceEntityId, const std::string sourceServiceId)
+   {
+       m_isValid = m_isValid & m_messageAttributes->updateSourceAttributes(sourceGroup, sourceEntityId, sourceServiceId);
+       m_string = m_address + s_addressAttributesDelimiter() + m_messageAttributes->getString() + s_addressAttributesDelimiter() + m_payload;
+       return (m_isValid);
+   };
+
+    bool
+    updateAddress(const std::string address)
+    {
+        m_address = address;
+        m_string = m_address + s_addressAttributesDelimiter() + m_messageAttributes->getString() + s_addressAttributesDelimiter() + m_payload;
+        return (m_isValid);
+    }
 
     bool
     setAddressAttributesAndPayloadFromDelimitedString(const std::string delimitedString)
@@ -168,7 +184,7 @@ protected:
 
         m_messageAttributes = uxas::stduxas::make_unique<MessageAttributes>();
         if (!m_messageAttributes->setAttributesFromDelimitedString(
-            std::move(delimitedString.substr(endOfAddressDelimIndex + 1, endOfMessageAttributesDelimIndex - (endOfAddressDelimIndex + 1)))))
+            delimitedString.substr(endOfAddressDelimIndex + 1, endOfMessageAttributesDelimIndex - (endOfAddressDelimIndex + 1))))
         {
             UXAS_LOG_ERROR(s_typeName(), "::setAddressAttributesAndPayload failed to initialize message attributes");
             m_isValid = false;

@@ -8,7 +8,7 @@
 // ===============================================================================
 
 #include "afrl/cmasi/AirVehicleState.h"
-#include "afrl/impact/GroundVehicleState.h"
+#include "afrl/impact/AreaOfInterest.h"
 
 #include "LmcpObjectNetworkBridgeManager.h"
 #include "LmcpObjectNetworkServer.h"
@@ -23,7 +23,8 @@
 #include "UxAS_StringUtil.h"
 
 #ifdef AFRL_INTERNAL_ENABLED
-#include "UxAS_SerialPortEmulator.h"
+#include "afrl/famus/PointSearchTask.h"
+//#include "UxAS_SerialPortEmulator.h"
 #endif
 
 #include "stdUniquePtr.h"
@@ -41,7 +42,7 @@
 #define ARG_RUN_UNTIL "-runUntil"
 
 #define MAJOR_VERSION "3"
-#define MINOR_VERSION "1"
+#define MINOR_VERSION "2"
 #define PATCH_VERSION "0"
 
 #define BEFORE_LOG_MANAGER_INITIALIZATION_LOG_MESSAGE(message) std::cout << message << std::endl; std::cout.flush();
@@ -84,11 +85,16 @@ main(int argc, char** argv)
         else if (strcmp((const char *) argv[i], ARG_VERSION) == 0)
         {
             auto o = new afrl::cmasi::AirVehicleState;
-            auto p = new afrl::impact::GroundVehicleState;
+            auto p = new afrl::impact::AreaOfInterest;
             std::cout << std::endl << "#######################" << std::endl;
             std::cout << "   VERSION: " << MAJOR_VERSION << "." << MINOR_VERSION << "." << PATCH_VERSION << std::endl;
             std::cout << "     CMASI:  " << o->getSeriesVersion() << std::endl;
             std::cout << "     IMPACT: " << p->getSeriesVersion() << std::endl;
+#ifdef AFRL_INTERNAL_ENABLED
+            auto q = new afrl::famus::PointSearchTask;
+            std::cout << "      FAMUS: " << q->getSeriesVersion() << std::endl;
+            delete q;
+#endif
             std::cout << "#######################" << std::endl << std::endl;
             delete o;
             delete p;
@@ -210,19 +216,6 @@ main(int argc, char** argv)
     }
 
     //
-    // build bridges
-    //
-    if (uxas::communications::LmcpObjectNetworkBridgeManager::getInstance().initialize())
-    {
-        UXAS_LOG_INFORM("UxAS_Main initialized bridge manager");
-    }
-    else
-    {
-        UXAS_LOG_ERROR("UxAS_Main failed to initialize bridge manager");
-        return (300);
-    }
-
-    //
     // service manager and services
     //
     if (uxas::service::ServiceManager::getInstance().configureServiceManager())
@@ -243,6 +236,19 @@ main(int argc, char** argv)
     {
         UXAS_LOG_ERROR("UxAS_Main failed to initialize and start ServiceManager");
         return (410);
+    }
+
+    //
+    // build bridges
+    //
+    if (uxas::communications::LmcpObjectNetworkBridgeManager::getInstance().initialize())
+    {
+        UXAS_LOG_INFORM("UxAS_Main initialized bridge manager");
+    }
+    else
+    {
+        UXAS_LOG_ERROR("UxAS_Main failed to initialize bridge manager");
+        return (300);
     }
 
     UXAS_LOG_INFORM("UxAS_Main running ServiceManager");

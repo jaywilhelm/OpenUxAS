@@ -18,12 +18,11 @@
 #include "TaskManagerService.h"
 #include "TaskServiceBase.h"
 
-#include "afrl/cmasi/AirVehicleConfiguration.h"
-#include "afrl/impact/GroundVehicleConfiguration.h"
-#include "afrl/impact/SurfaceVehicleConfiguration.h"
-#include "afrl/cmasi/AirVehicleState.h"
-#include "afrl/impact/GroundVehicleState.h"
-#include "afrl/impact/SurfaceVehicleState.h"
+
+#include "afrl/cmasi/EntityConfiguration.h"
+#include "afrl/cmasi/EntityConfigurationDescendants.h"
+#include "afrl/cmasi/EntityState.h"
+#include "afrl/cmasi/EntityStateDescendants.h"
 #include "afrl/cmasi/AutomationRequest.h"
 #include "afrl/cmasi/AutomationResponse.h"
 #include "uxas/messages/task/UniqueAutomationRequest.h"
@@ -74,7 +73,7 @@ TaskManagerService::ServiceBase::CreationRegistrar<TaskManagerService>
 TaskManagerService::s_registrar(TaskManagerService::s_registryServiceTypeNames());
 
 TaskManagerService::TaskManagerService()
-	: ServiceBase(TaskManagerService::s_typeName(), TaskManagerService::s_directoryName())
+    : ServiceBase(TaskManagerService::s_typeName(), TaskManagerService::s_directoryName())
 {
 }
 
@@ -135,17 +134,18 @@ TaskManagerService::configure(const pugi::xml_node& ndComponent)
     } //for (pugi::xml_node ndCurrent = ndConfigurationEntries.first_child(); ndCurrent; ndCurrent = ndCurrent.next_sibling())
 
     addSubscriptionAddress(afrl::cmasi::RemoveTasks::Subscription);
-
-    addSubscriptionAddress(afrl::cmasi::EntityState::Subscription);
+    
+    //ENTITY CONFIGURATIONS
     addSubscriptionAddress(afrl::cmasi::EntityConfiguration::Subscription);
-
-    addSubscriptionAddress(afrl::cmasi::AirVehicleConfiguration::Subscription);
-    addSubscriptionAddress(afrl::impact::GroundVehicleConfiguration::Subscription);
-    addSubscriptionAddress(afrl::impact::SurfaceVehicleConfiguration::Subscription);
-
-    addSubscriptionAddress(afrl::cmasi::AirVehicleState::Subscription);
-    addSubscriptionAddress(afrl::impact::GroundVehicleState::Subscription);
-    addSubscriptionAddress(afrl::impact::SurfaceVehicleState::Subscription);
+    std::vector< std::string > childconfigs = afrl::cmasi::EntityConfigurationDescendants();
+    for(auto child : childconfigs)
+        addSubscriptionAddress(child);
+    
+    // ENTITY STATES
+    addSubscriptionAddress(afrl::cmasi::EntityState::Subscription);
+    std::vector< std::string > childstates = afrl::cmasi::EntityStateDescendants();
+    for(auto child : childstates)
+        addSubscriptionAddress(child);
 
     addSubscriptionAddress(afrl::cmasi::MissionCommand::Subscription);
     addSubscriptionAddress(afrl::cmasi::AutomationResponse::Subscription);
@@ -160,6 +160,10 @@ TaskManagerService::configure(const pugi::xml_node& ndComponent)
     std::vector< std::string > childtasks = afrl::cmasi::TaskDescendants();
     for(auto child : childtasks)
         addSubscriptionAddress(child);
+
+    addSubscriptionAddress(afrl::cmasi::KeepInZone::Subscription);
+    addSubscriptionAddress(afrl::cmasi::KeepOutZone::Subscription);
+    addSubscriptionAddress(afrl::cmasi::OperatingRegion::Subscription);
 
     return true;
 }
@@ -190,7 +194,7 @@ TaskManagerService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicati
             auto message = std::static_pointer_cast<avtas::lmcp::Object>(killServiceMessage);
             sendSharedLmcpObjectBroadcastMessage(message);
             m_TaskIdVsServiceId.erase(itServiceId);
-            //COUT_INFO_MSG("Removed Task[" << taskId << "]")
+            UXAS_LOG_WARN("taskID ", taskId, " already exists. Killing previous task");
         }
         //COUT_INFO_MSG("Adding Task[" << taskId << "]")
 
@@ -243,39 +247,52 @@ TaskManagerService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicati
         if (!taskOptions.empty())
         {
             xmlTaskOptions = "<" + TaskServiceBase::m_taskOptions_XmlTag + ">" + taskOptions + "</" + TaskServiceBase::m_taskOptions_XmlTag + ">";
-            COUT_INFO_MSG("INFO:: TaskId[" << taskId << "] xmlTaskOptions[" << xmlTaskOptions << "]")
+            //COUT_INFO_MSG("INFO:: TaskId[" << taskId << "] xmlTaskOptions[" << xmlTaskOptions << "]")
         }
 
-        std::string xmlServiceBegin = "<Service Type=\"" + baseTask->getFullLmcpTypeName() + "\">" +
-                " <TaskRequest>" + baseTask->toXML() + "</TaskRequest>";
-        std::string xmlServiceEnd = "</Service>";
+        auto createNewServiceMessage = std::make_shared<uxas::messages::uxnative::CreateNewService>();
+        auto serviceId = ServiceBase::getUniqueServceId();
+        createNewServiceMessage->setServiceID(serviceId);
+        std::string xmlConfigStr = "<Service Type=\"" + baseTask->getFullLmcpTypeName() + "\">" +
+                " <TaskRequest>" + baseTask->toXML() + "</TaskRequest>\n" + xmlTaskOptions;
+        uxas::common::StringUtil::ReplaceAll(xmlConfigStr, "<", "&lt;");
+        uxas::common::StringUtil::ReplaceAll(xmlConfigStr, ">", "&gt;");
+        createNewServiceMessage->setXmlConfiguration(xmlConfigStr);
 
-        std::string xmlEntityConfigurations = "<EntityConfigurations>";
+        // add all existing entities for new service initialization
         for (auto& entityConfiguration : m_idVsEntityConfiguration)
         {
-            xmlEntityConfigurations += entityConfiguration.second->toXML();
+            createNewServiceMessage->getEntityConfigurations().push_back(entityConfiguration.second->clone());
         }
-        xmlEntityConfigurations += "</EntityConfigurations>";
-
-        std::string xmlEntityStates = "<EntityStates>";
+        
+        // add all existing entities for new service initialization
         for (auto& entityState : m_idVsEntityState)
         {
-            xmlEntityStates += entityState.second->toXML();
+            createNewServiceMessage->getEntityStates().push_back(entityState.second->clone());
         }
-        xmlEntityStates += "</EntityStates>";
 
-        // SET UP THE IMPACT AREAS, LINES, POINTS
-        std::string xmlAreaOfInterest;
-        std::string xmlLinesOfInterest;
-        std::string xmlPointOfInterest;
-        std::string xmlMissionCommands;
+        for (auto kiz : m_idVsKeepInZone)
+        {
+          createNewServiceMessage->getKeepInZones().push_back(kiz.second->clone());
+        }
+        for (auto koz : m_idVsKeepOutZone)
+        {
+          createNewServiceMessage->getKeepOutZones().push_back(koz.second->clone());
+        }
+        for (auto opr : m_idVsOperatingRegion)
+        {
+          createNewServiceMessage->getOperatingRegions().push_back(opr .second->clone());
+        }
+
+        // add the appropriate area/line/point of interest if new task requires knowledge of it
+        // TODO: simply send all areas/lines/points to all tasks and let each one find the necessary information
         if (afrl::impact::isAngledAreaSearchTask(messageObject.get()))
         {
             auto angledAreaSearchTask = std::static_pointer_cast<afrl::impact::AngledAreaSearchTask>(messageObject);
             auto itAreaOfInterest = m_idVsAreaOfInterest.find(angledAreaSearchTask->getSearchAreaID());
             if (itAreaOfInterest != m_idVsAreaOfInterest.end())
             {
-                xmlAreaOfInterest += itAreaOfInterest->second->toXML();
+                createNewServiceMessage->getAreas().push_back(itAreaOfInterest->second->clone());
             }
             else
             {
@@ -290,7 +307,7 @@ TaskManagerService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicati
             auto itLine = m_idVsLineOfInterest.find(impactLineSearchTask->getLineID());
             if (itLine != m_idVsLineOfInterest.end())
             {
-                xmlLinesOfInterest += itLine->second->toXML();
+                createNewServiceMessage->getLines().push_back(itLine->second->clone());
             }
             else
             {
@@ -307,7 +324,7 @@ TaskManagerService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicati
                 auto itPoint = m_idVsPointOfInterest.find(impactPointSearchTask->getSearchLocationID());
                 if (itPoint != m_idVsPointOfInterest.end())
                 {
-                    xmlPointOfInterest += itPoint->second->toXML();
+                    createNewServiceMessage->getPoints().push_back(itPoint->second->clone());
                 }
                 else
                 {
@@ -325,7 +342,7 @@ TaskManagerService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicati
                 auto itPoint = m_idVsPointOfInterest.find(patternSearchTask->getSearchLocationID());
                 if (itPoint != m_idVsPointOfInterest.end())
                 {
-                    xmlPointOfInterest += itPoint->second->toXML();
+                    createNewServiceMessage->getPoints().push_back(itPoint->second->clone());
                 }
                 else
                 {
@@ -337,37 +354,20 @@ TaskManagerService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicati
         }
         else if (afrl::impact::isEscortTask(messageObject.get()))
         {
-            xmlLinesOfInterest += "<LinesOfInterest>";
+            // escort attempts to determine 'supported entity' route from all lines of interest or mission commands
             for (auto line : m_idVsLineOfInterest)
             {
-                xmlLinesOfInterest += line.second->toXML();
+                createNewServiceMessage->getLines().push_back(line.second->clone());
             }
-            xmlLinesOfInterest += "</LinesOfInterest>";
-
-            xmlMissionCommands += "<MissionCommands>";
             for (auto missionCommand : m_vehicleIdVsCurrentMission)
             {
-                xmlMissionCommands += missionCommand.second->toXML();
+                createNewServiceMessage->getMissionCommands().push_back(missionCommand.second->clone());
             }
-            xmlMissionCommands += "</MissionCommands>";
         }
 
         if (isGoodTask)
         {
-            auto createNewServiceMessage = std::make_shared<uxas::messages::uxnative::CreateNewService>();
-            auto serviceId = ServiceBase::getUniqueServceId();
             m_TaskIdVsServiceId[taskId] = serviceId;
-            createNewServiceMessage->setServiceID(serviceId);
-            createNewServiceMessage->getXmlConfiguration().push_back(xmlServiceBegin);
-            createNewServiceMessage->getXmlConfiguration().push_back(xmlTaskOptions);
-            createNewServiceMessage->getXmlConfiguration().push_back(xmlEntityConfigurations);
-            createNewServiceMessage->getXmlConfiguration().push_back(xmlEntityStates);
-            createNewServiceMessage->getXmlConfiguration().push_back(xmlAreaOfInterest);
-            createNewServiceMessage->getXmlConfiguration().push_back(xmlLinesOfInterest);
-            createNewServiceMessage->getXmlConfiguration().push_back(xmlPointOfInterest);
-            createNewServiceMessage->getXmlConfiguration().push_back(xmlMissionCommands);
-            createNewServiceMessage->getXmlConfiguration().push_back(xmlServiceEnd);
-
             auto newServiceMessage = std::static_pointer_cast<avtas::lmcp::Object>(createNewServiceMessage);
             sendSharedLmcpObjectBroadcastMessage(newServiceMessage);
             //CERR_FILE_LINE_MSG("Added Task[" << taskId << "]")
@@ -419,6 +419,21 @@ TaskManagerService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicati
         auto mish = std::static_pointer_cast<afrl::cmasi::MissionCommand>(messageObject);
         m_vehicleIdVsCurrentMission[mish->getVehicleID()] = mish;
     }
+    else if (afrl::cmasi::isKeepInZone(messageObject.get()))
+    {
+        auto kiz = std::static_pointer_cast<afrl::cmasi::KeepInZone>(messageObject);
+        m_idVsKeepInZone[kiz->getZoneID()] = kiz;
+    }
+    else if (afrl::cmasi::isKeepOutZone(messageObject.get()))
+    {
+        auto koz = std::static_pointer_cast<afrl::cmasi::KeepOutZone>(messageObject);
+        m_idVsKeepOutZone[koz->getZoneID()] = koz;
+    }
+    else if (afrl::cmasi::isOperatingRegion(messageObject.get()))
+    {
+        auto opr = std::static_pointer_cast<afrl::cmasi::OperatingRegion>(messageObject);
+        m_idVsOperatingRegion[opr ->getID()] = opr ;
+    }
     else if (afrl::cmasi::isFollowPathCommand(messageObject.get()))
     {
         auto fpc = std::static_pointer_cast<afrl::cmasi::FollowPathCommand>(messageObject);
@@ -432,6 +447,7 @@ TaskManagerService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicati
     else if (afrl::cmasi::isRemoveTasks(messageObject.get()))
     {
         auto removeTasks = std::static_pointer_cast<afrl::cmasi::RemoveTasks>(messageObject);
+        auto countBefore = m_TaskIdVsServiceId.size();
         for (auto itTaskId = removeTasks->getTaskList().begin(); itTaskId != removeTasks->getTaskList().end(); itTaskId++)
         {
                 auto itServiceId = m_TaskIdVsServiceId.find(*itTaskId);
@@ -443,13 +459,20 @@ TaskManagerService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicati
                     auto message = std::static_pointer_cast<avtas::lmcp::Object>(killServiceMessage);
                     sendSharedLmcpObjectBroadcastMessage(message);
                     m_TaskIdVsServiceId.erase(itServiceId);
-                    COUT_INFO_MSG("Removed Task[" << *itTaskId << "]")
+                    UXAS_LOG_INFORM("Removed Task[" << *itTaskId << "]")
                 }
                 else
                 {
                     CERR_FILE_LINE_MSG("ERROR:: Tried to kill service, but could not find ServiceId for TaskId[" << *itTaskId << "]")
                 }
         }
+        std::string taskList = "[";
+        for (auto taskID : removeTasks->getTaskList())
+        {
+            taskList += std::to_string(taskID) + " ";
+        }
+        taskList += "]";
+        IMPACT_INFORM("Removed ", countBefore - m_TaskIdVsServiceId.size(), " tasks containing ", taskList, ". ", m_TaskIdVsServiceId.size(), " Still Exist.");
     }
     else
     {

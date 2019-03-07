@@ -9,6 +9,10 @@
 
 #include "UxAS_ConfigurationManager.h"
 
+#if defined(AFRL_INTERNAL_ENABLED) && defined(USE_GEO_LIBS)
+#include "GroundHeight.h"   // utility function that needs dted configuration file names form the cfg file
+#endif
+
 #include "UxAS_ConsoleLogger.h"
 #include "UxAS_HeadLogDataDatabaseLogger.h"
 #include "UxAS_FileLogger.h"
@@ -45,7 +49,8 @@ int32_t ConfigurationManager::s_zeroMqReceiveSocketPollWaitTime_ms = 100;
 int64_t ConfigurationManager::s_entityStartTimeSinceEpoch_ms = 0;
 uint32_t ConfigurationManager::s_startDelay_ms = 0;
 uint32_t ConfigurationManager::s_runDuration_s = UINT32_MAX;
-bool ConfigurationManager::s_isLoggingThreadId{true};
+bool ConfigurationManager::s_isLoggingThreadId{false};
+bool ConfigurationManager::s_isDataTimestamp{true};
 
 uint32_t ConfigurationManager::s_entityId = 0;
 std::string ConfigurationManager::s_entityType{""};
@@ -144,6 +149,9 @@ ConfigurationManager::loadXml(const std::string& xml, bool isFile, bool isBaseXm
         {
             isSuccess = false;
         }
+#ifdef AFRL_INTERNAL_ENABLED
+        loadUtilityValuesFromXmlNode(m_baseXmlDoc.root());
+#endif
     }
 
     if (isSuccess)
@@ -390,11 +398,63 @@ ConfigurationManager::setEntityValuesFromXmlNode(const pugi::xml_node& xmlNode)
         {
             UXAS_LOG_INFORM(s_typeName(), "::setEntityFromXmlNode retained default isLoggingThreadId ", s_isLoggingThreadId);
         }
+
+        if (isSuccess && !entityInfoXmlNode.attribute(StringConstant::isDataTimestamp().c_str()).empty())
+        {
+          s_isDataTimestamp = entityInfoXmlNode.attribute(StringConstant::isDataTimestamp().c_str()).as_bool();
+          UXAS_LOG_INFORM(s_typeName(), "::setEntityFromXmlNode setting isDataTimeStamp ", s_isDataTimestamp);
+        }
+        else
+        {
+          UXAS_LOG_INFORM(s_typeName(), "::setEntityFromXmlNode retained default isDataTimeStamp ", s_isDataTimestamp);
+        }
         uxas::common::log::LogManager::getInstance().m_isLoggingThreadId = s_isLoggingThreadId;
     }
 
     return (isSuccess);
 };
+
+void ConfigurationManager::loadUtilityValuesFromXmlNode(const pugi::xml_node& xmlNode)
+{
+    pugi::xml_node xmlUxasNode = xmlNode.child(StringConstant::UxAS().c_str());
+    if (xmlUxasNode)
+    {
+        for (auto currentXmlNode = xmlUxasNode.first_child(); currentXmlNode; currentXmlNode = currentXmlNode.next_sibling())
+        {
+#if defined(AFRL_INTERNAL_ENABLED) && defined(USE_GEO_LIBS)
+            if ((std::string(currentXmlNode.name()) == std::string("Utility"))
+                    && (!currentXmlNode.attribute("Type").empty()) &&
+                    (currentXmlNode.attribute("Type").value() == std::string("DtedLookup")))
+            {
+                std::string pathToFiles;
+                if (!currentXmlNode.attribute("PathToFiles").empty())
+                {
+                    pathToFiles = std::string(currentXmlNode.attribute("PathToFiles").value());
+                    // make sure it ends with a '/'
+                    pathToFiles = (*(pathToFiles.rbegin()) == '/') ? (pathToFiles) : (pathToFiles + "/"); 
+                }
+                for (auto dtedFileXmlNode = currentXmlNode.first_child(); dtedFileXmlNode; dtedFileXmlNode = dtedFileXmlNode.next_sibling())
+                {
+                    if ((std::string(dtedFileXmlNode.name()) == std::string("DtedFile"))
+                            && (!dtedFileXmlNode.attribute("FileName").empty()))
+                    {
+                        std::string fileName = dtedFileXmlNode.attribute("FileName").value();
+                        if(!fileName.empty())
+                        {
+                            std::string pathFile = pathToFiles + fileName;
+                            utilities::GroundHeight::getInstance().isLoadDtedFile(pathFile);
+                        }
+                    }
+                }
+            }
+#endif
+        }
+    }
+}
+
+
+
+
 
 // <editor-fold defaultstate="collapsed" desc="buildUxasMasterFile cfg file UTILITY ONLY">
 
