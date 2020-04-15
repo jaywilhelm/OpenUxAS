@@ -14,7 +14,7 @@ ROS + UxAS = issues
 
 Configure meson using:
 
-'meson build_debug --buildtype=debug -D force_dep_download=true'
+`meson build_debug --buildtype=debug -D force_dep_download=true`
 
 # License
 
