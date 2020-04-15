@@ -61,6 +61,7 @@
 
 // examples
 #include "01_HelloWorld.h"
+#include "../Pixhawk/PixhawkService.h"
 
 // data
 #include "MessageLoggerDataService.h"
@@ -193,7 +194,7 @@
 {auto svc = uxas::stduxas::make_unique<uxas::service::StatusReportService>();}
 {auto svc = uxas::stduxas::make_unique<uxas::service::LoiterLeash>();}
 
-
+{auto svc = uxas::stduxas::make_unique<uxas::service::PixhawkService>();}
 #endif  //REGISTER_SERVICE_CODE
 //////////////////////////////////////////////////////////
 /// END -- SERVICE REGISTRATION SECTION                ///

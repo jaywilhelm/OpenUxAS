@@ -162,6 +162,9 @@ subdir('src/Utilities')
 
 subdir('src/Plans')
 
+subdir('src/Pixhawk')
+
+
 libs = [
   lib_services,
   lib_tasks,
@@ -171,6 +174,7 @@ libs = [
   lib_visilibity,
   lib_plans,
   lib_dpss,
+  lib_pixhawk,
 ]
 
 if get_option('afrl_internal')
