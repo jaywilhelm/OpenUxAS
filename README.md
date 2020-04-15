@@ -10,6 +10,12 @@ USE SUBMODULE
 
 git submodule init;git submodule update
 
+ROS + UxAS = issues
+
+Configure meson using:
+
+'meson build_debug --buildtype=debug -D force_dep_download=true'
+
 # License
 
 *OpenUxAS* is developed by the Air Force Research Laboratory, Aerospace System Directorate, Power and Control Division.
