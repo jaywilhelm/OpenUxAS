@@ -8,7 +8,7 @@ MAVLINK2 C headers needed: https://github.com/mavlink/c_library_v2
 
 USE SUBMODULE
 
-git submodule init;git submodule update
+`git submodule init;git submodule update`
 
 ROS + UxAS = issues
 
