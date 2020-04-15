@@ -6,6 +6,10 @@ Two UxAS files are modified, meson.build (adds the meson px4 meson file) and 00_
 
 MAVLINK2 C headers needed: https://github.com/mavlink/c_library_v2
 
+USE SUBMODULE
+
+git submodule init;git submodule update
+
 # License
 
 *OpenUxAS* is developed by the Air Force Research Laboratory, Aerospace System Directorate, Power and Control Division.
