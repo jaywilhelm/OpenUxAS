@@ -1,3 +1,5 @@
+Snapshot of AFRL's OpenUxAS from 4-2020.
+
 # PX4 Interface
 
 This fork of OpenUxAS includes a PX4 interface that passes waypoints to the pixhawk system and monitors mission progression.
