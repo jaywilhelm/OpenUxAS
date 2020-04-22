@@ -1,5 +1,5 @@
 //#define MAVLINK_USE_CONVENIENCE_FUNCTIONS
-#include "mavlinkc/c_library_v2/common/mavlink.h"
+#include "mavlinkc/common/mavlink.h"
 
 // include header for this service
 
