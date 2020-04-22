@@ -1,0 +1,60 @@
+<LineSearchTask Series="CMASI">
+    <PointList>
+        <!-- <Location3D Series="CMASI">
+            <Latitude>1.5306</Latitude>
+            <Longitude>-132.5521</Longitude>
+            <Altitude>0.0</Altitude>
+            <AltitudeType>MSL</AltitudeType>
+        </Location3D> -->
+        <Location3D Series="CMASI">
+            <Latitude>1.5306</Latitude>
+            <Longitude>-132.532</Longitude>
+            <Altitude>0.0</Altitude>
+            <AltitudeType>MSL</AltitudeType>
+        </Location3D>
+        <Location3D Series="CMASI">
+            <Latitude>1.5306</Latitude>
+            <Longitude>-132.5119</Longitude>
+            <Altitude>0.0</Altitude>
+            <AltitudeType>MSL</AltitudeType>
+        </Location3D>
+
+        <!-- <Location3D Series="CMASI">
+            <Latitude>1.5176</Latitude>
+            <Longitude>-132.5119</Longitude>
+            <Altitude>0.0</Altitude>
+            <AltitudeType>MSL</AltitudeType>
+        </Location3D>
+        <Location3D Series="CMASI">
+            <Latitude>1.5047</Latitude>
+            <Longitude>-132.5119</Longitude>
+            <Altitude>0.0</Altitude>
+            <AltitudeType>MSL</AltitudeType>
+        </Location3D>
+
+        <Location3D Series="CMASI">
+            <Latitude>1.5047</Latitude>
+            <Longitude>-132.532</Longitude>
+            <Altitude>0.0</Altitude>
+            <AltitudeType>MSL</AltitudeType>
+        </Location3D>
+        <Location3D Series="CMASI">
+            <Latitude>1.5047</Latitude>
+            <Longitude>-132.5521</Longitude>
+            <Altitude>0.0</Altitude>
+            <AltitudeType>MSL</AltitudeType>
+        </Location3D> -->
+    </PointList>
+    <ViewAngleList/>
+    <UseInertialViewAngles>false</UseInertialViewAngles>
+    <DesiredWavelengthBands><WavelengthBand>AllAny</WavelengthBand></DesiredWavelengthBands>
+    <DwellTime>0</DwellTime>
+    <GroundSampleDistance>0.0</GroundSampleDistance>
+    <TaskID>8675</TaskID>
+    <Label/>
+    <EligibleEntities/>
+    <RevisitRate>0.0</RevisitRate>
+    <Parameters/>
+    <Priority>0</Priority>
+    <Required>true</Required>
+</LineSearchTask>
