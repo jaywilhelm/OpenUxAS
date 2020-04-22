@@ -217,16 +217,16 @@ def create_and_run_amase_scenario():
     # Modify IDs and PayloadIDs to be unique.
     # -----------------------------------------------------------------------------------------------------------------
 
-    cc3_lmcp_dom = parse("MessageLibrary/CameraConfiguration_WavelengthAnyAll_FovDiscrete_PayloadID-10001.xml")
+    cc3_lmcp_dom = parse("messageLibrary/CameraConfiguration_WavelengthAnyAll_FovDiscrete_PayloadID-10001.xml")
     obj_list = factory.unpackFromXMLNode(cc3_lmcp_dom)
     cc3_obj = obj_list[0]
     cc3_obj.set_PayloadID(10003)
-    gc3_lmcp_dom = parse("MessageLibrary/GimbalConfiguration_ClampedFalse_PayloadID-1001.xml")
+    gc3_lmcp_dom = parse("messageLibrary/GimbalConfiguration_ClampedFalse_PayloadID-1001.xml")
     obj_list = factory.unpackFromXMLNode(gc3_lmcp_dom)
     gc3_obj = obj_list[0]
     gc3_obj.set_PayloadID(1003)
     gc3_obj.ContainedPayloadList = [10003]
-    avc3_lmcp_dom = parse("MessageLibrary/AirVehicleConfiguration_FlightProfileAll_LoiterAll_ID-1.xml")
+    avc3_lmcp_dom = parse("messageLibrary/AirVehicleConfiguration_FlightProfileAll_LoiterAll_ID-1.xml")
     obj_list = factory.unpackFromXMLNode(avc3_lmcp_dom)
     avc3_obj = obj_list[0]
     avc3_obj.set_ID(3)
@@ -235,15 +235,15 @@ def create_and_run_amase_scenario():
 
     send_to_amase(avc3_obj, socket, client_id)
 
-    cs3_lmcp_dom = parse("MessageLibrary/CameraState_PayloadID-10001.xml")
+    cs3_lmcp_dom = parse("messageLibrary/CameraState_PayloadID-10001.xml")
     obj_list = factory.unpackFromXMLNode(cs3_lmcp_dom)
     cs3_obj = obj_list[0]
     cs3_obj.set_PayloadID(10003)
-    gs3_lmcp_dom = parse("MessageLibrary/GimbalState_PayloadID-1001.xml")
+    gs3_lmcp_dom = parse("messageLibrary/GimbalState_PayloadID-1001.xml")
     obj_list = factory.unpackFromXMLNode(gs3_lmcp_dom)
     gs3_obj = obj_list[0]
     gs3_obj.set_PayloadID(1003)
-    avs3_lmcp_dom = parse("MessageLibrary/AirVehicleState_FlightProfileAll_LoiterAll_ID-1.xml")
+    avs3_lmcp_dom = parse("messageLibrary/AirVehicleState_FlightProfileAll_LoiterAll_ID-1.xml")
     obj_list = factory.unpackFromXMLNode(avs3_lmcp_dom)
     avs3_obj = obj_list[0]
     avs3_obj.set_ID(3)

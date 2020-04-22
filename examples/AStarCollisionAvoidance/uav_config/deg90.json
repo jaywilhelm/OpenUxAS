@@ -1,0 +1,28 @@
+{
+    "uav0": {
+        "id": 1024,
+        "name": "RLS Legacy",
+        "latitude": 1.5156,
+        "longitude": -132.5611,
+        "heading": 90,
+        "speed": 50,
+        "waypoint": {
+            "latitude": 1.5156,
+            "longitude": -132.5111
+        },
+        "theta_possible": 30
+    },
+    "uav1": {
+        "id": 2256,
+        "name": "EAGLE 5",
+        "latitude": 1.48565,
+        "longitude": -132.531099,
+        "heading": 0,
+        "speed": 50,
+        "waypoint": {
+            "latitude": 1.5267,
+            "longitude": -132.531
+        },
+        "theta_possible": 30
+    }
+}

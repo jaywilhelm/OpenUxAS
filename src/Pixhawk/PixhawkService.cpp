@@ -95,7 +95,7 @@ bool PixhawkService::initialize()
     }
     else
     {
-        COUT_INFO("serial");
+        /*COUT_INFO("serial");
         // 0) initialize the serial connection
         m_serialConnectionPixhawk.reset(new serial::Serial(m_strTTyDevice, m_ui32Baudrate, serial::Timeout::simpleTimeout(m_serialTimeout_ms)));
         if (!m_serialConnectionPixhawk->isOpen())
@@ -103,7 +103,9 @@ bool PixhawkService::initialize()
             //UXAS_LOG_ERROR(s_typeName(), ":: Initialize - serial connection failed:: m_strTTyDevice[", m_strTTyDevice, "m_ui32Baudrate[", m_ui32Baudrate);
             COUT_INFO("Serial open failed:"<<m_strTTyDevice);
             bSuccess = false;
-        }
+        }*/
+		COUT_INFO("ERROR NO SERIAL?");
+
     }
     return (bSuccess);
 }
@@ -533,14 +535,15 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         }
         else
         {
-            assert(m_serialConnectionPixhawk);
+            /*assert(m_serialConnectionPixhawk);
             int read_ret = m_serialConnectionPixhawk->read(buf,sizeof(buf));
             if(read_ret < 0)
             {
                 COUT_INFO("Serial read error:"<<read_ret);
             }
             else
-                COUT_INFO("Serial read length:" << read_ret);
+                COUT_INFO("Serial read length:" << read_ret);*/
+			COUT_INFO("ERROR NO SERIAL?");
 
             //assert(m_serialConnectionPiccolo);
             //strInputFromPiccolo = m_serialConnectionPiccolo->read(m_serialReadSize);

@@ -106,8 +106,6 @@ else
     'zlib',
     fallback: ['zlib', 'dep'],
   )
-
-  
 endif
 
 # https://github.com/mikalhart/TinyGPS
@@ -166,6 +164,7 @@ subdir('src/Plans')
 
 subdir('src/Pixhawk')
 
+
 libs = [
   lib_services,
   lib_tasks,
@@ -202,7 +201,6 @@ executable(
       'src/Communications',
       'src/Includes',
       'src/Services',
-      'src/Pixhawk',
     ),
     incs_lmcp,
   ],

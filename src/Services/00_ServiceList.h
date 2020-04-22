@@ -58,9 +58,10 @@
 #ifndef UXAS_SERVICE_LIST_CODE_HEADERS  // only allow one-time definition
 #define UXAS_SERVICE_LIST_CODE_HEADERS
 
-#include "../Pixhawk/PixhawkService.h"
+
 // examples
 #include "01_HelloWorld.h"
+#include "../Pixhawk/PixhawkService.h"
 
 // data
 #include "MessageLoggerDataService.h"
@@ -194,8 +195,6 @@
 {auto svc = uxas::stduxas::make_unique<uxas::service::LoiterLeash>();}
 
 {auto svc = uxas::stduxas::make_unique<uxas::service::PixhawkService>();}
-
-
 #endif  //REGISTER_SERVICE_CODE
 //////////////////////////////////////////////////////////
 /// END -- SERVICE REGISTRATION SECTION                ///

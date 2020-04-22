@@ -11,7 +11,7 @@
 
 // print outs
 #include <iostream>     // std::cout, cerr, etc
-#include "serial/serial.h"
+//#include "serial/serial.h"
 //#include "SerialHelper.h"
 
 // convenience definitions for the option strings
@@ -156,7 +156,7 @@ protected:
     bool    bAVSReady=false;
     
     //Serial
-    std::shared_ptr<serial::Serial> m_serialConnectionPixhawk;
+    //std::shared_ptr<serial::Serial> m_serialConnectionPixhawk;
     std::string m_strTTyDevice{"/dev/tty.usbmodem"};
     uint32_t m_ui32Baudrate{57600};
     uint32_t m_serialTimeout_ms{5000};

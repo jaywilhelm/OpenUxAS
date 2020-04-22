@@ -48,7 +48,6 @@ deps_services = [
   dep_sqlite3,
   dep_sqlitecpp,
   dep_zeromq,
-  dep_serial,
 ]
 
 if get_option('afrl_internal')
