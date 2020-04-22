@@ -1,8 +1,12 @@
 # PX4 Interface
 
-This fork of OpenUxAS includes a PX4 interface that passes waypoints to the pixhawk system and monitors mission progression.
-One service was added along with MAVLINK2 c/c++ files
-Two UxAS files are modified, meson.build (adds the meson px4 meson file) and 00_ServiceList.h (px4 header and service var)
+Modified fork of OpenUxAS to communicate with the PX4/Pixhawk Autopilot.
+
+Developed by: Jay Wilhelm [jwilhelm@ohio.edu] (Assistant Professor, Mechanical Engineering, Ohio University)
+
+Tested using SITL PX4 and JMAVSIM using built-in mission of waterway search for UxAS that removed second aircraft.
+
+Successfully interprets UxAS style waypoints, converts to PX4 format, and queues up MAVLINK messages that are a chain of waypoints. Also, reads the MAVLINK messages to determine aircraft status and formulates aircraft vehicle states message for UxAS. One service was added along with MAVLINK2 c/c++ files. Two UxAS files are modified, meson.build (adds the meson px4 meson file) and 00_ServiceList.h (px4 header and service var)
 
 MAVLINK2 C headers needed: https://github.com/mavlink/c_library_v2
 
