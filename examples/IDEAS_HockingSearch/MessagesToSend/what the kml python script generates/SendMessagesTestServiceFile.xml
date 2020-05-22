@@ -1,0 +1,3 @@
+		<Message MessageFileName="tasks/1001_OperatingRegion_All.xml" SendTime_ms="1000"/>
+		<Message MessageFileName="tasks/1002_PISR_Task_FromKml_V400.xml" SendTime_ms="1000"/>
+		<Message MessageFileName="tasks/1003_PISR_Task_FromKml_V500.xml" SendTime_ms="1000"/>

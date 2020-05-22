@@ -1,6 +1,4 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
         {
@@ -66,6 +64,32 @@
             "options": {
                 "cwd": "${workspaceRoot}/docker"
             }
+        },
+        {
+            "type": "shell",
+            "label": "g++ build active file",
+            "command": "ninja -C build_debug uxas",
+            "args": [
+            ],
+            "options": {
+                "cwd": "."
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "npm",
+            "script": "rebuild",
+            "path": "3rd/czmq-4.0.2/bindings/nodejs/",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "label": "npm: rebuild - 3rd/czmq-4.0.2/bindings/nodejs",
+            "detail": "prebuild --compile"
         }
     ]
 }

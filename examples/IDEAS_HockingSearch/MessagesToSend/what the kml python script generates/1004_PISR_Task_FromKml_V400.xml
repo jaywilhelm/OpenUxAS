@@ -1,0 +1,16 @@
+<PISR_Task Series="PISR">
+	<TaskID>1004</TaskID>
+	<Label>PISR_FromGoogleEarth</Label>
+	<EligibleEntities><int64>400</int64></EligibleEntities>
+	<isListOrdered>false</isListOrdered>
+	<OperatingRegion>1003</OperatingRegion>
+	<!-- <AssignmentType>MWRRP</AssignmentType> -->
+	<AssignmentType>LengthConstrainedMtsp</AssignmentType>
+	<TaskList>
+		<PISR_TaskList Series="PISR">
+			<Beta_MWRRP>0.0</Beta_MWRRP>
+			<TaskList>
+			</TaskList>
+		</PISR_TaskList>
+	</TaskList>
+</PISR_Task>

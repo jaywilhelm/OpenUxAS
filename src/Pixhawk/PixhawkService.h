@@ -25,6 +25,12 @@
 #include "afrl/cmasi/CameraState.h"
 #include "afrl/cmasi/GimbalState.h"
 #include "afrl/cmasi/VideoStreamState.h"
+#include "uxas/messages/uxnative/AutopilotKeepAlive.h"
+#include "uxas/messages/uxnative/StartupComplete.h"
+#include "afrl/cmasi/MissionCommand.h"
+#include "afrl/cmasi/GoToWaypointAction.h"
+#include "afrl/cmasi/NavigationMode.h"
+
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
 #include "TypeDefs/UxAS_TypeDefs_Timer.h"
@@ -144,7 +150,9 @@ protected:
     sockaddr_in m_listenSocket;
     sockaddr_in m_remoteSocket;
     //std::string m_tcpAddress{"udp://localhost:14501"};
-    uint16_t m_netPort{14551};
+    //uint16_t m_netPort{14551};//mavproxy
+    uint16_t m_netPort{14550};//directy
+
     bool m_bServer{true};
     std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;
     bool m_isTerminate{false};//read thread terminate
@@ -154,7 +162,6 @@ protected:
     std::shared_ptr<afrl::cmasi::AirVehicleState> m_ptr_CurrentAirVehicleState;
     std::mutex m_AirvehicleStateMutex;
     bool    bAVSReady=false;
-    
     //Serial
     //std::shared_ptr<serial::Serial> m_serialConnectionPixhawk;
     std::string m_strTTyDevice{"/dev/tty.usbmodem"};
@@ -162,9 +169,7 @@ protected:
     uint32_t m_serialTimeout_ms{5000};
     
     bool m_bStartupComplete{false};
-    
-    int32_t m_missionSendState{0};
-    enum Mission_States{
+        enum Mission_States{
         NULL_STATE,
         WAIT_GLOBAL_POSITION,
         SENT_CLEAR,
@@ -173,16 +178,22 @@ protected:
         SENT_LAST_WAYPOINT,
         SENT_ACTIVE_WAYPOINT
     };
+    int32_t m_missionSendState{NULL_STATE};
+
     int32_t m_wpIterator{0};
     int32_t m_newWaypointCount{0};
     //std::vector<afrl::cmasi::Waypoint*> m_newWaypointList;
     std::vector<std::shared_ptr<afrl::cmasi::Waypoint>> m_newWaypointList;
     //std::shared_ptr<afrl::cmasi::MissionCommand> m_newMissionCommand;
+    
+    void Process_isMissionCommand(std::shared_ptr<afrl::cmasi::MissionCommand> missionCmd);
+
     void MissionUpdate_ClearAutopilotWaypoints(void);
     void MissionUpdate_SendNewWayPointCount(void);
     void MissionUpdate_SendWayPoint(void);
     void MissionUpdate_SetActiveWaypoint(uint32_t newWP_px);
-    
+    //void MissionUpdate_SendWayPointInt(void);
+
     mavlink_home_position_t m_SavedHomePositionMsg;
 };
 
