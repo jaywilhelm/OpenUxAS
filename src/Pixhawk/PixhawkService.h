@@ -151,7 +151,8 @@ protected:
     sockaddr_in m_remoteSocket;
     //std::string m_tcpAddress{"udp://localhost:14501"};
     //uint16_t m_netPort{14551};//mavproxy
-    uint16_t m_netPort{14550};//directy
+    uint16_t m_netPort{14551};//directy
+    uint16_t m_configListenPortMavlink{0};
 
     bool m_bServer{true};
     std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;

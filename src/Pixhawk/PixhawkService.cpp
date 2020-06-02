@@ -3,6 +3,7 @@
 // include header for this service
 #include "PixhawkService.h"
 
+#define STRING_XML_LISTEN_PORT_MAVLINK "MAVLinkListenPort"
 
 #warning "Building with Pixhawk"
 #define COUT_INFO(MESSAGE) std::cout << "PX: " << MESSAGE << std::endl;std::cout.flush();
@@ -33,11 +34,12 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
     bool isSuccess(true);
 
     // process options from the XML configuration node:
-    /*if (!ndComponent.attribute(STRING_XML_STRING_TO_SEND).empty())
+    if (!ndComponent.attribute(STRING_XML_STRING_TO_SEND).empty())
     {
-        m_stringToSend = ndComponent.attribute(STRING_XML_STRING_TO_SEND).value();
+        m_configListenPortMavlink = ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).as_uint();
+        COUT_INFO("XML Port: " + m_configListenPortMavlink)
     }
-    if (!ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).empty())
+    /*if (!ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).empty())
     {
         m_sendPeriod_ms = ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).as_int64();
     }
@@ -492,9 +494,12 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         memset((char *) &m_listenSocket, 0, sizeof(m_listenSocket));
 
         m_listenSocket.sin_family = AF_INET;
-        m_listenSocket.sin_port = htons(m_netPort);
+        if(m_configListenPortMavlink != 0)
+            m_listenSocket.sin_port = htons(m_configListenPortMavlink);
+        else
+            m_listenSocket.sin_port = htons(m_netPort);
         m_listenSocket.sin_addr.s_addr = htonl(INADDR_ANY);
-        COUT_INFO("binding to port " << m_netPort);
+        COUT_INFO("binding to port " << m_listenSocket.sin_port);
 
         //bind socket to port
         if(bind(m_netSocketFD , (struct sockaddr*)&m_listenSocket, sizeof(m_listenSocket) ) == -1)
