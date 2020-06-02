@@ -921,6 +921,11 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         break;
                     }
+                    case MAVLINK_MSG_ID_TIMESYNC://#111
+                    {
+                        COUT_INFO("TIMESYNC?")
+                        break;
+                    }
                     default:
                     {
                         COUT_INFO("####################################### Msg: "<<msg.msgid);
