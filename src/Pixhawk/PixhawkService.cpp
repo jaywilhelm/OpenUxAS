@@ -34,7 +34,7 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
     bool isSuccess(true);
 
     // process options from the XML configuration node:
-    if (!ndComponent.attribute(STRING_XML_STRING_TO_SEND).empty())
+    if (!ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).empty())
     {
         m_configListenPortMavlink = ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).as_uint();
         COUT_INFO("XML Port: " + m_configListenPortMavlink)
@@ -494,12 +494,14 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         memset((char *) &m_listenSocket, 0, sizeof(m_listenSocket));
 
         m_listenSocket.sin_family = AF_INET;
+        uint16_t listentPort = 0;
         if(m_configListenPortMavlink != 0)
-            m_listenSocket.sin_port = htons(m_configListenPortMavlink);
+            listentPort = m_configListenPortMavlink;
         else
-            m_listenSocket.sin_port = htons(m_netPort);
+            listentPort = m_netPort;
+        m_listenSocket.sin_port = htons(listentPort);    
         m_listenSocket.sin_addr.s_addr = htonl(INADDR_ANY);
-        COUT_INFO("binding to port " << m_listenSocket.sin_port);
+        COUT_INFO("binding to port " << listentPort);
 
         //bind socket to port
         if(bind(m_netSocketFD , (struct sockaddr*)&m_listenSocket, sizeof(m_listenSocket) ) == -1)
@@ -595,11 +597,8 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         double lon_d = (double)gpsi.lon/10000000.0;//deg
                         uint32_t timems = gpsi.time_boot_ms;
 
-                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
-                        //old mutex method
-                        /*else
-                            COUT_INFO("Failed mAVS lock");
-                        m_AirvehicleStateMutex.unlock();*/
+                        //MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
+                        //COUT_INFO("GLOBAL_POSITION_INT")
                         break;
                     }
                     case MAVLINK_MSG_ID_GPS_RAW_INT://#24 //HITL and real
