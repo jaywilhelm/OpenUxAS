@@ -585,7 +585,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         //std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
                         break;
                     }
-                    case MAVLINK_MSG_ID_GLOBAL_POSITION_INT://#33
+                    case MAVLINK_MSG_ID_GLOBAL_POSITION_INT://#33 //SITL only
                     {
                         mavlink_global_position_int_t gpsi;
                         mavlink_msg_global_position_int_decode(&msg,&gpsi);
@@ -593,97 +593,27 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         float cog_d = (float)gpsi.hdg/1000.0f;//deg
                         double lat_d = (double)gpsi.lat/10000000.0;//deg
                         double lon_d = (double)gpsi.lon/10000000.0;//deg
+                        uint32_t timems = gpsi.time_boot_ms;
 
-                        //COUT_INFO("GLOBAL POS INT " << newAlt_m); 
-                        //m_AirvehicleStateMutex.lock();
-                        {
-                            std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
-                            if(m_Attitude.time_boot_ms!=0)
-                            {
-                                m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
-                                m_ptr_CurrentAirVehicleState->setRoll(m_Attitude.roll);
-                            }
-                            m_ptr_CurrentAirVehicleState->setID(400);
-                            m_ptr_CurrentAirVehicleState->setAirspeed(m_Airspeed);//m/s
-                            
-                            m_ptr_CurrentAirVehicleState->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);
-                            m_ptr_CurrentAirVehicleState->getLocation()->setAltitude(newAlt_m);
-                            m_ptr_CurrentAirVehicleState->getLocation()->setLatitude(lat_d);
-                            m_ptr_CurrentAirVehicleState->getLocation()->setLongitude(lon_d);
-                            m_ptr_CurrentAirVehicleState->setCourse(cog_d);
-                            // u, v, w, udot, vdot, wdot
-                            m_ptr_CurrentAirVehicleState->setU(0.0);
-                            m_ptr_CurrentAirVehicleState->setV(0.0);
-                            m_ptr_CurrentAirVehicleState->setW(0.0);
-                            m_ptr_CurrentAirVehicleState->setUdot(0.0);
-                            m_ptr_CurrentAirVehicleState->setVdot(0.0);
-                            m_ptr_CurrentAirVehicleState->setWdot(0.0);
-
-                            //build this from the actual battery...
-                            m_ptr_CurrentAirVehicleState->setEnergyAvailable(100);
-                            m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0001);
-
-                            m_ptr_CurrentAirVehicleState->setTime(gpsi.time_boot_ms);
-                            //m_ptr_CurrentAirVehicleState->setMode(afrl::cmasi::NavigationMode::FlightDirector);
-                            //m_ptr_CurrentAirVehicleState->setCurrentCommand(100);
-                            
-                            //std::vector<afrl::cmasi::PayloadState*> &payload = m_ptr_CurrentAirVehicleState->getPayloadStateList();
-                            // heading, pitch, roll
-                            //m_ptr_CurrentAirVehicleState->setHeading((telemetryPkt->GetYaw() / 10000.0) * RAD_TO_DEG); // heading = yaw
-                            //m_ptr_CurrentAirVehicleState->setPitch((telemetryPkt->GetPitch() / 10000.0) * RAD_TO_DEG);
-                            //m_ptr_CurrentAirVehicleState->setRoll((telemetryPkt->GetRoll() / 10000.0) * RAD_TO_DEG);
-
-                            // yaw, pitch, roll rates
-                            //m_ptr_CurrentAirVehicleState->setR((telemetryPkt->GetYawRate() / 10000.0) * RAD_TO_DEG); // from (1/10,000)r/s -> rad/s
-                            //m_ptr_CurrentAirVehicleState->setQ((telemetryPkt->GetPitchRate() / 10000.0) * RAD_TO_DEG);
-                            //m_ptr_CurrentAirVehicleState->setP((telemetryPkt->GetRollRate() / 10000.0) * RAD_TO_DEG);
-                             // ActualEnergyRate, EnergyAvailable
-                            //m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0);
-                            //m_ptr_CurrentAirVehicleState->setEnergyAvailable(0.0);
-                            
-                            // wind speed/heading
-                            //m_ptr_CurrentAirVehicleState->setWindSpeed(telemetryPkt->GetWindSpeed()); // m/s
-                            //m_ptr_CurrentAirVehicleState->setWindDirection(telemetryPkt->GetWindFromDirection()); // degrees from north (wind is coming from)
-
-                            // ground speed, ground track
-                            //m_ptr_CurrentAirVehicleState->setGroundspeed(telemetryPkt->GetGroundSpeed()); // m/s
-                            
-                            //float vEast_mps = static_cast<float> (telemetryPkt->GetVEast()) / 100.0;
-                            //float vNorth_mps = static_cast<float> (telemetryPkt->GetVNorth()) / 100.0;
-                            //float vDown_mps = static_cast<float> (telemetryPkt->GetVDown()) / 100.0;
-                            //m_ptr_CurrentAirVehicleState->setCourse(atan2(vEast_mps, vNorth_mps) * RAD_TO_DEG);
-                            
-                            
-                            m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint);
-                            sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
-                            bAVSReady=true;
-                            //COUT_INFO("Broadcasting AVS");
-                            if(m_missionSendState == WAIT_GLOBAL_POSITION)
-                            {
-                                std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
-
-                                double lat,lon,alt;
-                                
-                                lat = this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude(); 
-                                lon = this->m_ptr_CurrentAirVehicleState->getLocation()->getLongitude();
-                                alt =  this->m_ptr_CurrentAirVehicleState->getLocation()->getAltitude();
-
-                                //for the takeoff position...
-                                newWP->setLatitude(lat);
-                                newWP->setLongitude(lon);
-                                newWP->setAltitude(alt);
-                                newWP->setNumber(0);
-                                m_newWaypointList.insert(m_newWaypointList.begin(),newWP);
-                                //for the takeoff position...
-                                COUT_INFO("GOT Global POS, Starting WP send");
-
-                                this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
-                            }                            
-                        }
+                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
                         //old mutex method
                         /*else
                             COUT_INFO("Failed mAVS lock");
                         m_AirvehicleStateMutex.unlock();*/
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_GPS_RAW_INT://#24 //HITL and real
+                    {
+                        mavlink_gps_raw_int_t rgpsi;
+                        mavlink_msg_gps_raw_int_decode(&msg,&rgpsi);
+                        float newAlt_m = (float)rgpsi.alt/1000.0f;//AMSL
+                        float cog_d = (float)rgpsi.cog/100.0f;//deg
+                        double lat_d = (double)rgpsi.lat/10000000.0;//deg
+                        double lon_d = (double)rgpsi.lon/10000000.0;//deg
+                        uint32_t timems = rgpsi.time_usec/1000;
+                        
+                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
+                        //COUT_INFO("GPS RAW INT");
                         break;
                     }
                     case MAVLINK_MSG_ID_MISSION_CURRENT://#224
@@ -764,13 +694,6 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         mavlink_highres_imu_t highimu;
                         mavlink_msg_highres_imu_decode(&msg,&highimu);
                         //COUT_INFO("HighResIMU");
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_GPS_RAW_INT://#24
-                    {
-                        mavlink_gps_raw_int_t rgpsint;
-                        mavlink_msg_gps_raw_int_decode(&msg,&rgpsint);
-                        //COUT_INFO("GPS RAW INT");
                         break;
                     }
                     case MAVLINK_MSG_ID_ESTIMATOR_STATUS://#230
@@ -923,7 +846,15 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     }
                     case MAVLINK_MSG_ID_TIMESYNC://#111
                     {
-                        COUT_INFO("TIMESYNC?")
+                        //COUT_INFO("TIMESYNC?")
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_SCALED_IMU://#26
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_HIL_SENSOR://#107
+                    {
                         break;
                     }
                     default:
@@ -936,6 +867,67 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         }
     }
     
+}
+void PixhawkService::MAVLINK_ProcessNewPosition(float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems)
+{
+    float newAlt_m = nAlt;
+    double lat_d = nLat;
+    double lon_d = nLon;
+    double cog_d = nCOG;
+    {
+        std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
+        if(m_Attitude.time_boot_ms!=0)
+        {
+            m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
+            m_ptr_CurrentAirVehicleState->setRoll(m_Attitude.roll);
+        }
+        m_ptr_CurrentAirVehicleState->setID(400);
+        m_ptr_CurrentAirVehicleState->setAirspeed(m_Airspeed);//m/s
+        
+        m_ptr_CurrentAirVehicleState->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);
+        m_ptr_CurrentAirVehicleState->getLocation()->setAltitude(newAlt_m);
+        m_ptr_CurrentAirVehicleState->getLocation()->setLatitude(lat_d);
+        m_ptr_CurrentAirVehicleState->getLocation()->setLongitude(lon_d);
+        m_ptr_CurrentAirVehicleState->setCourse(cog_d);
+        // u, v, w, udot, vdot, wdot
+        m_ptr_CurrentAirVehicleState->setU(0.0);
+        m_ptr_CurrentAirVehicleState->setV(0.0);
+        m_ptr_CurrentAirVehicleState->setW(0.0);
+        m_ptr_CurrentAirVehicleState->setUdot(0.0);
+        m_ptr_CurrentAirVehicleState->setVdot(0.0);
+        m_ptr_CurrentAirVehicleState->setWdot(0.0);
+
+        //build this from the actual battery...
+        m_ptr_CurrentAirVehicleState->setEnergyAvailable(100);
+        m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0001);
+        m_ptr_CurrentAirVehicleState->setTime(ntimems);        
+        
+        m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint);
+        sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
+        bAVSReady=true;
+        //COUT_INFO("Broadcasting AVS");
+        if(m_missionSendState == WAIT_GLOBAL_POSITION)
+        {
+            std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
+
+            double lat,lon,alt;
+            
+            lat = this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude(); 
+            lon = this->m_ptr_CurrentAirVehicleState->getLocation()->getLongitude();
+            alt =  this->m_ptr_CurrentAirVehicleState->getLocation()->getAltitude();
+
+            //for the takeoff position...
+            newWP->setLatitude(lat);
+            newWP->setLongitude(lon);
+            newWP->setAltitude(alt);
+            newWP->setNumber(0);
+            m_newWaypointList.insert(m_newWaypointList.begin(),newWP);
+            //for the takeoff position...
+            COUT_INFO("GOT Global POS, Starting WP send");
+
+            this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
+        }                            
+    }
 }
 void PixhawkService::MissionUpdate_ClearAutopilotWaypoints(void)
 {
