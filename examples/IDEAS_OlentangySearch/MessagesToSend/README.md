@@ -4,21 +4,32 @@ This is an example of running UxAS service that communicates to the Amase simula
 
 ## Files:
 
-* `cfg_WaterwaySearch.xml` - This is 
-* `runUxAS_WaterwaySearch.sh` - 
-* `runAMASE_WaterwaySearch.sh` - 
-* `Scenario_WaterwaySearch.xml` -
+* `cfg_OlentangySearch.xml` - 
+* `runUxAS_OlentagySearch.sh` - 
+* `runAMASE_OlentangySearch.sh` - 
+* `Scenario_OlentangySearch.xml` -
 * `MessagesToSend/` - most of the messages in this directory are explained in the document, `WaterwayExample_MessageFLow.pdf`. A few are explained below:
 * `MessagesToSend/LINE_Waterway_Deschutes.kml` - a 'kml' file from Google Earth, used to define the line search task.
-* `MessagesToSend/KmlToBoundariesTasks.WaterwaySearch.py` - a python script that process the kml file and generates LMCP messages for the example. 
+* `MessagesToSend/KmlToBoundariesTasks.WaterwaySearch.py` -
 
 
 ## Running the Example:
-1. open a ternimal window in the directory: "examples/02_Example_WaterwaySearch/"
-2. enter the command: `./runAMASE_WaterwaySearch.sh`
+1. Open QGC
+2. Open terminal and change directory to the px4 firmware 
+3. enter command to change location: 
+	export PX4_HOME_LAT=40.07928367570902
+	export PX4_HOME_LON=-83.07235656422958
+	export PX4_HOME_ALT=1000
+
+3. enter command: 'make px4_sitl_defualt gazebo'
+3. Open another termianl and run 'mavproxy.py --master=udp:localhost:14550 --out=udp:localhost:14551 --out=udp:localhost:14552' 
+2. open a ternimal window in the directory: "examples/IDEAS_OlentantgySearch/"
+2. enter the command: `./runAMASE_OlentangySearch.sh`
 3. start the Amase simulation (i.e. push the play button)
-4. open another ternimal window in the directory: "examples/02_Example_WaterwaySearch/"
-5. enter the command: `./runUxAS_WaterwaySearch.sh`
+4. open another ternimal window in the directory: "examples/IDEAS_OlentantgySearch/"
+5. enter the command: `./runUxAS_OlentangySearch.sh`
+6. In QGC go to the plan tab > plan > download > upload
+7. Switch to the flight tab and start the mission
 
 
 ### What Happens?
