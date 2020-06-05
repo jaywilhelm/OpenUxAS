@@ -623,7 +623,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         m_CurrentWaypoint=mcur.seq;
                         break;
                     }
-                    case MAVLINK_MSG_ID_MISSION_ITEM_REACHED:
+                    case MAVLINK_MSG_ID_MISSION_ITEM_REACHED: //#46
                     {
                         COUT_INFO("MISSION_ITEM_REACHED")
                         break;
