@@ -619,8 +619,13 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         mavlink_mission_current_t mcur;
                         mavlink_msg_mission_current_decode(&msg,&mcur);
-                        //COUT_INFO("Mission Curr: "<<mcur.seq);
+                        COUT_INFO("Mission Curr: "<<mcur.seq);
                         m_CurrentWaypoint=mcur.seq;
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_MISSION_ITEM_REACHED:
+                    {
+                        COUT_INFO("MISSION_ITEM_REACHED")
                         break;
                     }
                     case MAVLINK_MSG_ID_VFR_HUD://#74
@@ -853,6 +858,22 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         break;
                     }
                     case MAVLINK_MSG_ID_HIL_SENSOR://#107
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_HIL_ACTUATOR_CONTROLS://#93
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_ACTUATOR_CONTROL_TARGET://#140
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_ODOMETRY://#331
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT://#62
                     {
                         break;
                     }
