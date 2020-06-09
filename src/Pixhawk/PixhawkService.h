@@ -193,9 +193,9 @@ protected:
     void MissionUpdate_ClearAutopilotWaypoints(void);
     void MissionUpdate_SendNewWayPointCount(void);
     void MissionUpdate_SendWayPoint(void);
+    void MissionUpdate_SendWayPointInt(void);
     void MissionUpdate_SetActiveWaypoint(uint32_t newWP_px);
-    //void MissionUpdate_SendWayPointInt(void);
-
+    bool mWaypointDistCheck=false;
     mavlink_home_position_t m_SavedHomePositionMsg;
 };
 

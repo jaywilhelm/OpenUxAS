@@ -3,6 +3,8 @@
 // include header for this service
 #include "PixhawkService.h"
 
+//#define USE_MISSION_INT
+
 #define STRING_XML_LISTEN_PORT_MAVLINK "MAVLinkListenPort"
 
 #warning "Building with Pixhawk"
@@ -37,15 +39,12 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
     if (!ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).empty())
     {
         m_configListenPortMavlink = ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).as_uint();
-        COUT_INFO("XML Port: " + m_configListenPortMavlink)
+        std::cout << "XML Port: " << m_configListenPortMavlink << std::endl;
     }
-    /*if (!ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).empty())
+    else
     {
-        m_sendPeriod_ms = ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).as_int64();
+        COUT_INFO("USING default port " + this->m_netPort);
     }
-
-    // subscribe to messages::
-    addSubscriptionAddress(afrl::cmasi::KeyValuePair::Subscription);*/
     ////////////////////////////////////////////////////////
     // subscribe to messages
     ////////////////////////////////////////////////////////
@@ -60,7 +59,9 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
         std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
         m_ptr_CurrentAirVehicleState.reset(new afrl::cmasi::AirVehicleState());
     }
-    //sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
+    
+    COUT_INFO("PX Configure done");
+
     return (isSuccess);
 }
 
@@ -390,13 +391,13 @@ void PixhawkService::Process_isMissionCommand(std::shared_ptr<afrl::cmasi::Missi
         std::cout << "Start at C#" << (int) missionCmd->getFirstWaypoint() << std::endl;   
         
         //start the waypoint update process to Pixhawk
-        if(saved_takeoff_pos)
+        /*if(saved_takeoff_pos)
             this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
         else
         {
             m_missionSendState = WAIT_GLOBAL_POSITION;
             COUT_INFO("Waiting on global position");
-        }
+        }*/
     }
 }
 void PixhawkService::SafetyTimer()
@@ -585,6 +586,23 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         mavlink_msg_heartbeat_decode(&msg, &heartbeat);
                         //std::cout << "HB " << (uint16_t) heartbeat.autopilot << " - " << (uint16_t) heartbeat.mavlink_version << std::endl;
                         //std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
+                        if(!this->mWaypointDistCheck)
+                        {
+                            this->mWaypointDistCheck=true;
+                            char param_id[16]="MIS_DIST_WPS";
+                            int16_t param_index=0;
+                            uint8_t target_system=1;
+                            uint8_t target_component=0;
+
+                            mavlink_message_t msg;
+                            uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+                            uint8_t system_id=255;
+                            uint8_t component_id=0;
+
+                            mavlink_msg_param_request_read_pack(system_id,component_id,&msg,target_system,target_component,param_id,param_index);
+                            /*uint16_t slen =*/ mavlink_msg_to_send_buffer(buf, &msg);
+                            ssize_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));  
+                        }
                         break;
                     }
                     case MAVLINK_MSG_ID_GLOBAL_POSITION_INT://#33 //SITL only
@@ -597,13 +615,14 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         double lon_d = (double)gpsi.lon/10000000.0;//deg
                         uint32_t timems = gpsi.time_boot_ms;
 
-                        //MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
+                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
                         //COUT_INFO("GLOBAL_POSITION_INT")
                         break;
                     }
                     case MAVLINK_MSG_ID_GPS_RAW_INT://#24 //HITL and real
                     {
-                        mavlink_gps_raw_int_t rgpsi;
+                        #warning HITL use only "MAVLINK_MSG_ID_GPS_RAW_INT"
+                        /*mavlink_gps_raw_int_t rgpsi;
                         mavlink_msg_gps_raw_int_decode(&msg,&rgpsi);
                         float newAlt_m = (float)rgpsi.alt/1000.0f;//AMSL
                         float cog_d = (float)rgpsi.cog/100.0f;//deg
@@ -611,7 +630,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         double lon_d = (double)rgpsi.lon/10000000.0;//deg
                         uint32_t timems = rgpsi.time_usec/1000;
                         
-                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
+                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);*/
                         //COUT_INFO("GPS RAW INT");
                         break;
                     }
@@ -692,6 +711,17 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     case MAVLINK_MSG_ID_PARAM_VALUE://#22
                     {
                         COUT_INFO("MAVLINK_MSG_ID_PARAM_VALUE")
+                        mavlink_param_value_t pvt;
+                        mavlink_msg_param_value_decode(&msg,&pvt);
+                        COUT_INFO(pvt.param_id)
+                        if(std::strcmp(pvt.param_id,"MIS_DIST_WPS")==0)
+                        {
+                            float dist = pvt.param_value;
+                            char buf[128];
+                            sprintf(buf,"GOT Max Waypoint Distance parameter: %f", dist);
+                            COUT_INFO(buf)
+                        }
+                        break;
                     }
                     case MAVLINK_MSG_ID_HIGHRES_IMU://#105
                     {
@@ -817,7 +847,11 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         {
                             //send first waypoint in my list
                             COUT_INFO("Rq: Sending 1st WP # " << m_wpIterator);
+                            #ifdef USE_MISSION_INT
+                            MissionUpdate_SendWayPointInt();
+                            #else
                             MissionUpdate_SendWayPoint();
+                            #endif
 
                         }
                         else if(m_missionSendState == SENT_WAYPOINT && m_wpIterator < m_newWaypointCount)
@@ -825,7 +859,11 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                             //send next waypoint
                             this->m_wpIterator++;
                             COUT_INFO("Rq: Sending next WP # " << m_wpIterator);
+                            #ifdef USE_MISSION_INT
+                            MissionUpdate_SendWayPointInt();
+                            #else
                             MissionUpdate_SendWayPoint();
+                            #endif
                         }
                         else if(m_missionSendState == SENT_ACTIVE_WAYPOINT)
                         {
@@ -840,7 +878,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     /*case MAVLINK_MSG_ID_MISSION_ITEM_REQUEST:
                     {
                         mavlink_mission_item_request_t mreq;
-                        avlink_mission_item_request_decode(&msg,&mreq);
+                        mavlink_mission_item_request_decode(&msg,&mreq);
                         COUT_INFO("MISSION ITEM REQUEST");
                         break;
                     }*/
@@ -874,6 +912,10 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         break;
                     }
                     case MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT://#62
+                    {
+                        break;
+                    }
+                    case MAVLINK_MSG_ID_FILE_TRANSFER_PROTOCOL ://#110
                     {
                         break;
                     }
@@ -1094,7 +1136,7 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
     }
 }
 //deal with QGC changing the PX4's mission mode
-/*void PixhawkService::MissionUpdate_SendWayPointInt(void)
+void PixhawkService::MissionUpdate_SendWayPointInt(void)
 {
     auto wp = m_newWaypointList[m_wpIterator];
     //afrl::cmasi::Waypoint* wp = m_newWaypointList[m_wpIterator];
@@ -1166,7 +1208,7 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
     {
         COUT_INFO("New WP sent #" << m_wpIterator << " (x,y,z) " << x << ", " << y << ", " << z);
     }
-}*/
+}
 void PixhawkService::MissionUpdate_SetActiveWaypoint(uint32_t newWP_px)
 {
     m_newWaypointCount = m_newWaypointList.size();   
