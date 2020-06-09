@@ -4,7 +4,7 @@
 #include "PixhawkService.h"
 
 //#define USE_MISSION_INT
-
+#define MinWPDistCheck 16000.0
 #define STRING_XML_LISTEN_PORT_MAVLINK "MAVLinkListenPort"
 
 #warning "Building with Pixhawk"
@@ -590,7 +590,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         {
                             this->mWaypointDistCheck=true;
                             char param_id[16]="MIS_DIST_WPS";
-                            int16_t param_index=0;
+                            int16_t param_index=-1;
                             uint8_t target_system=1;
                             uint8_t target_component=0;
 
@@ -718,8 +718,13 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         {
                             float dist = pvt.param_value;
                             char buf[128];
-                            sprintf(buf,"GOT Max Waypoint Distance parameter: %f", dist);
+                            sprintf(buf,"GOT Max Waypoint Distance parameter: %4.2f", dist);
                             COUT_INFO(buf)
+                            if(dist < MinWPDistCheck)
+                            {
+                                sprintf(buf,"ERROR, Configure PX4 MIS_DIST_WPS to be larger at: %4.2f", MinWPDistCheck);
+                                COUT_INFO(buf)
+                            }
                         }
                         break;
                     }
