@@ -15,8 +15,6 @@
 //#include "SerialHelper.h"
 
 // convenience definitions for the option strings
-#define STRING_XML_STRING_TO_SEND "StringToSend"
-#define STRING_XML_SEND_PERIOD_MS "SendPeriod_ms"
 #ifndef PIXHAWKSERVICE_H
 #define PIXHAWKSERVICE_H
 #include "afrl/cmasi/AirVehicleState.h"
@@ -183,6 +181,7 @@ protected:
 
     int32_t m_wpIterator{0};
     int32_t m_newWaypointCount{0};
+    uint16_t m_VehicleIDtoWatch{1};
     //std::vector<afrl::cmasi::Waypoint*> m_newWaypointList;
     std::vector<std::shared_ptr<afrl::cmasi::Waypoint>> m_newWaypointList;
     //std::shared_ptr<afrl::cmasi::MissionCommand> m_newMissionCommand;

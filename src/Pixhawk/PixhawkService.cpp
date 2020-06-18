@@ -3,8 +3,8 @@
 // include header for this service
 #include "PixhawkService.h"
 
-#define STRING_XML_LISTEN_PORT_MAVLINK "MAVLinkListenPort"
-
+#define STRING_XML_LISTEN_PORT_MAVLINK  "MAVLinkListenPort"
+#define STRING_XML_VEHICLE_ID           "VehicleIDToWatch"
 #warning "Building with Pixhawk"
 #define COUT_INFO(MESSAGE) std::cout << "PX: " << MESSAGE << std::endl;std::cout.flush();
 
@@ -37,15 +37,14 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
     if (!ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).empty())
     {
         m_configListenPortMavlink = ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).as_uint();
-        COUT_INFO("XML Port: " + m_configListenPortMavlink)
+        COUT_INFO("XML Port: " << m_configListenPortMavlink)
     }
-    /*if (!ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).empty())
+    if (!ndComponent.attribute(STRING_XML_VEHICLE_ID).empty())
     {
-        m_sendPeriod_ms = ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).as_int64();
+        m_VehicleIDtoWatch = ndComponent.attribute(STRING_XML_VEHICLE_ID).as_uint();
+        COUT_INFO("Vehicle ID to watch: " << m_VehicleIDtoWatch)
     }
-
-    // subscribe to messages::
-    addSubscriptionAddress(afrl::cmasi::KeyValuePair::Subscription);*/
+    
     ////////////////////////////////////////////////////////
     // subscribe to messages
     ////////////////////////////////////////////////////////
@@ -362,11 +361,11 @@ void PixhawkService::Process_isMissionCommand(std::shared_ptr<afrl::cmasi::Missi
         for (int i = 0; i < (int)missionCmd->getWaypointList().size(); i++)
         {
             wp = missionCmd->getWaypointList().at(i);
-            std::cout << "waypoint[" << i << "]:" << std::endl;
+            /*std::cout << "waypoint[" << i << "]:" << std::endl;
             std::cout << "CMASI ID: " << (int) wp->getNumber() << std::endl;
             std::cout << "Next ID: " << (int) wp->getNextWaypoint() << std::endl;
             std::cout << "lat: " << wp->getLatitude() << std::endl;
-            std::cout << "lon: " << wp->getLongitude() << std::endl;
+            std::cout << "lon: " << wp->getLongitude() << std::endl;*/
             std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
 
             newWP->setLatitude(wp->getLatitude());
@@ -553,12 +552,8 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
             }
             else
                 COUT_INFO("Serial read length:" << read_ret);*/
-			COUT_INFO("ERROR NO SERIAL?");
+			COUT_INFO("ERROR NO SERIAL SUPPORT?");
 
-            //assert(m_serialConnectionPiccolo);
-            //strInputFromPiccolo = m_serialConnectionPiccolo->read(m_serialReadSize);
-            //UXAS_LOG_DEBUG_VERBOSE("PiccoloAutopilotAdapterService::executePiccoloAutopilotSerialProcessing", " bytes on serial port: ", strInputFromPiccolo.length());
-            //UXAS_LOG_DEBUG_VERBOSE("PiccoloAutopilotAdapterService::executePiccoloAutopilotSerialProcessing", " all bytes read from serial port: ", strInputFromPiccolo);
         }
         if(recv_len <= 0)
             continue;
@@ -577,13 +572,18 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
             if(mvp_ret != 0)
             {
                 //COUT_INFO(msg.msgid);
+                if(msg.sysid != m_VehicleIDtoWatch)
+                {
+                    COUT_INFO("Msg not for my vehicle ID " << msg.sysid)
+                    continue;
+                }
                 switch (msg.msgid)
                 {
                     case MAVLINK_MSG_ID_HEARTBEAT://#0
                     {
                         mavlink_heartbeat_t heartbeat;
                         mavlink_msg_heartbeat_decode(&msg, &heartbeat);
-                        //std::cout << "HB " << (uint16_t) heartbeat.autopilot << " - " << (uint16_t) heartbeat.mavlink_version << std::endl;
+                        std::cout << "HB @ " << int(msg.sysid) << "/" << (uint16_t) heartbeat.autopilot << " - " << (uint16_t) heartbeat.mavlink_version << std::endl;
                         //std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
                         break;
                     }
@@ -597,7 +597,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         double lon_d = (double)gpsi.lon/10000000.0;//deg
                         uint32_t timems = gpsi.time_boot_ms;
 
-                        //MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
+                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
                         //COUT_INFO("GLOBAL_POSITION_INT")
                         break;
                     }
@@ -610,8 +610,8 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         double lat_d = (double)rgpsi.lat/10000000.0;//deg
                         double lon_d = (double)rgpsi.lon/10000000.0;//deg
                         uint32_t timems = rgpsi.time_usec/1000;
-                        
-                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
+                        //CHECK FOR VALID FIX???
+                        //MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
                         //COUT_INFO("GPS RAW INT");
                         break;
                     }
@@ -864,8 +864,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                 }
             }         
         }
-    }
-    
+    } 
 }
 void PixhawkService::MAVLINK_ProcessNewPosition(float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems)
 {
@@ -880,7 +879,7 @@ void PixhawkService::MAVLINK_ProcessNewPosition(float nAlt, float nCOG, double n
             m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
             m_ptr_CurrentAirVehicleState->setRoll(m_Attitude.roll);
         }
-        m_ptr_CurrentAirVehicleState->setID(400);
+        m_ptr_CurrentAirVehicleState->setID(this->m_VehicleIDtoWatch);
         m_ptr_CurrentAirVehicleState->setAirspeed(m_Airspeed);//m/s
         
         m_ptr_CurrentAirVehicleState->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);

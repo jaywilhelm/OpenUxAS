@@ -7,7 +7,7 @@
     </Bridge>
 
     <Service Type="PixhawkService" />
-    <Service Type="StatusReportService" VehicleID="400" />
+    <Service Type="StatusReportService" VehicleID="1" />
     <Service Type="Test_SimulationTime"/>
     <Service Type="TaskManagerService"/>
     <Service Type="AutomationRequestValidatorService"/>

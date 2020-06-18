@@ -6,7 +6,7 @@
         <SubscribeToMessage MessageType="afrl.cmasi.VehicleActionCommand" />
     </Bridge>
 
-    <Service Type="StatusReportService" VehicleID="400" />
+    <Service Type="StatusReportService" VehicleID="1" />
     <Service Type="Test_SimulationTime"/>
     <Service Type="TaskManagerService"/>
     <Service Type="AutomationRequestValidatorService"/>
@@ -15,10 +15,10 @@
     <Service Type="AssignmentTreeBranchBoundService" NumberNodesMaximum="0" CostFunction="MINMAX" />   
     <Service Type="AutomationDiagramDataService"/>
 
-    <Service Type="WaypointPlanManagerService" VehicleID="400" NumberWaypointsToServe="15" NumberWaypointsOverlap="5"
+    <Service Type="WaypointPlanManagerService" VehicleID="1" NumberWaypointsToServe="15" NumberWaypointsOverlap="5"
              DefaultLoiterRadius_m="250"  param.turnType="FlyOver" AddLoiterToEndOfSegments="FALSE"
              AddLoiterToEndOfMission="FALSE" LoopBackToFirstTask="FALSE" GimbalPayloadId="1"/>
-    <Service Type="WaypointPlanManagerService" VehicleID="500" NumberWaypointsToServe="15" NumberWaypointsOverlap="5"
+    <Service Type="WaypointPlanManagerService" VehicleID="50" NumberWaypointsToServe="15" NumberWaypointsOverlap="5"
              DefaultLoiterRadius_m="250"  param.turnType="FlyOver" AddLoiterToEndOfSegments="FALSE"
              AddLoiterToEndOfMission="FALSE" LoopBackToFirstTask="FALSE" GimbalPayloadId="1"/>
 
@@ -35,7 +35,7 @@
         <LogMessage MessageType="uxas" NumberMessagesToSkip="0"/>
         <LogMessage MessageType="afrl" NumberMessagesToSkip="0"/>    
     </Service>
-    <Service Type="PixhawkService" MAVLinkListenPort="14559"/>
+    <Service Type="PixhawkService" MAVLinkListenPort="14551" VehicleIDToWatch="1"/>
     <!-- Send every message from zeromq bus to an external program using TCP -->
     <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://*:9999" Server="TRUE">
         <SubscribeToMessage MessageType="a" />
