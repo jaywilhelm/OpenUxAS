@@ -645,7 +645,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                             this->mWaypointDistCheck=true;
                             char param_id[16]="MIS_DIST_WPS";
                             int16_t param_index=-1;
-                            uint8_t target_system=1;
+                            uint8_t target_system=this->m_VehicleIDtoWatch;
                             uint8_t target_component=0;
 
                             mavlink_message_t msg;
@@ -1071,7 +1071,7 @@ void PixhawkService::MissionUpdate_ClearAutopilotWaypoints(void)
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
 
-    uint8_t target_system=1;
+    uint8_t target_system=this->m_VehicleIDtoWatch;
     uint8_t target_component=0;
     uint8_t mission_type=0;
 
@@ -1110,7 +1110,7 @@ void PixhawkService::MissionUpdate_SendNewWayPointCount(void)
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
 
-    uint8_t target_system=1;//System ID
+    uint8_t target_system=this->m_VehicleIDtoWatch;
     uint8_t target_component=0;
     uint8_t mission_type=0;
     //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
@@ -1140,7 +1140,7 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
     uint8_t     system_id=255;
     uint8_t     component_id=MAV_COMP_ID_MISSIONPLANNER;
     mavlink_message_t msg;
-    uint8_t     target_system=1;
+    uint8_t     target_system=this->m_VehicleIDtoWatch;
     uint8_t     target_component=0; 
     uint16_t    seq=m_wpIterator;
     uint8_t     frame=MAV_FRAME_GLOBAL_RELATIVE_ALT;//MAV_FRAME_GLOBAL
@@ -1213,7 +1213,7 @@ void PixhawkService::MissionUpdate_SendWayPointInt(void)
     uint8_t     system_id=255;
     uint8_t     component_id=MAV_COMP_ID_MISSIONPLANNER;
     mavlink_message_t msg;
-    uint8_t     target_system=1;
+    uint8_t     target_system=this->m_VehicleIDtoWatch;
     uint8_t     target_component=0; 
     uint16_t    seq=m_wpIterator;
     uint8_t     frame=MAV_FRAME_GLOBAL_RELATIVE_ALT;//MAV_FRAME_GLOBAL
@@ -1295,7 +1295,7 @@ void PixhawkService::MissionUpdate_SetActiveWaypoint(uint32_t newWP_px)
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
 
-    uint8_t target_system=1;
+    uint8_t target_system=this->m_VehicleIDtoWatch;
     uint8_t target_component=0;
 
     //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
