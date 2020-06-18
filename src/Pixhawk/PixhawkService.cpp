@@ -3,15 +3,11 @@
 // include header for this service
 #include "PixhawkService.h"
 
-<<<<<<< HEAD
 #define STRING_XML_LISTEN_PORT_MAVLINK  "MAVLinkListenPort"
 #define STRING_XML_VEHICLE_ID           "VehicleIDToWatch"
-=======
 //#define USE_MISSION_INT
 #define MinWPDistCheck 16000.0
-#define STRING_XML_LISTEN_PORT_MAVLINK "MAVLinkListenPort"
 
->>>>>>> cd7081db26d800da1496f36ec45f4bb23f29672c
 #warning "Building with Pixhawk"
 #define COUT_INFO(MESSAGE) std::cout << "PX: " << MESSAGE << std::endl;std::cout.flush();
 
@@ -44,23 +40,20 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
     if (!ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).empty())
     {
         m_configListenPortMavlink = ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).as_uint();
-<<<<<<< HEAD
         COUT_INFO("XML Port: " << m_configListenPortMavlink)
     }
+    else
+    {
+        COUT_INFO("USING default port " << this->m_netPort);
+    }
+
     if (!ndComponent.attribute(STRING_XML_VEHICLE_ID).empty())
     {
         m_VehicleIDtoWatch = ndComponent.attribute(STRING_XML_VEHICLE_ID).as_uint();
         COUT_INFO("Vehicle ID to watch: " << m_VehicleIDtoWatch)
+
     }
     
-=======
-        std::cout << "XML Port: " << m_configListenPortMavlink << std::endl;
-    }
-    else
-    {
-        COUT_INFO("USING default port " + this->m_netPort);
-    }
->>>>>>> cd7081db26d800da1496f36ec45f4bb23f29672c
     ////////////////////////////////////////////////////////
     // subscribe to messages
     ////////////////////////////////////////////////////////
@@ -332,8 +325,8 @@ void PixhawkService::Process_isMissionCommand(std::shared_ptr<afrl::cmasi::Missi
     COUT_INFO("Mission Command: " << missionCmd->getLmcpTypeName() << " ID: " << missionCmd->getVehicleID());
     if (missionCmd)
     {
-        //if (missionCmd->getVehicleID() != m_ui16AutopilotID)
-        //    return;
+        if (missionCmd->getVehicleID() != this->m_VehicleIDtoWatch)
+            return;
 
         //DEBUG
         
@@ -407,19 +400,62 @@ void PixhawkService::Process_isMissionCommand(std::shared_ptr<afrl::cmasi::Missi
         std::cout << "Start at C#" << (int) missionCmd->getFirstWaypoint() << std::endl;   
         
         //start the waypoint update process to Pixhawk
-        /*if(saved_takeoff_pos)
-            this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
+        if(saved_takeoff_pos)
+        {
+            m_missionStateLastSendCount=-1;
+            this->MissionUpdate_ClearAutopilotWaypoints();
+        }
         else
         {
             m_missionSendState = WAIT_GLOBAL_POSITION;
             COUT_INFO("Waiting on global position");
-        }*/
+        }
     }
 }
 void PixhawkService::SafetyTimer()
 {
     //COUT_INFO("Saftey timer tick")
     //COUT_INFO("TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms())
+
+    if(m_missionSendState == this->SENT_CLEAR)
+    {
+        if(uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() > m_missionStateLastSendTime + 5000)
+        {
+            m_missionStateLastSendCount++;
+            if(m_missionStateLastSendCount > 3)
+            {
+                COUT_INFO("SafetyTimer caught waypoint clear not getting ack")
+                COUT_INFO("PX4 is not responding to clear!!! ERROR")
+                m_missionStateLastSendCount=-1;
+                MissionUpdate_ClearAutopilotWaypoints();
+            }
+            else
+            {
+                COUT_INFO("Sending clear again from safety timer")
+                MissionUpdate_ClearAutopilotWaypoints();
+            }
+        }
+    }
+    if(m_missionSendState == this->SENT_COUNT)
+    {
+        if(uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() > m_missionStateLastSendTime + 5000)
+        {
+            m_missionStateLastSendCount++;
+            if(m_missionStateLastSendCount > 3)
+            {
+                COUT_INFO("SafetyTimer caught waypoint count not getting ack")
+                COUT_INFO("SafetyTimer starting wp process over")
+                m_missionStateLastSendCount=-1;
+                MissionUpdate_ClearAutopilotWaypoints();
+            }
+            else
+            {
+                COUT_INFO("Sending count again from safety timer")
+                //Start the whole process over or retry?
+                MissionUpdate_SendNewWayPointCount();
+            }
+        }
+    }
 
     //meant to check the waypoints loaded on autopilot match uxas waypoints
     {
@@ -602,7 +638,8 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         mavlink_heartbeat_t heartbeat;
                         mavlink_msg_heartbeat_decode(&msg, &heartbeat);
                         std::cout << "HB @ " << int(msg.sysid) << "/" << (uint16_t) heartbeat.autopilot << " - " << (uint16_t) heartbeat.mavlink_version << std::endl;
-                        //std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
+                        //send back heartbeat???
+                        std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
                         if(!this->mWaypointDistCheck)
                         {
                             this->mWaypointDistCheck=true;
@@ -630,7 +667,10 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         float cog_d = (float)gpsi.hdg/1000.0f;//deg
                         double lat_d = (double)gpsi.lat/10000000.0;//deg
                         double lon_d = (double)gpsi.lon/10000000.0;//deg
-                        uint32_t timems = gpsi.time_boot_ms;
+                        if(m_PX4EpocTimeDiff == 0)
+                            this->m_PX4EpocTimeDiff = gpsi.time_boot_ms;
+
+                        uint32_t timems = gpsi.time_boot_ms - m_PX4EpocTimeDiff;
 
                         MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
                         //COUT_INFO("GLOBAL_POSITION_INT")
@@ -646,13 +686,9 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         double lat_d = (double)rgpsi.lat/10000000.0;//deg
                         double lon_d = (double)rgpsi.lon/10000000.0;//deg
                         uint32_t timems = rgpsi.time_usec/1000;
-<<<<<<< HEAD
                         //CHECK FOR VALID FIX???
                         //MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
-=======
-                        
                         MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);*/
->>>>>>> cd7081db26d800da1496f36ec45f4bb23f29672c
                         //COUT_INFO("GPS RAW INT");
                         break;
                     }
@@ -660,7 +696,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         mavlink_mission_current_t mcur;
                         mavlink_msg_mission_current_decode(&msg,&mcur);
-                        COUT_INFO("Mission Curr: "<<mcur.seq);
+                        //COUT_INFO("Mission Curr: "<<mcur.seq);
                         m_CurrentWaypoint=mcur.seq;
                         break;
                     }
@@ -826,12 +862,14 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         if(m_missionSendState == SENT_CLEAR)
                         {
                             COUT_INFO("Finished clear (ack), sending count");
+                            //reset the safety count
+                            this->m_missionStateLastSendCount = -1; 
                             MissionUpdate_SendNewWayPointCount();
                         }
                         else if(m_missionSendState == SENT_LAST_WAYPOINT)
                         {
                             COUT_INFO("Finished waypoint write, got ACK");
-                            //Set active waypoint here
+                            //Set active waypoint here ???
                             //MissionUpdate_SetActiveWaypoint(2);
                         }
                         else
@@ -843,18 +881,17 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     case MAVLINK_MSG_ID_MISSION_REQUEST_INT://#51
                     {
                         COUT_INFO("MAVLINK_MSG_ID_MISSION_REQUEST_INT");
-                        /*if(m_missionSendState == SENT_COUNT)
+                        if(m_missionSendState == SENT_COUNT)
                         {
                             //send first waypoint in my list
-                            COUT_INFO("Rq: Sending 1st WP # " << m_wpIterator);
+                            COUT_INFO("Rq: Sending 1st WP INT # " << m_wpIterator);
                             MissionUpdate_SendWayPointInt();
-
                         }
                         else if(m_missionSendState == SENT_WAYPOINT && m_wpIterator < m_newWaypointCount)
                         {
                             //send next waypoint
                             this->m_wpIterator++;
-                            COUT_INFO("Rq: Sending next WP # " << m_wpIterator);
+                            COUT_INFO("Rq: Sending next INT WP # " << m_wpIterator);
                             MissionUpdate_SendWayPointInt();
                         }
                         else if(m_missionSendState == SENT_ACTIVE_WAYPOINT)
@@ -864,7 +901,8 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         else
                         {
                             COUT_INFO("MISSION ACK ERROR");
-                        }*/
+                            COUT_INFO("Wp i: " << m_wpIterator << " wpcount " << m_newWaypointCount << " state :" << m_missionSendState);
+                        }
                         break;
                     }
                     case MAVLINK_MSG_ID_MISSION_REQUEST://#40
@@ -1012,7 +1050,7 @@ void PixhawkService::MAVLINK_ProcessNewPosition(float nAlt, float nCOG, double n
             m_newWaypointList.insert(m_newWaypointList.begin(),newWP);
             //for the takeoff position...
             COUT_INFO("GOT Global POS, Starting WP send");
-
+            m_missionStateLastSendCount=-1;
             this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
         }                            
     }
@@ -1052,6 +1090,9 @@ void PixhawkService::MissionUpdate_ClearAutopilotWaypoints(void)
         COUT_INFO("Cleared waypoint command sent");
         m_wpIterator = 0;
         m_missionSendState = SENT_CLEAR;
+        m_missionStateLastSendTime = uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms();
+        if(this->m_missionStateLastSendCount == -1)
+            m_missionStateLastSendCount = 0;
     }
 }
 void PixhawkService::MissionUpdate_SendNewWayPointCount(void)
@@ -1063,7 +1104,7 @@ void PixhawkService::MissionUpdate_SendNewWayPointCount(void)
         return;
     }
     else
-        COUT_INFO("Sending " << m_newWaypointCount << " waypoints");
+        COUT_INFO("Sending count of " << m_newWaypointCount << " waypoints");
     uint8_t system_id=255;
     uint8_t component_id=MAV_COMP_ID_MISSIONPLANNER;
     mavlink_message_t msg;
@@ -1087,6 +1128,9 @@ void PixhawkService::MissionUpdate_SendNewWayPointCount(void)
         COUT_INFO("New count sent (" << send_len << ") " << m_newWaypointCount);
         m_wpIterator = 0;
         m_missionSendState = SENT_COUNT;
+        m_missionStateLastSendTime = uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms();
+        if(this->m_missionStateLastSendCount == -1)
+            m_missionStateLastSendCount = 0;
     }
 }
 void PixhawkService::MissionUpdate_SendWayPoint(void)
@@ -1246,7 +1290,7 @@ void PixhawkService::MissionUpdate_SetActiveWaypoint(uint32_t newWP_px)
     else
         COUT_INFO("Clearing px4 waypoints");
     
-    uint8_t system_id=255;
+    uint8_t system_id=255; //this is UxAS system id
     uint8_t component_id=MAV_COMP_ID_MISSIONPLANNER;
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];

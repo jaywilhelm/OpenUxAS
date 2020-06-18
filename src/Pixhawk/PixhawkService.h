@@ -166,7 +166,7 @@ protected:
     std::string m_strTTyDevice{"/dev/tty.usbmodem"};
     uint32_t m_ui32Baudrate{57600};
     uint32_t m_serialTimeout_ms{5000};
-    
+    uint64_t m_PX4EpocTimeDiff=0;
     bool m_bStartupComplete{false};
         enum Mission_States{
         NULL_STATE,
@@ -189,6 +189,8 @@ protected:
 
     void Process_isMissionCommand(std::shared_ptr<afrl::cmasi::MissionCommand> missionCmd);
 
+    uint64_t m_missionStateLastSendTime = 0;
+    uint32_t m_missionStateLastSendCount = 0;
     void MissionUpdate_ClearAutopilotWaypoints(void);
     void MissionUpdate_SendNewWayPointCount(void);
     void MissionUpdate_SendWayPoint(void);
