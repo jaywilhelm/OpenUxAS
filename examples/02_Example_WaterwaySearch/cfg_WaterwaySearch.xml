@@ -35,7 +35,7 @@
         <LogMessage MessageType="uxas" NumberMessagesToSkip="0"/>
         <LogMessage MessageType="afrl" NumberMessagesToSkip="0"/>    
     </Service>
-    <Service Type="PixhawkService" MAVLinkListenPort="14550" VehicleIDToWatch="1"/>
+    <Service Type="PixhawkService" MAVLinkListenPort="14551" VehicleIDToWatch="1"/>
 
     <!-- Send every message from zeromq bus to an external program using TCP -->
     <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://*:9999" Server="TRUE">

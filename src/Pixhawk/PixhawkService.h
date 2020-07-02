@@ -185,7 +185,7 @@ protected:
     //std::vector<afrl::cmasi::Waypoint*> m_newWaypointList;
     std::vector<std::shared_ptr<afrl::cmasi::Waypoint>> m_newWaypointList;
     //std::shared_ptr<afrl::cmasi::MissionCommand> m_newMissionCommand;
-    void MAVLINK_ProcessNewPosition(float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems);
+    void MAVLINK_ProcessNewPosition(uint64_t vID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems);
 
     void Process_isMissionCommand(std::shared_ptr<afrl::cmasi::MissionCommand> missionCmd);
 

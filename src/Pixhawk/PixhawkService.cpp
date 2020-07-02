@@ -628,9 +628,34 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                 //COUT_INFO(msg.msgid);
                 if(msg.sysid != m_VehicleIDtoWatch)
                 {
-                    COUT_INFO("Msg not for my vehicle ID " << msg.sysid)
+                    if(msg.msgid == MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
+                    {
+                        //broadcast this to AirVehicleState
+                        mavlink_global_position_int_t gpsi;
+                        mavlink_msg_global_position_int_decode(&msg,&gpsi);
+                        float newAlt_m = (float)gpsi.alt/1000.0f;//AMSL
+                        float cog_d = (float)gpsi.hdg/1000.0f;//deg
+                        double lat_d = (double)gpsi.lat/10000000.0;//deg
+                        double lon_d = (double)gpsi.lon/10000000.0;//deg
+
+                        if(m_PX4EpocTimeDiff != 0)
+                        {
+                            //wait until the time is set by my vehicle time
+                            uint32_t timems = gpsi.time_boot_ms - m_PX4EpocTimeDiff;
+                            MAVLINK_ProcessNewPosition((uint64_t)msg.msgid, newAlt_m, cog_d, lat_d, lon_d, timems);
+                            COUT_INFO("Mavlink Diff ID -> Send AVS @ ID: " << int(msg.sysid));
+                        }
+                    }
+                    else if(msg.msgid == MAVLINK_MSG_ID_HEARTBEAT ||
+                       msg.msgid == MAVLINK_MSG_ID_SYS_STATUS)
+                       {
+
+                       }
+                    else
+                        COUT_INFO("Msg not for my vehicle ID " << int(msg.sysid) << " ID: " << int(msg.msgid))
                     continue;
                 }
+                
                 switch (msg.msgid)
                 {
                     case MAVLINK_MSG_ID_HEARTBEAT://#0
@@ -672,7 +697,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
 
                         uint32_t timems = gpsi.time_boot_ms - m_PX4EpocTimeDiff;
 
-                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
+                        MAVLINK_ProcessNewPosition(this->m_VehicleIDtoWatch, newAlt_m, cog_d, lat_d, lon_d, timems);
                         //COUT_INFO("GLOBAL_POSITION_INT")
                         break;
                     }
@@ -994,7 +1019,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         }
     } 
 }
-void PixhawkService::MAVLINK_ProcessNewPosition(float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems)
+void PixhawkService::MAVLINK_ProcessNewPosition(uint64_t vehicleID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems)
 {
     float newAlt_m = nAlt;
     double lat_d = nLat;
@@ -1007,7 +1032,7 @@ void PixhawkService::MAVLINK_ProcessNewPosition(float nAlt, float nCOG, double n
             m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
             m_ptr_CurrentAirVehicleState->setRoll(m_Attitude.roll);
         }
-        m_ptr_CurrentAirVehicleState->setID(this->m_VehicleIDtoWatch);
+        m_ptr_CurrentAirVehicleState->setID(vehicleID);
         m_ptr_CurrentAirVehicleState->setAirspeed(m_Airspeed);//m/s
         
         m_ptr_CurrentAirVehicleState->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);
