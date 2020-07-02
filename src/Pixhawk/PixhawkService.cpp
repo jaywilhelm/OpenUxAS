@@ -90,14 +90,6 @@ bool PixhawkService::initialize()
         // open tcp/ip socket for sending/receiving messages
         //assert(!m_tcpAddress.empty());
         //std::cout << "PX Connecting to " << m_tcpAddress << std::endl;
-        if ((m_netSocketFD=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
-        {
-            bSuccess=false;
-            COUT_INFO("create socket failed");
-        }
-        else
-            COUT_INFO("socket created");
-
     }
     else
     {
@@ -169,87 +161,6 @@ bool PixhawkService::processReceivedLmcpMessage(std::unique_ptr<uxas::communicat
     {
         COUT_INFO("Startup Complete");
         m_bStartupComplete=true;
-        
-        //test only
-        /*m_newWaypointList.clear();
-        bool saved_takeoff_pos = false;
-        double lat,lon,alt;
-        {
-            std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
-            if(this->m_ptr_CurrentAirVehicleState && this->m_ptr_CurrentAirVehicleState->getLocation()
-                    && this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude() != 0.0)
-            {
-                lat = this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude(); 
-                lon = this->m_ptr_CurrentAirVehicleState->getLocation()->getLongitude();
-                alt =  this->m_ptr_CurrentAirVehicleState->getLocation()->getAltitude();
-                saved_takeoff_pos=true;
-                std::shared_ptr<afrl::cmasi::Waypoint> newTWP(new afrl::cmasi::Waypoint);
-
-                newTWP->setLatitude(lat);
-                newTWP->setLongitude(lon);
-                newTWP->setAltitude(alt);
-                newTWP->setNumber(0);
-                m_newWaypointList.push_back(newTWP);
-            }
-        }
-        
-        
-        std::ifstream infile ("Set1.csav", std::ifstream::in);
-
-        std::string line;
-        //WP Count
-        getline(infile, line);
-        int wpcounti=-1;
-        std::istringstream swpc(line);  // note we use istringstream, we don't need the o part of stringstream
-
-        swpc >> wpcounti;
-        
-        std::cout.precision(5);
-
-        for(int i=0;i<wpcounti;i++)
-        {
-            getline(infile, line);
-
-            std::istringstream ss(line);  // note we use istringstream, we don't need the o part of stringstream
-
-            char c1, c2, c3, c4, c5;  // to eat the commas
-
-            double lat,lon,alt,param1;
-            int cmd;
-            ss >> lat >> c1 >>
-                  lon >> c2 >>
-                  alt >> c3 >>
-                  cmd >> c4 >>
-                  param1;
-            std::cout << lat << "\t" << lon << "\t\t" << alt << "\t" << cmd << "\t" << param1 << std::endl;
-            std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
-
-            newWP->setLatitude(lat);
-            newWP->setLongitude(lon);
-            newWP->setAltitude(alt);
-            newWP->setNumber(i+1);
-            m_newWaypointList.push_back(newWP);
-            //COUT_INFO(lat);
-        }
-        COUT_INFO("Test sending WPs #"<<m_newWaypointList.size());
-        for (int i = 0; i < (int)m_newWaypointList.size(); i++)
-        {
-            auto wp = m_newWaypointList[i];
-            std::cout << "waypoint[" << i << "]:" << std::endl;
-            //std::cout << "CMASI ID: " << (int) wp->getNumber() << std::endl;
-            //std::cout << "Next ID: " << (int) wp->getNextWaypoint() << std::endl;
-            std::cout << "Lat: " << wp->getLatitude() << "\t";
-            std::cout << "Lon: " << wp->getLongitude() << "\t";
-            std::cout << "Alt: " << wp->getAltitude() << std::endl;
-
-        }
-        if(saved_takeoff_pos)
-            this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
-        else
-        {
-            m_missionSendState = WAIT_GLOBAL_POSITION;
-            COUT_INFO("Waiting on global position");
-        }*/
     }
     else if (afrl::cmasi::isVehicleActionCommand(receivedLmcpMessage->m_object))
     {
@@ -447,6 +358,8 @@ void PixhawkService::SafetyTimer()
                 COUT_INFO("SafetyTimer starting wp process over")
                 m_missionStateLastSendCount=-1;
                 MissionUpdate_ClearAutopilotWaypoints();
+                MavlinkDisconnect();
+                MavlinkConnect();
             }
             else
             {
@@ -481,7 +394,7 @@ void PixhawkService::SafetyTimer()
         //uint8_t target_system, uint8_t target_component, uint16_t count, uint8_t mission_type
         //mavlink_msg_mission_count_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
         //                       uint8_t target_system, uint8_t target_component, uint16_t count, uint8_t mission_type)
-        uint8_t system_id=255;
+        uint8_t system_id=m_MAVLinkID_UxAS;
         uint8_t component_id=MAV_COMP_ID_MISSIONPLANNER;
         mavlink_message_t msg;
         uint8_t buf[MAVLINK_MAX_PACKET_LEN];
@@ -510,14 +423,13 @@ void PixhawkService::SafetyTimer()
     }
     else if(m_bStartupComplete && rport == 0 && call_count==0)
         COUT_INFO("rport = 0");*/
-    /*mavlink_system_t mavlink_system;
- 
-    mavlink_system.sysid = 255;                   ///
-    mavlink_system.compid = MAV_COMP_ID_IMU;     ///
-    uint8_t     system_type=MAV_TYPE_QUADROTOR;
+    mavlink_system_t mavlink_system;
+    mavlink_system.sysid    = 255;
+    mavlink_system.compid   = MAV_COMP_ID_MISSIONPLANNER;
+    uint8_t     system_type =MAV_TYPE_GENERIC;
     uint8_t     autopilot_type=MAV_AUTOPILOT_GENERIC;
-    uint8_t     system_mode=MAV_MODE_PREFLIGHT;
-    uint32_t    custom_mode=0;
+    uint8_t     system_mode =MAV_MODE_PREFLIGHT;
+    uint32_t    custom_mode =0;
     uint8_t     system_state=MAV_STATE_STANDBY;
 
     mavlink_message_t msg;
@@ -527,14 +439,60 @@ void PixhawkService::SafetyTimer()
     uint16_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, slen);
     if (send_len == -1)
     {
-        COUT_INFO("bad send " << send_len);
+        COUT_INFO("bad HB send " << send_len);
     }
     else
     {
 
-    }*/
+    }
     //else
     //    COUT_INFO("Failed mAVS lock");
+}
+int PixhawkService::MavlinkConnect(void)
+{
+    int success=0; 
+    if ((m_netSocketFD=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+    {
+        success=-1;
+        COUT_INFO("create socket failed");
+        return success;
+    }
+    else
+        COUT_INFO("socket created");
+    // zero out the structure
+    memset((char *) &m_listenSocket, 0, sizeof(m_listenSocket));
+
+    m_listenSocket.sin_family = AF_INET;
+    uint16_t listentPort = 0;
+    if(m_configListenPortMavlink != 0)
+        listentPort = m_configListenPortMavlink;
+    else
+        listentPort = m_netPort;
+    m_listenSocket.sin_port = htons(listentPort);    
+    m_listenSocket.sin_addr.s_addr = htonl(INADDR_ANY);
+    COUT_INFO("binding to port " << listentPort);
+
+    int enableopt = 1;
+    if (setsockopt(m_netSocketFD, SOL_SOCKET, SO_REUSEADDR, &enableopt, sizeof(int)) < 0)
+        COUT_INFO("setsockopt(SO_REUSEADDR) failed")
+
+    //bind socket to port
+    if(bind(m_netSocketFD , (struct sockaddr*)&m_listenSocket, sizeof(m_listenSocket) ) == -1)
+    {
+        COUT_INFO("bind failed");
+        m_isTerminate=true;
+        return -1;
+    }
+    else
+        COUT_INFO("bind good");
+        
+    memset((char *) &m_remoteSocket, 0, sizeof(m_remoteSocket));
+    return success;
+}
+int PixhawkService::MavlinkDisconnect()
+{
+    shutdown(m_netSocketFD, SHUT_RDWR);
+    //memset((char *) &m_listenSocket, 0, sizeof(m_listenSocket));
 }
 void
 PixhawkService::executePixhawkAutopilotCommProcessing()
@@ -543,29 +501,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
     std::string strInputFromPixhawk;
     if (m_bServer)
     {
-        // zero out the structure
-        memset((char *) &m_listenSocket, 0, sizeof(m_listenSocket));
-
-        m_listenSocket.sin_family = AF_INET;
-        uint16_t listentPort = 0;
-        if(m_configListenPortMavlink != 0)
-            listentPort = m_configListenPortMavlink;
-        else
-            listentPort = m_netPort;
-        m_listenSocket.sin_port = htons(listentPort);    
-        m_listenSocket.sin_addr.s_addr = htonl(INADDR_ANY);
-        COUT_INFO("binding to port " << listentPort);
-
-        //bind socket to port
-        if(bind(m_netSocketFD , (struct sockaddr*)&m_listenSocket, sizeof(m_listenSocket) ) == -1)
-        {
-            COUT_INFO("bind failed");
-            m_isTerminate=true;
-            return;
-        }
-        else
-            COUT_INFO("bind good");
-        memset((char *) &m_remoteSocket, 0, sizeof(m_remoteSocket));
+        MavlinkConnect();
     }
     else
     {
@@ -654,19 +590,19 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     else
                         COUT_INFO("Msg not for my vehicle ID " << int(msg.sysid) << " ID: " << int(msg.msgid))
                     continue;
-                }
-                
+                }         
                 switch (msg.msgid)
                 {
                     case MAVLINK_MSG_ID_HEARTBEAT://#0
                     {
                         mavlink_heartbeat_t heartbeat;
                         mavlink_msg_heartbeat_decode(&msg, &heartbeat);
-                        std::cout << "HB @ " << int(msg.sysid) << "/" << (uint16_t) heartbeat.autopilot << " - " << (uint16_t) heartbeat.mavlink_version << std::endl;
+                        std::cout << "HB @ ID: " << int(msg.sysid) << "/" << (uint16_t) heartbeat.autopilot << " - V: " << (uint16_t) heartbeat.mavlink_version << std::endl;
                         //send back heartbeat???
                         std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
                         if(!this->mWaypointDistCheck)
                         {
+                            COUT_INFO("ASKING WP DIST...")
                             this->mWaypointDistCheck=true;
                             char param_id[16]="MIS_DIST_WPS";
                             int16_t param_index=-1;
@@ -675,7 +611,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
 
                             mavlink_message_t msg;
                             uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-                            uint8_t system_id=255;
+                            uint8_t system_id=m_MAVLinkID_UxAS;
                             uint8_t component_id=0;
 
                             mavlink_msg_param_request_read_pack(system_id,component_id,&msg,target_system,target_component,param_id,param_index);
@@ -1091,7 +1027,7 @@ void PixhawkService::MissionUpdate_ClearAutopilotWaypoints(void)
     else
         COUT_INFO("Clearing px4 waypoints");
     
-    uint8_t system_id=255;
+    uint8_t system_id=m_MAVLinkID_UxAS;
     uint8_t component_id=MAV_COMP_ID_MISSIONPLANNER;
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
@@ -1130,7 +1066,7 @@ void PixhawkService::MissionUpdate_SendNewWayPointCount(void)
     }
     else
         COUT_INFO("Sending count of " << m_newWaypointCount << " waypoints");
-    uint8_t system_id=255;
+    uint8_t system_id=m_MAVLinkID_UxAS;
     uint8_t component_id=MAV_COMP_ID_MISSIONPLANNER;
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
@@ -1162,7 +1098,7 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
 {
     auto wp = m_newWaypointList[m_wpIterator];
     //afrl::cmasi::Waypoint* wp = m_newWaypointList[m_wpIterator];
-    uint8_t     system_id=255;
+    uint8_t     system_id=m_MAVLinkID_UxAS;
     uint8_t     component_id=MAV_COMP_ID_MISSIONPLANNER;
     mavlink_message_t msg;
     uint8_t     target_system=this->m_VehicleIDtoWatch;
@@ -1235,7 +1171,7 @@ void PixhawkService::MissionUpdate_SendWayPointInt(void)
 {
     auto wp = m_newWaypointList[m_wpIterator];
     //afrl::cmasi::Waypoint* wp = m_newWaypointList[m_wpIterator];
-    uint8_t     system_id=255;
+    uint8_t     system_id=m_MAVLinkID_UxAS;
     uint8_t     component_id=MAV_COMP_ID_MISSIONPLANNER;
     mavlink_message_t msg;
     uint8_t     target_system=this->m_VehicleIDtoWatch;
@@ -1315,7 +1251,7 @@ void PixhawkService::MissionUpdate_SetActiveWaypoint(uint32_t newWP_px)
     else
         COUT_INFO("Clearing px4 waypoints");
     
-    uint8_t system_id=255; //this is UxAS system id
+    uint8_t system_id=m_MAVLinkID_UxAS; //this is UxAS system id
     uint8_t component_id=MAV_COMP_ID_MISSIONPLANNER;
     mavlink_message_t msg;
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];

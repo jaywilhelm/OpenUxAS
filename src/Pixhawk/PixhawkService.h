@@ -33,8 +33,7 @@
 #include "CallbackTimer.h"
 #include "TypeDefs/UxAS_TypeDefs_Timer.h"
 extern "C"{
-#include<arpa/inet.h>
-#include<sys/socket.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -130,8 +129,11 @@ private:
     
 private:
     /** brief The timer calls this function periodically to send out messages */
-    void executePixhawkAutopilotCommProcessing();
-    void SafetyTimer();
+    void    executePixhawkAutopilotCommProcessing();
+    int     MavlinkConnect(void);
+    int     MavlinkDisconnect();
+
+    void    SafetyTimer();
     
 protected:
     std::string m_stringToSend = std::string("PixhawkService String");
@@ -182,6 +184,7 @@ protected:
     int32_t m_wpIterator{0};
     int32_t m_newWaypointCount{0};
     uint16_t m_VehicleIDtoWatch{1};
+    uint16_t m_MAVLinkID_UxAS{254};
     //std::vector<afrl::cmasi::Waypoint*> m_newWaypointList;
     std::vector<std::shared_ptr<afrl::cmasi::Waypoint>> m_newWaypointList;
     //std::shared_ptr<afrl::cmasi::MissionCommand> m_newMissionCommand;
