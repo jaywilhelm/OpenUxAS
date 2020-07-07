@@ -578,8 +578,9 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         {
                             //wait until the time is set by my vehicle time
                             uint32_t timems = gpsi.time_boot_ms - m_PX4EpocTimeDiff;
-                            MAVLINK_ProcessNewPosition((uint64_t)msg.msgid, newAlt_m, cog_d, lat_d, lon_d, timems);
-                            COUT_INFO("Mavlink Diff ID -> Send AVS @ ID: " << int(msg.sysid));
+                            uint64_t vID = msg.msgid;
+                            MAVLINK_ProcessNewPosition(vID, newAlt_m, cog_d, lat_d, lon_d, timems);
+                            COUT_INFO("Mavlink Diff ID -> Send AVS @ ID: " << vID);
                         }
                     }
                     else if(msg.msgid == MAVLINK_MSG_ID_HEARTBEAT ||
