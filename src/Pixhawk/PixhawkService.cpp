@@ -328,6 +328,8 @@ void PixhawkService::SafetyTimer()
     //COUT_INFO("Saftey timer tick")
     //COUT_INFO("TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms())
 
+    //    CheckMaxPX4WPDist(); 
+
     if(m_missionSendState == this->SENT_CLEAR)
     {
         if(uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() > (int64_t)m_missionStateLastSendTime + 5000)
@@ -409,7 +411,7 @@ void PixhawkService::SafetyTimer()
         memset((char*)&servaddr, 0, sizeof(servaddr));      
         servaddr.sin_family = AF_INET;
         servaddr.sin_port = htons(m_netPort);
-        ssize_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+        ssize_t send_len = sendto(m_netSocketFD, buf, ????, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
         if (send_len == -1)
         {
             COUT_INFO("bad send " << send_len);
@@ -423,7 +425,7 @@ void PixhawkService::SafetyTimer()
     }
     else if(m_bStartupComplete && rport == 0 && call_count==0)
         COUT_INFO("rport = 0");*/
-    mavlink_system_t mavlink_system;
+    /*mavlink_system_t mavlink_system;
     mavlink_system.sysid    = 255;
     mavlink_system.compid   = MAV_COMP_ID_MISSIONPLANNER;
     uint8_t     system_type =MAV_TYPE_GENERIC;
@@ -436,7 +438,7 @@ void PixhawkService::SafetyTimer()
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_heartbeat_pack(mavlink_system.sysid, mavlink_system.compid, &msg, system_type, autopilot_type, system_mode, custom_mode, system_state);
     uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
-    uint16_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, slen);
+    uint16_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, slen);
     if (send_len == -1)
     {
         COUT_INFO("bad HB send " << send_len);
@@ -444,7 +446,7 @@ void PixhawkService::SafetyTimer()
     else
     {
 
-    }
+    }*/
     //else
     //    COUT_INFO("Failed mAVS lock");
 }
@@ -509,7 +511,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         COUT_INFO("not m_bServer???")
         //m_tcpConnectionSocket->connect(m_tcpAddress.c_str());
     }
-    uint8_t buf[2048];
+    uint8_t buf[4096];
     int32_t recv_len=0;
     static uint64_t packets_recv = 0;
     while (!m_isTerminate)
@@ -519,9 +521,8 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         if (m_useNetConnection)
         {                 
             socklen_t slen = sizeof(m_remoteSocket);
-            recv_len=0;
-            //int ret = recv(m_netSocketFD,buf,sizeof(buf), 0);//non-blocking, also will drop bytes if packet is smaller than buffer
-            //(ret == 0)
+            recv_len = 0;
+            //recv_len = recv(m_netSocketFD, buf, sizeof(buf), 0);//non-blocking, also will drop bytes if packet is smaller than buffer
             recv_len = recvfrom(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, &slen);
             if (recv_len == -1)
             {
@@ -613,7 +614,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         }
                         break;
                     }
-                    case MAVLINK_MSG_ID_GLOBAL_POSITION_INT://#33 //SITL only
+                    case MAVLINK_MSG_ID_GLOBAL_POSITION_INT://#33 //SITL only and now mandatory
                     {
                         mavlink_global_position_int_t gpsi;
                         mavlink_msg_global_position_int_decode(&msg,&gpsi);
@@ -626,7 +627,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
 
                         uint32_t timems = gpsi.time_boot_ms - m_PX4EpocTimeDiff;
 
-                        //MAVLINK_ProcessNewPosition(this->m_VehicleIDtoWatch, newAlt_m, cog_d, lat_d, lon_d, timems);
+                        MAVLINK_ProcessNewPosition(this->m_VehicleIDtoWatch, newAlt_m, cog_d, lat_d, lon_d, timems);
                         //COUT_INFO("GLOBAL_POSITION_INT")
                         break;
                     }
@@ -1033,8 +1034,8 @@ void PixhawkService::MissionUpdate_ClearAutopilotWaypoints(void)
     //                           uint8_t target_system, uint8_t target_component, uint8_t mission_type
     mavlink_msg_mission_clear_all_pack(system_id,component_id,&msg,
                                         target_system,target_component,mission_type);
-    /*uint16_t slen =*/ mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
     if (send_len == -1)
     {
         COUT_INFO("clear waypoint send error");
@@ -1071,8 +1072,8 @@ void PixhawkService::MissionUpdate_SendNewWayPointCount(void)
     //                           uint8_t target_system, uint8_t target_component, uint16_t count, uint8_t mission_type
     mavlink_msg_mission_count_pack(system_id, component_id, &msg,
                            target_system, target_component, this->m_newWaypointCount,mission_type);
-    /*uint16_t slen =*/ mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
     if (send_len == -1)
     {
         COUT_INFO("bad send count " << send_len);
@@ -1148,8 +1149,8 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
             target_component,seq,frame,command,current,autocontinue,
             param1,param2,param3,param4,x,y,z,mission_type);
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    /*uint16_t slen =*/ mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
     if (send_len == -1)
     {
         COUT_INFO("bad WP sent " << send_len);
@@ -1222,8 +1223,8 @@ void PixhawkService::MissionUpdate_SendWayPointInt(void)
             target_component,seq,frame,command,current,autocontinue,
             param1,param2,param3,param4,x,y,z,mission_type);
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-    mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
     if (send_len == -1)
     {
         COUT_INFO("bad WP sent " << send_len);
@@ -1256,8 +1257,8 @@ void PixhawkService::MissionUpdate_SetActiveWaypoint(uint32_t newWP_px)
     //                           uint8_t target_system, uint8_t target_component, uint16_t seq
     mavlink_msg_mission_set_current_pack(system_id,component_id,&msg,
                                         target_system,target_component,newWP_px);
-    /*uint16_t slen =*/ mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
     if (send_len == -1)
     {
         COUT_INFO("Active waypoint send error");
@@ -1284,7 +1285,15 @@ void PixhawkService::CheckMaxPX4WPDist(void)
     uint8_t component_id=0;
 
     mavlink_msg_param_request_read_pack(system_id,component_id,&msg,target_system,target_component,param_id,param_index);
-    /*uint16_t slen =*/ mavlink_msg_to_send_buffer(buf, &msg);
-    /*ssize_t send_len =*/ sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket)); 
+    uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket)); 
+    if(send_len < 0)
+    {
+        COUT_INFO("WP Dist sendto error")
+    }
+    else if(send_len != slen)
+        {
+        COUT_INFO("WP Dist sendto error not all data sent")
+    }
 }
 };};
