@@ -508,7 +508,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
     {
         //m_tcpConnectionSocket->connect(m_tcpAddress.c_str());
     }
-    uint8_t buf[1024];
+    uint8_t buf[2048];
     int32_t recv_len=0;
     static uint64_t packets_recv = 0;
     while (!m_isTerminate)
@@ -557,10 +557,14 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         //std::cout << std::hex << (uint16_t) 0xFD << std::endl;
         for(int32_t i=0;i<recv_len;i++)
         {
-            uint8_t mvp_ret = mavlink_parse_char(chan,buf[i],&msg,&status);
+            uint8_t mvp_ret = mavlink_parse_char(chan, buf[i], &msg, &status);
             //uint16_t data = 0x00FF & buf[i];
             //std::cout << "p_ret " << std::hex << data << std::endl;
-            if(mvp_ret != 0)
+            /*if(mvp_ret == 0)
+            {
+                COUT_INFO("mavlink_parse_char -> 0")
+            }
+            else */if(mvp_ret != 0)
             {
                 //COUT_INFO(msg.msgid);
                 if(msg.sysid != m_VehicleIDtoWatch)
