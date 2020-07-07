@@ -330,7 +330,7 @@ void PixhawkService::SafetyTimer()
 
     if(m_missionSendState == this->SENT_CLEAR)
     {
-        if(uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() > m_missionStateLastSendTime + 5000)
+        if(uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() > (int64_t)m_missionStateLastSendTime + 5000)
         {
             m_missionStateLastSendCount++;
             if(m_missionStateLastSendCount > 3)
@@ -349,7 +349,7 @@ void PixhawkService::SafetyTimer()
     }
     if(m_missionSendState == this->SENT_COUNT)
     {
-        if(uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() > m_missionStateLastSendTime + 5000)
+        if(uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() > (int64_t)m_missionStateLastSendTime + 5000)
         {
             m_missionStateLastSendCount++;
             if(m_missionStateLastSendCount > 3)
@@ -493,6 +493,7 @@ int PixhawkService::MavlinkDisconnect()
 {
     shutdown(m_netSocketFD, SHUT_RDWR);
     //memset((char *) &m_listenSocket, 0, sizeof(m_listenSocket));
+    return 0;
 }
 void
 PixhawkService::executePixhawkAutopilotCommProcessing()
@@ -617,7 +618,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
 
                             mavlink_msg_param_request_read_pack(system_id,component_id,&msg,target_system,target_component,param_id,param_index);
                             /*uint16_t slen =*/ mavlink_msg_to_send_buffer(buf, &msg);
-                            ssize_t send_len = sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));  
+                            /*ssize_t send_len =*/ sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));  
                         }
                         break;
                     }

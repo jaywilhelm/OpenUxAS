@@ -193,7 +193,7 @@ protected:
     void Process_isMissionCommand(std::shared_ptr<afrl::cmasi::MissionCommand> missionCmd);
 
     uint64_t m_missionStateLastSendTime = 0;
-    uint32_t m_missionStateLastSendCount = 0;
+    int32_t m_missionStateLastSendCount = 0;
     void MissionUpdate_ClearAutopilotWaypoints(void);
     void MissionUpdate_SendNewWayPointCount(void);
     void MissionUpdate_SendWayPoint(void);
