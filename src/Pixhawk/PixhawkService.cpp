@@ -506,6 +506,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
     }
     else
     {
+        COUT_INFO("not m_bServer???")
         //m_tcpConnectionSocket->connect(m_tcpAddress.c_str());
     }
     uint8_t buf[2048];
@@ -608,21 +609,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
                         if(!this->mWaypointDistCheck)
                         {
-                            COUT_INFO("ASKING WP DIST...")
-                            this->mWaypointDistCheck=true;
-                            char param_id[16]="MIS_DIST_WPS";
-                            int16_t param_index=-1;
-                            uint8_t target_system=this->m_VehicleIDtoWatch;
-                            uint8_t target_component=0;
-
-                            mavlink_message_t msg;
-                            uint8_t buf[MAVLINK_MAX_PACKET_LEN];
-                            uint8_t system_id=m_MAVLinkID_UxAS;
-                            uint8_t component_id=0;
-
-                            mavlink_msg_param_request_read_pack(system_id,component_id,&msg,target_system,target_component,param_id,param_index);
-                            /*uint16_t slen =*/ mavlink_msg_to_send_buffer(buf, &msg);
-                            /*ssize_t send_len =*/ sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));  
+                            CheckMaxPX4WPDist(); 
                         }
                         break;
                     }
@@ -639,7 +626,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
 
                         uint32_t timems = gpsi.time_boot_ms - m_PX4EpocTimeDiff;
 
-                        MAVLINK_ProcessNewPosition(this->m_VehicleIDtoWatch, newAlt_m, cog_d, lat_d, lon_d, timems);
+                        //MAVLINK_ProcessNewPosition(this->m_VehicleIDtoWatch, newAlt_m, cog_d, lat_d, lon_d, timems);
                         //COUT_INFO("GLOBAL_POSITION_INT")
                         break;
                     }
@@ -1282,5 +1269,22 @@ void PixhawkService::MissionUpdate_SetActiveWaypoint(uint32_t newWP_px)
         m_missionSendState = SENT_ACTIVE_WAYPOINT;
     }
 }
+void PixhawkService::CheckMaxPX4WPDist(void)
+{
+    COUT_INFO("ASKING WP DIST...")
+    this->mWaypointDistCheck=true;
+    char param_id[16]="MIS_DIST_WPS";
+    int16_t param_index=-1;
+    uint8_t target_system=this->m_VehicleIDtoWatch;
+    uint8_t target_component=0;
 
+    mavlink_message_t msg;
+    uint8_t buf[MAVLINK_MAX_PACKET_LEN];
+    uint8_t system_id=m_MAVLinkID_UxAS;
+    uint8_t component_id=0;
+
+    mavlink_msg_param_request_read_pack(system_id,component_id,&msg,target_system,target_component,param_id,param_index);
+    /*uint16_t slen =*/ mavlink_msg_to_send_buffer(buf, &msg);
+    /*ssize_t send_len =*/ sendto(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket)); 
+}
 };};

@@ -134,7 +134,8 @@ private:
     int     MavlinkDisconnect();
 
     void    SafetyTimer();
-    
+    void    CheckMaxPX4WPDist(void);
+
 protected:
     std::string m_stringToSend = std::string("PixhawkService String");
     int64_t m_sendPeriod_ms{1000};
