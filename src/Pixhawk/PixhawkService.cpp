@@ -1182,7 +1182,7 @@ void PixhawkService::MissionUpdate_SendWayPointInt(void)
     int32_t     x=(int32_t)tempFloat;
     tempFloat = int32_t(wp->getLongitude()*10000000.0);
     int32_t     y=tempFloat;
-    printf("WP %d %f %f",x,wp->getLatitude(),wp->getLatitude()*10000000);
+    //printf("WP %d %f %f\r\n",x,wp->getLatitude(),wp->getLatitude()*10000000);
     //float   def_alt = this->m_SavedHomePositionMsg.altitude;
     //def_alt /= 1000.0;
     #warning altitude is set at 50 above ground
