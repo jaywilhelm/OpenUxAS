@@ -5,7 +5,7 @@
 
 #define STRING_XML_LISTEN_PORT_MAVLINK  "MAVLinkListenPort"
 #define STRING_XML_VEHICLE_ID           "VehicleIDToWatch"
-//#define USE_MISSION_INT
+#define USE_MISSION_INT
 #define MinWPDistCheck 16000.0
 
 #warning "Building with Pixhawk"
@@ -580,7 +580,6 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         float cog_d = (float)gpsi.hdg/1000.0f;//deg
                         double lat_d = (double)gpsi.lat/10000000.0;//deg
                         double lon_d = (double)gpsi.lon/10000000.0;//deg
-
                         //if(m_PX4EpocTimeDiff != 0)
                         {
                             //wait until the time is set by my vehicle time
@@ -1179,10 +1178,11 @@ void PixhawkService::MissionUpdate_SendWayPointInt(void)
     float       param2=0.0f;
     float       param3=0.0f; 
     float       param4=0.0f; 
-    float       tempFloat = wp->getLatitude()*10e7;
-    int32_t     x=tempFloat;
-    tempFloat = int32_t(wp->getLongitude()*10e7);
+    double      tempFloat = wp->getLatitude()*10000000.0;
+    int32_t     x=(int32_t)tempFloat;
+    tempFloat = int32_t(wp->getLongitude()*10000000.0);
     int32_t     y=tempFloat;
+    printf("WP %d %f %f",x,wp->getLatitude(),wp->getLatitude()*10000000);
     //float   def_alt = this->m_SavedHomePositionMsg.altitude;
     //def_alt /= 1000.0;
     #warning altitude is set at 50 above ground
