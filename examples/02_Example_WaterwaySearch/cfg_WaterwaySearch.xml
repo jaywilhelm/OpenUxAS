@@ -15,7 +15,7 @@
     <Service Type="AssignmentTreeBranchBoundService" NumberNodesMaximum="0" CostFunction="MINMAX" />   
     <Service Type="AutomationDiagramDataService"/>
 
-    <Service Type="WaypointPlanManagerService" VehicleID="1" NumberWaypointsToServe="15" NumberWaypointsOverlap="5"
+    <Service Type="WaypointPlanManagerService" VehicleID="1" NumberWaypointsToServe="5" NumberWaypointsOverlap="2"
              DefaultLoiterRadius_m="250"  param.turnType="FlyOver" AddLoiterToEndOfSegments="FALSE"
              AddLoiterToEndOfMission="FALSE" LoopBackToFirstTask="FALSE" GimbalPayloadId="1"/>
     <Service Type="WaypointPlanManagerService" VehicleID="50" NumberWaypointsToServe="15" NumberWaypointsOverlap="5"
@@ -35,7 +35,7 @@
         <LogMessage MessageType="uxas" NumberMessagesToSkip="0"/>
         <LogMessage MessageType="afrl" NumberMessagesToSkip="0"/>    
     </Service>
-    <Service Type="PixhawkService" MAVLinkListenPort="14550" VehicleIDToWatch="1"/>
+    <Service Type="PixhawkService" MAVLinkListenPort="14551" VehicleIDToWatch="1"/>
 
     <!-- Send every message from zeromq bus to an external program using TCP -->
     <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://*:9999" Server="TRUE">

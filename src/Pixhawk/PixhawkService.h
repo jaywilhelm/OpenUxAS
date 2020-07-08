@@ -185,11 +185,12 @@ protected:
     int32_t m_wpIterator{0};
     int32_t m_newWaypointCount{0};
     uint16_t m_VehicleIDtoWatch{1};
-    uint16_t m_MAVLinkID_UxAS{254};
+    uint16_t m_MAVLinkID_UxAS{199};
+    uint64_t m_WaypointOffset{0};
     //std::vector<afrl::cmasi::Waypoint*> m_newWaypointList;
     std::vector<std::shared_ptr<afrl::cmasi::Waypoint>> m_newWaypointList;
     //std::shared_ptr<afrl::cmasi::MissionCommand> m_newMissionCommand;
-    void MAVLINK_ProcessNewPosition(uint64_t vID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems);
+    void MAVLINK_ProcessNewPosition(bool sendnow, uint64_t vID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems);
 
     void Process_isMissionCommand(std::shared_ptr<afrl::cmasi::MissionCommand> missionCmd);
 

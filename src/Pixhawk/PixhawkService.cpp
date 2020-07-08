@@ -309,7 +309,7 @@ void PixhawkService::Process_isMissionCommand(std::shared_ptr<afrl::cmasi::Missi
             std::cout << "lon: " << wp->getLongitude() << std::endl;
         }*/
         std::cout << "Start at C#" << (int) missionCmd->getFirstWaypoint() << std::endl;   
-        
+        m_WaypointOffset = missionCmd->getFirstWaypoint();
         //start the waypoint update process to Pixhawk
         if(saved_takeoff_pos)
         {
@@ -318,8 +318,24 @@ void PixhawkService::Process_isMissionCommand(std::shared_ptr<afrl::cmasi::Missi
         }
         else
         {
-            m_missionSendState = WAIT_GLOBAL_POSITION;
-            COUT_INFO("Waiting on global position");
+            std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
+
+            double lat,lon,alt;
+            
+            lat = this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude(); 
+            lon = this->m_ptr_CurrentAirVehicleState->getLocation()->getLongitude();
+            alt =  this->m_ptr_CurrentAirVehicleState->getLocation()->getAltitude();
+
+            //for the takeoff position...
+            newWP->setLatitude(lat);
+            newWP->setLongitude(lon);
+            newWP->setAltitude(alt);
+            newWP->setNumber(0);
+            m_newWaypointList.insert(m_newWaypointList.begin(),newWP);
+            //for the takeoff position...
+            COUT_INFO("GOT Global POS, Starting WP send");
+            m_missionStateLastSendCount=-1;
+            this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
         }
     }
 }
@@ -328,7 +344,13 @@ void PixhawkService::SafetyTimer()
     //COUT_INFO("Saftey timer tick")
     //COUT_INFO("TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms())
 
-    //    CheckMaxPX4WPDist(); 
+    //CheckMaxPX4WPDist(); 
+    afrl::cmasi::Location3D *loc = m_ptr_CurrentAirVehicleState->getLocation();
+    //COUT_INFO("AVS: " << loc->getLatitude() << "\t " << loc->getLongitude() << "\t " << loc->getAltitude()
+    //            << "\t " << m_ptr_CurrentAirVehicleState->getCourse() << "\t " << m_ptr_CurrentAirVehicleState->getCurrentWaypoint())
+    printf("AVS: %4.6f\t %4.6f\t %4.6f\t %4.6f\t %ld\r\n", loc->getLatitude(), loc->getLongitude(), loc->getAltitude(),
+                m_ptr_CurrentAirVehicleState->getCourse(), m_ptr_CurrentAirVehicleState->getCurrentWaypoint());
+    sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
 
     if(m_missionSendState == this->SENT_CLEAR)
     {
@@ -577,7 +599,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         mavlink_global_position_int_t gpsi;
                         mavlink_msg_global_position_int_decode(&msg,&gpsi);
                         float newAlt_m = (float)gpsi.alt/1000.0f;//AMSL
-                        float cog_d = (float)gpsi.hdg/1000.0f;//deg
+                        float cog_d = (float)gpsi.hdg/100.0f;//deg
                         double lat_d = (double)gpsi.lat/10000000.0;//deg
                         double lon_d = (double)gpsi.lon/10000000.0;//deg
                         //if(m_PX4EpocTimeDiff != 0)
@@ -585,7 +607,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                             //wait until the time is set by my vehicle time
                             uint32_t timems = 0;//gpsi.time_boot_ms - m_PX4EpocTimeDiff;
                             uint64_t vID = msg.sysid;
-                            MAVLINK_ProcessNewPosition(vID, newAlt_m, cog_d, lat_d, lon_d, timems);
+                            MAVLINK_ProcessNewPosition(true, vID, newAlt_m, cog_d, lat_d, lon_d, timems);
                             COUT_INFO("Mavlink Diff ID -> Send AVS @ ID: " << vID);
                         }
                     }
@@ -618,7 +640,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                         mavlink_global_position_int_t gpsi;
                         mavlink_msg_global_position_int_decode(&msg,&gpsi);
                         float newAlt_m = (float)gpsi.alt/1000.0f;//AMSL
-                        float cog_d = (float)gpsi.hdg/1000.0f;//deg
+                        float cog_d = (float)gpsi.hdg/100.0f;//deg
                         double lat_d = (double)gpsi.lat/10000000.0;//deg
                         double lon_d = (double)gpsi.lon/10000000.0;//deg
                         if(m_PX4EpocTimeDiff == 0)
@@ -626,7 +648,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
 
                         uint32_t timems = gpsi.time_boot_ms - m_PX4EpocTimeDiff;
 
-                        MAVLINK_ProcessNewPosition(this->m_VehicleIDtoWatch, newAlt_m, cog_d, lat_d, lon_d, timems);
+                        MAVLINK_ProcessNewPosition(false, this->m_VehicleIDtoWatch, newAlt_m, cog_d, lat_d, lon_d, timems);
                         //COUT_INFO("GLOBAL_POSITION_INT")
                         break;
                     }
@@ -650,13 +672,15 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         mavlink_mission_current_t mcur;
                         mavlink_msg_mission_current_decode(&msg,&mcur);
-                        //COUT_INFO("Mission Curr: "<<mcur.seq);
+                        //COUT_INFO("Mission Curr: " << mcur.seq);
                         m_CurrentWaypoint=mcur.seq;
                         break;
                     }
                     case MAVLINK_MSG_ID_MISSION_ITEM_REACHED: //#46
                     {
-                        COUT_INFO("MISSION_ITEM_REACHED")
+                        mavlink_mission_item_reached_t mir;
+                        mavlink_msg_mission_item_reached_decode(&msg,&mir);
+                        //COUT_INFO("MISSION_ITEM_REACHED " << mir.seq)
                         break;
                     }
                     case MAVLINK_MSG_ID_VFR_HUD://#74
@@ -948,7 +972,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         }
     } 
 }
-void PixhawkService::MAVLINK_ProcessNewPosition(uint64_t vehicleID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems)
+void PixhawkService::MAVLINK_ProcessNewPosition(bool sendnow, uint64_t vehicleID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems)
 {
     float newAlt_m = nAlt;
     double lat_d = nLat;
@@ -982,31 +1006,11 @@ void PixhawkService::MAVLINK_ProcessNewPosition(uint64_t vehicleID, float nAlt, 
         m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0001);
         m_ptr_CurrentAirVehicleState->setTime(ntimems);        
         
-        m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint);
-        sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
+        m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint+1+m_WaypointOffset);
+        if(sendnow)
+            sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
         bAVSReady=true;
-        //COUT_INFO("Broadcasting AVS");
-        if(m_missionSendState == WAIT_GLOBAL_POSITION)
-        {
-            std::shared_ptr<afrl::cmasi::Waypoint> newWP(new afrl::cmasi::Waypoint);
-
-            double lat,lon,alt;
-            
-            lat = this->m_ptr_CurrentAirVehicleState->getLocation()->getLatitude(); 
-            lon = this->m_ptr_CurrentAirVehicleState->getLocation()->getLongitude();
-            alt =  this->m_ptr_CurrentAirVehicleState->getLocation()->getAltitude();
-
-            //for the takeoff position...
-            newWP->setLatitude(lat);
-            newWP->setLongitude(lon);
-            newWP->setAltitude(alt);
-            newWP->setNumber(0);
-            m_newWaypointList.insert(m_newWaypointList.begin(),newWP);
-            //for the takeoff position...
-            COUT_INFO("GOT Global POS, Starting WP send");
-            m_missionStateLastSendCount=-1;
-            this->MissionUpdate_ClearAutopilotWaypoints();//MissionUpdate_SendNewWayPointCount();
-        }                            
+        //COUT_INFO("Broadcasting AVS");                     
     }
 }
 void PixhawkService::MissionUpdate_ClearAutopilotWaypoints(void)
