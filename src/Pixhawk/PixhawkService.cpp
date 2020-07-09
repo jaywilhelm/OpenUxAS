@@ -348,7 +348,8 @@ void PixhawkService::SafetyTimer()
     afrl::cmasi::Location3D *loc = m_ptr_CurrentAirVehicleState->getLocation();
     //COUT_INFO("AVS: " << loc->getLatitude() << "\t " << loc->getLongitude() << "\t " << loc->getAltitude()
     //            << "\t " << m_ptr_CurrentAirVehicleState->getCourse() << "\t " << m_ptr_CurrentAirVehicleState->getCurrentWaypoint())
-    printf("AVS: %4.6f\t %4.6f\t %4.6f\t %4.6f\t %ld\r\n", loc->getLatitude(), loc->getLongitude(), loc->getAltitude(),
+    printf("%ld AVS: %4.6f\t %4.6f\t %4.6f\t %4.6f\t %ld\r\n", uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms(),
+                loc->getLatitude(), loc->getLongitude(), loc->getAltitude(),
                 m_ptr_CurrentAirVehicleState->getCourse(), m_ptr_CurrentAirVehicleState->getCurrentWaypoint());
     sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
 
@@ -626,9 +627,9 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
                     {
                         mavlink_heartbeat_t heartbeat;
                         mavlink_msg_heartbeat_decode(&msg, &heartbeat);
-                        std::cout << "HB @ ID: " << int(msg.sysid) << "/" << (uint16_t) heartbeat.autopilot << " - V: " << (uint16_t) heartbeat.mavlink_version << std::endl;
+                        //std::cout << "HB @ ID: " << int(msg.sysid) << "/" << (uint16_t) heartbeat.autopilot << " - V: " << (uint16_t) heartbeat.mavlink_version << std::endl;
                         //send back heartbeat???
-                        std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
+                        //std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
                         if(!this->mWaypointDistCheck)
                         {
                             CheckMaxPX4WPDist(); 
