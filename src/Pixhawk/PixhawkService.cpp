@@ -1006,7 +1006,7 @@ void PixhawkService::MAVLINK_ProcessNewPosition(bool sendnow, uint64_t vehicleID
         m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0001);
         m_ptr_CurrentAirVehicleState->setTime(ntimems);        
         
-        m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint+1+m_WaypointOffset);
+        m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint-1+m_WaypointOffset);
         if(sendnow)
             sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
         bAVSReady=true;
