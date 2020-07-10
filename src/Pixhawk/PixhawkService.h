@@ -128,42 +128,49 @@ private:
     
     
 private:
+protected:
+
     /** brief The timer calls this function periodically to send out messages */
     void    executePixhawkAutopilotCommProcessing();
+    void    executeSecondaryMAVLINKProcessing();
+    std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;
+    std::unique_ptr<std::thread> m_receiveFromSecondaryThread;
+
     int     MavlinkConnect(void);
     int     MavlinkDisconnect();
 
     void    SafetyTimer();
     void    CheckMaxPX4WPDist(void);
 
-protected:
     std::string m_stringToSend = std::string("PixhawkService String");
-    int64_t m_sendPeriod_ms{1000};
-    uint64_t m_SafetyTimerId{0};
+    int64_t     m_dtSafetyTimer{1000};
+    uint64_t    m_SafetyTimerId{0};
     
-    bool m_useNetConnection{true};
-    ///// TCP/IP
-    /*! \brief this is the zmq context used to connect to the external device */
-    ///std::shared_ptr<zmq::context_t> m_contextLocal;
-    /*! \brief this is the stream socket used to connect to the external device */
-    //std::shared_ptr<zmq::socket_t> m_tcpConnectionSocket;
-    int m_netSocketFD;
-    sockaddr_in m_listenSocket;
-    sockaddr_in m_remoteSocket;
-    //std::string m_tcpAddress{"udp://localhost:14501"};
-    //uint16_t m_netPort{14551};//mavproxy
-    uint16_t m_netPort{14551};//directy
-    uint16_t m_configListenPortMavlink{0};
+    bool        m_useNetConnection{true};
+    int         m_netSocketFD;
+    sockaddr_in m_listenAddr;
+    sockaddr_in m_remoteAddr;
+    #define     netPortDefault 14550;
+    uint16_t    m_listenPortMavlink{0};
+    uint16_t    m_IncomingMAVLinkSecondary{14541};
+    int         m_netSocketFDSecondary;
+    sockaddr_in m_listenAddrSecondary;
+    sockaddr_in m_remoteAddrSecondary;
+    int RecvAndProcessFromMainMAVLINKConnection(void);
+    int RecvAndProcessFromSecondaryMAVLINKConnection(void);
 
-    bool m_bServer{true};
-    std::unique_ptr<std::thread> m_receiveFromPixhawkProcessingThread;
-    bool m_isTerminate{false};//read thread terminate
-    int64_t m_CurrentWaypoint{-1};
+    int RecvAndProcessMAVLINKConnection(int sockfd, uint8_t chan);
+
+    int ProcessMAVLINKMessage(mavlink_message_t &msg, mavlink_status_t &status, uint8_t chan);
+
+    bool        m_bServer{true};
+    bool        m_isTerminate{false};//read thread terminate
+    int64_t     m_CurrentWaypoint{-1};
     mavlink_attitude_t m_Attitude;
-    double m_Airspeed{0.0};
+    double      m_Airspeed{0.0};
     std::shared_ptr<afrl::cmasi::AirVehicleState> m_ptr_CurrentAirVehicleState;
-    std::mutex m_AirvehicleStateMutex;
-    bool    bAVSReady=false;
+    std::mutex  m_AirvehicleStateMutex;
+    bool        bAVSReady=false;
     //Serial
     //std::shared_ptr<serial::Serial> m_serialConnectionPixhawk;
     std::string m_strTTyDevice{"/dev/tty.usbmodem"};
@@ -190,7 +197,7 @@ protected:
     //std::vector<afrl::cmasi::Waypoint*> m_newWaypointList;
     std::vector<std::shared_ptr<afrl::cmasi::Waypoint>> m_newWaypointList;
     //std::shared_ptr<afrl::cmasi::MissionCommand> m_newMissionCommand;
-    void MAVLINK_ProcessNewPosition(bool sendnow, uint64_t vID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems);
+    void MAVLINK_ProcessNewPosition(uint64_t vID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems);
 
     void Process_isMissionCommand(std::shared_ptr<afrl::cmasi::MissionCommand> missionCmd);
 

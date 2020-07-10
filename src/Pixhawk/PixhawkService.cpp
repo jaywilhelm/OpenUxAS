@@ -6,7 +6,7 @@
 #define STRING_XML_LISTEN_PORT_MAVLINK  "MAVLinkListenPort"
 #define STRING_XML_VEHICLE_ID           "VehicleIDToWatch"
 #define USE_MISSION_INT
-#define MinWPDistCheck 16000.0
+#define MinWPDistCheck 10000.0
 
 #warning "Building with Pixhawk"
 #define COUT_INFO(MESSAGE) std::cout << "PX: " << MESSAGE << std::endl;std::cout.flush();
@@ -39,12 +39,13 @@ bool PixhawkService::configure(const pugi::xml_node& ndComponent)
     // process options from the XML configuration node:
     if (!ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).empty())
     {
-        m_configListenPortMavlink = ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).as_uint();
-        COUT_INFO("XML Port: " << m_configListenPortMavlink)
+        this->m_listenPortMavlink = ndComponent.attribute(STRING_XML_LISTEN_PORT_MAVLINK).as_uint();
+        COUT_INFO("XML Port: " << m_listenPortMavlink)
     }
     else
     {
-        COUT_INFO("USING default port " << this->m_netPort);
+        m_listenPortMavlink = netPortDefault;
+        COUT_INFO("USING default port " << this->m_listenPortMavlink);
     }
 
     if (!ndComponent.attribute(STRING_XML_VEHICLE_ID).empty())
@@ -82,28 +83,14 @@ bool PixhawkService::initialize()
     m_SafetyTimerId = uxas::common::TimerManager::getInstance().createTimer(
         std::bind(&PixhawkService::SafetyTimer, this), "PixhawkService::SafetyTimer");
     bool bSuccess(true);
-
-    std::cout <<  "PX init"<<std::endl;
-    
+  
     if (m_useNetConnection)
     {
-        // open tcp/ip socket for sending/receiving messages
-        //assert(!m_tcpAddress.empty());
-        //std::cout << "PX Connecting to " << m_tcpAddress << std::endl;
+        COUT_INFO("Will use network")
     }
     else
     {
-        /*COUT_INFO("serial");
-        // 0) initialize the serial connection
-        m_serialConnectionPixhawk.reset(new serial::Serial(m_strTTyDevice, m_ui32Baudrate, serial::Timeout::simpleTimeout(m_serialTimeout_ms)));
-        if (!m_serialConnectionPixhawk->isOpen())
-        {
-            //UXAS_LOG_ERROR(s_typeName(), ":: Initialize - serial connection failed:: m_strTTyDevice[", m_strTTyDevice, "m_ui32Baudrate[", m_ui32Baudrate);
-            COUT_INFO("Serial open failed:"<<m_strTTyDevice);
-            bSuccess = false;
-        }*/
-		COUT_INFO("ERROR NO SERIAL?");
-
+		COUT_INFO("ERROR NO SERIAL?")
     }
     return (bSuccess);
 }
@@ -112,8 +99,10 @@ bool PixhawkService::start()
 {
     COUT_INFO("PX start");
     m_receiveFromPixhawkProcessingThread = uxas::stduxas::make_unique<std::thread>(&PixhawkService::executePixhawkAutopilotCommProcessing, this);
-    //return true;
-    return (uxas::common::TimerManager::getInstance().startPeriodicTimer(m_SafetyTimerId,0,m_sendPeriod_ms));
+    m_receiveFromSecondaryThread = uxas::stduxas::make_unique<std::thread>(&PixhawkService::executeSecondaryMAVLINKProcessing, this);
+
+    
+    return (uxas::common::TimerManager::getInstance().startPeriodicTimer(m_SafetyTimerId,0,m_dtSafetyTimer));
 };
 
 bool PixhawkService::terminate()
@@ -143,8 +132,18 @@ bool PixhawkService::terminate()
     }
     else
     {
-        COUT_INFO("PX::terminate unexpectedly could not join m_receiveFromPiccoloProcessingThread");
+        COUT_INFO("PX::terminate unexpectedly could not join m_receiveFromPixhawkProcessingThread");
     }
+    if (m_receiveFromSecondaryThread && m_receiveFromSecondaryThread->joinable())
+    {
+        m_receiveFromSecondaryThread->join();
+        COUT_INFO("PX ::terminate calling thread completed m_receiveFromSecondaryThread join");
+    }
+    else
+    {
+        COUT_INFO("PX::terminate unexpectedly could not join m_receiveFromSecondaryThread");
+    }
+    
     return (true);
 }
 
@@ -351,7 +350,7 @@ void PixhawkService::SafetyTimer()
     printf("%ld AVS: %4.6f\t %4.6f\t %4.6f\t %4.6f\t %ld\r\n", uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms(),
                 loc->getLatitude(), loc->getLongitude(), loc->getAltitude(),
                 m_ptr_CurrentAirVehicleState->getCourse(), m_ptr_CurrentAirVehicleState->getCurrentWaypoint());
-    sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
+    //sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
 
     if(m_missionSendState == this->SENT_CLEAR)
     {
@@ -412,7 +411,7 @@ void PixhawkService::SafetyTimer()
         }*/
     }
     //static int call_count=0;
-    //int rport = m_remoteSocket.sin_port;
+    //int rport = m_remoteAddr.sin_port;
     /*if(m_bStartupComplete && call_count == 0 && rport != 0)
     {
         //uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
@@ -434,7 +433,7 @@ void PixhawkService::SafetyTimer()
         memset((char*)&servaddr, 0, sizeof(servaddr));      
         servaddr.sin_family = AF_INET;
         servaddr.sin_port = htons(m_netPort);
-        ssize_t send_len = sendto(m_netSocketFD, buf, ????, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+        ssize_t send_len = sendto(m_netSocketFD, buf, ????, 0, (struct sockaddr *) &m_remoteAddr, sizeof(m_remoteAddr));
         if (send_len == -1)
         {
             COUT_INFO("bad send " << send_len);
@@ -461,7 +460,7 @@ void PixhawkService::SafetyTimer()
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     mavlink_msg_heartbeat_pack(mavlink_system.sysid, mavlink_system.compid, &msg, system_type, autopilot_type, system_mode, custom_mode, system_state);
     uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
-    uint16_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, slen);
+    uint16_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteAddr, slen);
     if (send_len == -1)
     {
         COUT_INFO("bad HB send " << send_len);
@@ -473,51 +472,484 @@ void PixhawkService::SafetyTimer()
     //else
     //    COUT_INFO("Failed mAVS lock");
 }
-int PixhawkService::MavlinkConnect(void)
+int MavlinkConnectByPort(uint16_t port, sockaddr_in &listenAddr, int &sockFD)
 {
-    int success=0; 
-    if ((m_netSocketFD=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+    //if(sockFD != 0)
+    //    close(sockFD);
+    if ((sockFD=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
     {
-        success=-1;
-        COUT_INFO("create socket failed");
-        return success;
+        COUT_INFO("create socket failed " << port);
+        return -1;
     }
     else
-        COUT_INFO("socket created");
+        COUT_INFO("socket created " << port);
     // zero out the structure
-    memset((char *) &m_listenSocket, 0, sizeof(m_listenSocket));
-
-    m_listenSocket.sin_family = AF_INET;
-    uint16_t listentPort = 0;
-    if(m_configListenPortMavlink != 0)
-        listentPort = m_configListenPortMavlink;
-    else
-        listentPort = m_netPort;
-    m_listenSocket.sin_port = htons(listentPort);    
-    m_listenSocket.sin_addr.s_addr = htonl(INADDR_ANY);
-    COUT_INFO("binding to port " << listentPort);
+    memset((char *) &listenAddr, 0, sizeof(sockaddr_in));
+    listenAddr.sin_family = AF_INET;
+    listenAddr.sin_port = htons(port);    
+    listenAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    COUT_INFO("binding to port " << port);
 
     int enableopt = 1;
-    if (setsockopt(m_netSocketFD, SOL_SOCKET, SO_REUSEADDR, &enableopt, sizeof(int)) < 0)
+    if (setsockopt(sockFD, SOL_SOCKET, SO_REUSEADDR, &enableopt, sizeof(int)) < 0)
         COUT_INFO("setsockopt(SO_REUSEADDR) failed")
 
+    /*struct timeval read_timeout;
+    read_timeout.tv_sec = 0;
+    read_timeout.tv_usec = 1;
+    setsockopt(sockFD, SOL_SOCKET, SO_RCVTIMEO, &read_timeout, sizeof read_timeout);*/
     //bind socket to port
-    if(bind(m_netSocketFD , (struct sockaddr*)&m_listenSocket, sizeof(m_listenSocket) ) == -1)
+    if(bind(sockFD , (struct sockaddr*)&listenAddr, sizeof(sockaddr) ) == -1)
     {
         COUT_INFO("bind failed");
-        m_isTerminate=true;
-        return -1;
+        //m_isTerminate=true;
+        return -2;
     }
     else
         COUT_INFO("bind good");
         
-    memset((char *) &m_remoteSocket, 0, sizeof(m_remoteSocket));
+    //memset((char *) &m_remoteAddr, 0, sizeof(m_remoteAddr));
+    return 0;
+}
+//main px4 connection
+int PixhawkService::MavlinkConnect(void)
+{
+    int success = MavlinkConnectByPort(this->m_listenPortMavlink, this->m_listenAddr, this->m_netSocketFD);
+    memset((char *) &m_remoteAddr, 0, sizeof(m_remoteAddr));
     return success;
 }
 int PixhawkService::MavlinkDisconnect()
 {
     shutdown(m_netSocketFD, SHUT_RDWR);
     //memset((char *) &m_listenSocket, 0, sizeof(m_listenSocket));
+    return 0;
+}
+int PixhawkService::RecvAndProcessMAVLINKConnection(int sockfd, uint8_t chan)
+{
+    uint8_t buf[1024];
+    socklen_t slen = sizeof(m_remoteAddr);
+    int32_t recv_len = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteAddr, &slen);
+    if (recv_len == -1)
+    {
+        //COUT_INFO("bad recv " << recv_len);
+        //-1 also means timeout...
+        return 0;
+    }
+    else
+    {
+        /*if(packets_recv == 0)
+            COUT_INFO("RPORT: " << m_remoteAddr.sin_port);
+        packets_recv++;*/
+    } 
+
+    if(recv_len <= 0)
+        return 0;
+    
+    buf[recv_len]=0;
+    //COUT_INFO("recv " << buf << " " << recv_len);
+    mavlink_message_t   msg;
+    mavlink_status_t    status;    
+    //std::cout << std::hex << (uint16_t) 0xFD << std::endl;
+    for(int32_t i=0;i<recv_len;i++)
+    {
+        uint8_t mvp_ret = mavlink_parse_char(chan, buf[i], &msg, &status);
+        if(mvp_ret > 0)
+            ProcessMAVLINKMessage(msg,status,chan);
+    }       
+    return 0;
+}
+int PixhawkService::RecvAndProcessFromSecondaryMAVLINKConnection(void)
+{
+    RecvAndProcessMAVLINKConnection(this->m_netSocketFDSecondary, 1);
+    return 0;
+}
+int PixhawkService::RecvAndProcessFromMainMAVLINKConnection(void)
+{
+    RecvAndProcessMAVLINKConnection(this->m_netSocketFD, 0);
+    return 0;
+}
+
+int 
+PixhawkService::ProcessMAVLINKMessage(mavlink_message_t &msg, mavlink_status_t &status,uint8_t chan)
+{
+    if(msg.sysid != m_VehicleIDtoWatch)
+    {
+        if(msg.msgid == MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
+        {
+            //broadcast this to AirVehicleState
+            mavlink_global_position_int_t gpsi;
+            mavlink_msg_global_position_int_decode(&msg,&gpsi);
+            float newAlt_m = (float)gpsi.alt/1000.0f;//AMSL
+            float cog_d = (float)gpsi.hdg/100.0f;//deg
+            double lat_d = (double)gpsi.lat/10000000.0;//deg
+            double lon_d = (double)gpsi.lon/10000000.0;//deg
+            //if(m_PX4EpocTimeDiff != 0)
+            {
+                //wait until the time is set by my vehicle time
+                uint32_t timems = 0;//gpsi.time_boot_ms - m_PX4EpocTimeDiff;
+                uint64_t vID = msg.sysid;
+                MAVLINK_ProcessNewPosition(vID, newAlt_m, cog_d, lat_d, lon_d, timems);
+                COUT_INFO("Mavlink Diff ID -> Send AVS @ ID: " << vID);
+            }
+            return 0;
+        }
+        else if(msg.msgid == MAVLINK_MSG_ID_HEARTBEAT ||
+            msg.msgid == MAVLINK_MSG_ID_SYS_STATUS)
+            {
+
+            }
+        else
+            COUT_INFO("Msg not for my vehicle ID " << int(msg.sysid) << " ID: " << int(msg.msgid))
+        return 0;
+    }
+    switch (msg.msgid)
+    {
+        case MAVLINK_MSG_ID_HEARTBEAT://#0
+        {
+            mavlink_heartbeat_t heartbeat;
+            mavlink_msg_heartbeat_decode(&msg, &heartbeat);
+            //std::cout << "HB @ ID: " << int(msg.sysid) << "/" << (uint16_t) heartbeat.autopilot << " - V: " << (uint16_t) heartbeat.mavlink_version << std::endl;
+            //send back heartbeat???
+            //std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
+            if(!this->mWaypointDistCheck)
+            {
+                CheckMaxPX4WPDist(); 
+            }
+            break;
+        }
+        case MAVLINK_MSG_ID_GLOBAL_POSITION_INT://#33 //SITL only and now mandatory
+        {
+            mavlink_global_position_int_t gpsi;
+            mavlink_msg_global_position_int_decode(&msg,&gpsi);
+            float newAlt_m = (float)gpsi.alt/1000.0f;//AMSL
+            float cog_d = (float)gpsi.hdg/100.0f;//deg
+            double lat_d = (double)gpsi.lat/10000000.0;//deg
+            double lon_d = (double)gpsi.lon/10000000.0;//deg
+            if(m_PX4EpocTimeDiff == 0)
+                this->m_PX4EpocTimeDiff = gpsi.time_boot_ms;
+
+            uint32_t timems = gpsi.time_boot_ms - m_PX4EpocTimeDiff;
+
+            MAVLINK_ProcessNewPosition(msg.sysid, newAlt_m, cog_d, lat_d, lon_d, timems);
+            //COUT_INFO("GLOBAL_POSITION_INT")
+            break;
+        }
+        case MAVLINK_MSG_ID_GPS_RAW_INT://#24 //HITL and real
+        {
+            #warning HITL use only "MAVLINK_MSG_ID_GPS_RAW_INT"
+            /*mavlink_gps_raw_int_t rgpsi;
+            mavlink_msg_gps_raw_int_decode(&msg,&rgpsi);
+            float newAlt_m = (float)rgpsi.alt/1000.0f;//AMSL
+            float cog_d = (float)rgpsi.cog/100.0f;//deg
+            double lat_d = (double)rgpsi.lat/10000000.0;//deg
+            double lon_d = (double)rgpsi.lon/10000000.0;//deg
+            uint32_t timems = rgpsi.time_usec/1000;
+            //CHECK FOR VALID FIX???
+            //MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
+            MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);*/
+            //COUT_INFO("GPS RAW INT");
+            break;
+        }
+        case MAVLINK_MSG_ID_MISSION_CURRENT://#224
+        {
+            mavlink_mission_current_t mcur;
+            mavlink_msg_mission_current_decode(&msg,&mcur);
+            //COUT_INFO("Mission Curr: " << mcur.seq);
+            m_CurrentWaypoint=mcur.seq;
+            break;
+        }
+        case MAVLINK_MSG_ID_MISSION_ITEM_REACHED: //#46
+        {
+            mavlink_mission_item_reached_t mir;
+            mavlink_msg_mission_item_reached_decode(&msg,&mir);
+            //COUT_INFO("MISSION_ITEM_REACHED " << mir.seq)
+            break;
+        }
+        case MAVLINK_MSG_ID_VFR_HUD://#74
+        {
+            mavlink_vfr_hud_t vfr;
+            mavlink_msg_vfr_hud_decode(&msg,&vfr);
+            //COUT_INFO("Speed VFR "<<vfr.airspeed);
+            //m_Airspeed = vfr.airspeed;
+            m_Airspeed = vfr.groundspeed;
+            #warning "Using ground speed"
+            break;
+        }
+        case MAVLINK_MSG_ID_WIND_COV://#231
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_ALTITUDE://#141
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_ATTITUDE: //#30
+        {
+            mavlink_attitude_t att;
+            mavlink_msg_attitude_decode(&msg,&att);
+            memcpy(&m_Attitude,&att,sizeof(m_Attitude));
+            //pitch roll yaw
+            break;
+        }
+        case MAVLINK_MSG_ID_SYS_STATUS://#1
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_SYSTEM_TIME://#2
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_PING://#4
+        {
+            COUT_INFO("MAV PING")
+            //Send ping back???
+            break;
+        }
+        case MAVLINK_MSG_ID_BATTERY_STATUS://#147
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_EXTENDED_SYS_STATE://#245
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_ATTITUDE_QUATERNION://#31
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_LOCAL_POSITION_NED://#32
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_ATTITUDE_TARGET://#82
+        {
+            //Reports the current commanded attitude of the vehicle as specified by the autopilot. This should match the commands sent in a SET_ATTITUDE_TARGET message if the vehicle is being controlled this way.
+            break;
+        }
+        case MAVLINK_MSG_ID_PARAM_VALUE://#22
+        {
+            COUT_INFO("MAVLINK_MSG_ID_PARAM_VALUE")
+            mavlink_param_value_t pvt;
+            mavlink_msg_param_value_decode(&msg,&pvt);
+            COUT_INFO(pvt.param_id)
+            if(std::strcmp(pvt.param_id,"MIS_DIST_WPS")==0)
+            {
+                float dist = pvt.param_value;
+                char buf[128];
+                sprintf(buf,"GOT Max Waypoint Distance parameter: %4.2f", dist);
+                COUT_INFO(buf)
+                if(dist < MinWPDistCheck)
+                {
+                    sprintf(buf,"ERROR, Configure PX4 MIS_DIST_WPS to be larger at: %4.2f", MinWPDistCheck);
+                    COUT_INFO(buf)
+                }
+            }
+            break;
+        }
+        case MAVLINK_MSG_ID_HIGHRES_IMU://#105
+        {
+            mavlink_highres_imu_t highimu;
+            mavlink_msg_highres_imu_decode(&msg,&highimu);
+            //COUT_INFO("HighResIMU");
+            break;
+        }
+        case MAVLINK_MSG_ID_ESTIMATOR_STATUS://#230
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_HOME_POSITION://#242
+        {
+            mavlink_home_position_t homet;
+            mavlink_msg_home_position_decode(&msg,&homet);
+            if(m_SavedHomePositionMsg.latitude != homet.latitude &&
+                m_SavedHomePositionMsg.longitude != homet.longitude &&
+                m_SavedHomePositionMsg.altitude != homet.altitude)
+            {
+                //COUT_INFO("New HP? "<< m_SavedHomePositionMsg.latitude<<"/"<<homet.latitude);
+
+                std::memset(&this->m_SavedHomePositionMsg,0,sizeof(homet));
+                std::memcpy(&this->m_SavedHomePositionMsg,&homet,sizeof(homet));
+                COUT_INFO("Saved NEW HOME POSITION");
+            }                        
+            break;
+        }
+        case MAVLINK_MSG_ID_VIBRATION://#241
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_POSITION_TARGET_GLOBAL_INT://#86
+        {
+            //COUT_INFO("TARGET GLOBAL INT");
+            break;
+        }
+        case MAVLINK_MSG_ID_STATUSTEXT://#253
+        {
+            COUT_INFO("STATUS TEXT")
+            char textresponse[512];
+            mavlink_msg_statustext_get_text(&msg,textresponse);
+            COUT_INFO(textresponse);
+            break;
+        }
+        case MAVLINK_MSG_ID_COMMAND_LONG://#76
+        {
+            COUT_INFO("MAVLINK_MSG_ID_COMMAND_LONG")
+            break;
+        }
+        case MAVLINK_MSG_ID_POSITION_TARGET_LOCAL_NED://#85
+        {
+            //COUT_INFO("MAVLINK_MSG_ID_POSITION_TARGET_LOCAL_NED")//this happens alot
+            break;
+        }
+        case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW://#36
+        {
+            //COUT_INFO("MAVLINK_MSG_ID_SERVO_OUTPUT_RAW")//this happens alot
+            break;
+        }
+        case MAVLINK_MSG_ID_MISSION_COUNT://#44
+        {
+            mavlink_mission_count_t mcount;
+            mavlink_msg_mission_count_decode(&msg,&mcount);
+            COUT_INFO("RX COUNT " << mcount.count);
+            
+            //m_recvMissionCount=mcount.count;//only need if we are going to read waypoint list
+            break;
+        }
+        case MAVLINK_MSG_ID_MISSION_ACK://#47
+        {
+            COUT_INFO("MAVLINK_MSG_ID_MISSION_ACK");
+            mavlink_mission_ack_t mack;
+            mavlink_msg_mission_ack_decode(&msg,&mack);
+            if(m_missionSendState == SENT_CLEAR)
+            {
+                COUT_INFO("Finished clear (ack), sending count");
+                //reset the safety count
+                this->m_missionStateLastSendCount = -1; 
+                MissionUpdate_SendNewWayPointCount();
+            }
+            else if(m_missionSendState == SENT_LAST_WAYPOINT)
+            {
+                COUT_INFO("Finished waypoint write, got ACK");
+                //Set active waypoint here ???
+                //MissionUpdate_SetActiveWaypoint(2);
+            }
+            else
+            {
+                COUT_INFO("GOT ACK FOR NO REASON???")
+            }
+            break;
+        }
+        case MAVLINK_MSG_ID_MISSION_REQUEST_INT://#51
+        {
+            COUT_INFO("MAVLINK_MSG_ID_MISSION_REQUEST_INT");
+            if(m_missionSendState == SENT_COUNT)
+            {
+                //send first waypoint in my list
+                COUT_INFO("Rq: Sending 1st WP INT # " << m_wpIterator);
+                MissionUpdate_SendWayPointInt();
+            }
+            else if(m_missionSendState == SENT_WAYPOINT && m_wpIterator < m_newWaypointCount)
+            {
+                //send next waypoint
+                this->m_wpIterator++;
+                COUT_INFO("Rq: Sending next INT WP # " << m_wpIterator);
+                MissionUpdate_SendWayPointInt();
+            }
+            else if(m_missionSendState == SENT_ACTIVE_WAYPOINT)
+            {
+                COUT_INFO("Mission send done");
+            }
+            else
+            {
+                COUT_INFO("MISSION ACK ERROR");
+                COUT_INFO("Wp i: " << m_wpIterator << " wpcount " << m_newWaypointCount << " state :" << m_missionSendState);
+            }
+            break;
+        }
+        case MAVLINK_MSG_ID_MISSION_REQUEST://#40
+        {
+            COUT_INFO("MAVLINK_MSG_ID_MISSION_REQUEST)");
+            if(m_missionSendState == SENT_COUNT)
+            {
+                //send first waypoint in my list
+                COUT_INFO("Rq: Sending 1st WP # " << m_wpIterator);
+                #ifdef USE_MISSION_INT
+                MissionUpdate_SendWayPointInt();
+                #else
+                MissionUpdate_SendWayPoint();
+                #endif
+
+            }
+            else if(m_missionSendState == SENT_WAYPOINT && m_wpIterator < m_newWaypointCount)
+            {
+                //send next waypoint
+                this->m_wpIterator++;
+                COUT_INFO("Rq: Sending next WP # " << m_wpIterator);
+                #ifdef USE_MISSION_INT
+                MissionUpdate_SendWayPointInt();
+                #else
+                MissionUpdate_SendWayPoint();
+                #endif
+            }
+            else if(m_missionSendState == SENT_ACTIVE_WAYPOINT)
+            {
+                COUT_INFO("Mission send done");
+            }
+            else
+            {
+                COUT_INFO("MISSION ACK ERROR");
+            }
+            break;
+        }
+        /*case MAVLINK_MSG_ID_MISSION_ITEM_REQUEST:
+        {
+            mavlink_mission_item_request_t mreq;
+            mavlink_mission_item_request_decode(&msg,&mreq);
+            COUT_INFO("MISSION ITEM REQUEST");
+            break;
+        }*/
+        case MAVLINK_MSG_ID_UTM_GLOBAL_POSITION://#340 "SITL sents this
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_TIMESYNC://#111
+        {
+            //COUT_INFO("TIMESYNC?")
+            break;
+        }
+        case MAVLINK_MSG_ID_SCALED_IMU://#26
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_HIL_SENSOR://#107
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_HIL_ACTUATOR_CONTROLS://#93
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_ACTUATOR_CONTROL_TARGET://#140
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_ODOMETRY://#331
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT://#62
+        {
+            break;
+        }
+        case MAVLINK_MSG_ID_FILE_TRANSFER_PROTOCOL ://#110
+        {
+            break;
+        }
+        default:
+        {
+            COUT_INFO("####################################### Msg: "<<msg.msgid);
+            break;
+        }
+    }
     return 0;
 }
 void
@@ -527,6 +959,7 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
     std::string strInputFromPixhawk;
     if (m_bServer)
     {
+        //main mavlink connection to px4
         MavlinkConnect();
     }
     else
@@ -534,485 +967,91 @@ PixhawkService::executePixhawkAutopilotCommProcessing()
         COUT_INFO("not m_bServer???")
         //m_tcpConnectionSocket->connect(m_tcpAddress.c_str());
     }
-    uint8_t buf[4096];
-    int32_t recv_len=0;
-    static uint64_t packets_recv = 0;
+    //this is for testing to get global position messages from simulated aircraft
+    MavlinkConnectByPort(this->m_IncomingMAVLinkSecondary, this->m_listenAddrSecondary, this->m_netSocketFDSecondary);
+
     while (!m_isTerminate)
     {
-        //std::string strInputFromPiccolo;
-        //strInputFromPiccolo.clear();
-        if (m_useNetConnection)
-        {                 
-            socklen_t slen = sizeof(m_remoteSocket);
-            recv_len = 0;
-            //recv_len = recv(m_netSocketFD, buf, sizeof(buf), 0);//non-blocking, also will drop bytes if packet is smaller than buffer
-            recv_len = recvfrom(m_netSocketFD, buf, sizeof(buf), 0, (struct sockaddr *) &m_remoteSocket, &slen);
-            if (recv_len == -1)
-            {
-                COUT_INFO("bad recv " << recv_len);
-            }
-            else
-            {
-                if(packets_recv == 0)
-                    COUT_INFO("RPORT: " << m_remoteSocket.sin_port);
-                packets_recv++;
-            } 
+        int recv_ret = RecvAndProcessFromMainMAVLINKConnection();
+        if(recv_ret < 0)
+        {     
+            COUT_INFO("Main recv error")        
         }
-        else
-        {
-            /*assert(m_serialConnectionPixhawk);
-            int read_ret = m_serialConnectionPixhawk->read(buf,sizeof(buf));
-            if(read_ret < 0)
-            {
-                COUT_INFO("Serial read error:"<<read_ret);
-            }
-            else
-                COUT_INFO("Serial read length:" << read_ret);*/
-			COUT_INFO("ERROR NO SERIAL SUPPORT?");
+        /*int recv_ret2 = RecvAndProcessFromSecondaryMAVLINKConnection();
+        if(recv_ret2 < 0)
+        {     
+            COUT_INFO("Secondary recv error")        
+        }*/
+    } 
+}
 
-        }
-        if(recv_len <= 0)
-            continue;
-        
-        buf[recv_len]=0;
-        //COUT_INFO("recv " << buf << " " << recv_len);
-        int chan = 0;
-        mavlink_message_t msg;
-        mavlink_status_t status;
-        //std::cout << std::hex << (uint16_t) 0xFD << std::endl;
-        for(int32_t i=0;i<recv_len;i++)
-        {
-            uint8_t mvp_ret = mavlink_parse_char(chan, buf[i], &msg, &status);
-            //uint16_t data = 0x00FF & buf[i];
-            //std::cout << "p_ret " << std::hex << data << std::endl;
-            /*if(mvp_ret == 0)
-            {
-                COUT_INFO("mavlink_parse_char -> 0")
-            }
-            else */if(mvp_ret != 0)
-            {
-                //COUT_INFO(msg.msgid);
-                if(msg.sysid != m_VehicleIDtoWatch)
-                {
-                    if(msg.msgid == MAVLINK_MSG_ID_GLOBAL_POSITION_INT)
-                    {
-                        //broadcast this to AirVehicleState
-                        mavlink_global_position_int_t gpsi;
-                        mavlink_msg_global_position_int_decode(&msg,&gpsi);
-                        float newAlt_m = (float)gpsi.alt/1000.0f;//AMSL
-                        float cog_d = (float)gpsi.hdg/100.0f;//deg
-                        double lat_d = (double)gpsi.lat/10000000.0;//deg
-                        double lon_d = (double)gpsi.lon/10000000.0;//deg
-                        //if(m_PX4EpocTimeDiff != 0)
-                        {
-                            //wait until the time is set by my vehicle time
-                            uint32_t timems = 0;//gpsi.time_boot_ms - m_PX4EpocTimeDiff;
-                            uint64_t vID = msg.sysid;
-                            MAVLINK_ProcessNewPosition(true, vID, newAlt_m, cog_d, lat_d, lon_d, timems);
-                            COUT_INFO("Mavlink Diff ID -> Send AVS @ ID: " << vID);
-                        }
-                    }
-                    else if(msg.msgid == MAVLINK_MSG_ID_HEARTBEAT ||
-                       msg.msgid == MAVLINK_MSG_ID_SYS_STATUS)
-                       {
+//non-blocking socket recv slowed down comms too much...
+void
+PixhawkService::executeSecondaryMAVLINKProcessing()
+{
+    COUT_INFO("executeSecondaryMAVLINKProcessing");
+    std::string strInputFromPixhawk;
+    
+    MavlinkConnectByPort(this->m_IncomingMAVLinkSecondary, this->m_listenAddrSecondary, this->m_netSocketFDSecondary);
 
-                       }
-                    else
-                        COUT_INFO("Msg not for my vehicle ID " << int(msg.sysid) << " ID: " << int(msg.msgid))
-                    continue;
-                }         
-                switch (msg.msgid)
-                {
-                    case MAVLINK_MSG_ID_HEARTBEAT://#0
-                    {
-                        mavlink_heartbeat_t heartbeat;
-                        mavlink_msg_heartbeat_decode(&msg, &heartbeat);
-                        //std::cout << "HB @ ID: " << int(msg.sysid) << "/" << (uint16_t) heartbeat.autopilot << " - V: " << (uint16_t) heartbeat.mavlink_version << std::endl;
-                        //send back heartbeat???
-                        //std::cout << "TIME: " << uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms() << std::endl;
-                        if(!this->mWaypointDistCheck)
-                        {
-                            CheckMaxPX4WPDist(); 
-                        }
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_GLOBAL_POSITION_INT://#33 //SITL only and now mandatory
-                    {
-                        mavlink_global_position_int_t gpsi;
-                        mavlink_msg_global_position_int_decode(&msg,&gpsi);
-                        float newAlt_m = (float)gpsi.alt/1000.0f;//AMSL
-                        float cog_d = (float)gpsi.hdg/100.0f;//deg
-                        double lat_d = (double)gpsi.lat/10000000.0;//deg
-                        double lon_d = (double)gpsi.lon/10000000.0;//deg
-                        if(m_PX4EpocTimeDiff == 0)
-                            this->m_PX4EpocTimeDiff = gpsi.time_boot_ms;
-
-                        uint32_t timems = gpsi.time_boot_ms - m_PX4EpocTimeDiff;
-
-                        MAVLINK_ProcessNewPosition(false, this->m_VehicleIDtoWatch, newAlt_m, cog_d, lat_d, lon_d, timems);
-                        //COUT_INFO("GLOBAL_POSITION_INT")
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_GPS_RAW_INT://#24 //HITL and real
-                    {
-                        #warning HITL use only "MAVLINK_MSG_ID_GPS_RAW_INT"
-                        /*mavlink_gps_raw_int_t rgpsi;
-                        mavlink_msg_gps_raw_int_decode(&msg,&rgpsi);
-                        float newAlt_m = (float)rgpsi.alt/1000.0f;//AMSL
-                        float cog_d = (float)rgpsi.cog/100.0f;//deg
-                        double lat_d = (double)rgpsi.lat/10000000.0;//deg
-                        double lon_d = (double)rgpsi.lon/10000000.0;//deg
-                        uint32_t timems = rgpsi.time_usec/1000;
-                        //CHECK FOR VALID FIX???
-                        //MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);
-                        MAVLINK_ProcessNewPosition(newAlt_m, cog_d, lat_d, lon_d, timems);*/
-                        //COUT_INFO("GPS RAW INT");
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_MISSION_CURRENT://#224
-                    {
-                        mavlink_mission_current_t mcur;
-                        mavlink_msg_mission_current_decode(&msg,&mcur);
-                        //COUT_INFO("Mission Curr: " << mcur.seq);
-                        m_CurrentWaypoint=mcur.seq;
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_MISSION_ITEM_REACHED: //#46
-                    {
-                        mavlink_mission_item_reached_t mir;
-                        mavlink_msg_mission_item_reached_decode(&msg,&mir);
-                        //COUT_INFO("MISSION_ITEM_REACHED " << mir.seq)
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_VFR_HUD://#74
-                    {
-                        mavlink_vfr_hud_t vfr;
-                        mavlink_msg_vfr_hud_decode(&msg,&vfr);
-                        //COUT_INFO("Speed VFR "<<vfr.airspeed);
-                        //m_Airspeed = vfr.airspeed;
-                        m_Airspeed = vfr.groundspeed;
-                        #warning "Using ground speed"
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_WIND_COV://#231
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_ALTITUDE://#141
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_ATTITUDE: //#30
-                    {
-                        mavlink_attitude_t att;
-                        mavlink_msg_attitude_decode(&msg,&att);
-                        memcpy(&m_Attitude,&att,sizeof(m_Attitude));
-                        //pitch roll yaw
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_SYS_STATUS://#1
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_SYSTEM_TIME://#2
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_PING://#4
-                    {
-                        COUT_INFO("MAV PING")
-                        //Send ping back???
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_BATTERY_STATUS://#147
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_EXTENDED_SYS_STATE://#245
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_ATTITUDE_QUATERNION://#31
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_LOCAL_POSITION_NED://#32
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_ATTITUDE_TARGET://#82
-                    {
-                        //Reports the current commanded attitude of the vehicle as specified by the autopilot. This should match the commands sent in a SET_ATTITUDE_TARGET message if the vehicle is being controlled this way.
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_PARAM_VALUE://#22
-                    {
-                        COUT_INFO("MAVLINK_MSG_ID_PARAM_VALUE")
-                        mavlink_param_value_t pvt;
-                        mavlink_msg_param_value_decode(&msg,&pvt);
-                        COUT_INFO(pvt.param_id)
-                        if(std::strcmp(pvt.param_id,"MIS_DIST_WPS")==0)
-                        {
-                            float dist = pvt.param_value;
-                            char buf[128];
-                            sprintf(buf,"GOT Max Waypoint Distance parameter: %4.2f", dist);
-                            COUT_INFO(buf)
-                            if(dist < MinWPDistCheck)
-                            {
-                                sprintf(buf,"ERROR, Configure PX4 MIS_DIST_WPS to be larger at: %4.2f", MinWPDistCheck);
-                                COUT_INFO(buf)
-                            }
-                        }
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_HIGHRES_IMU://#105
-                    {
-                        mavlink_highres_imu_t highimu;
-                        mavlink_msg_highres_imu_decode(&msg,&highimu);
-                        //COUT_INFO("HighResIMU");
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_ESTIMATOR_STATUS://#230
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_HOME_POSITION://#242
-                    {
-                        mavlink_home_position_t homet;
-                        mavlink_msg_home_position_decode(&msg,&homet);
-                        if(m_SavedHomePositionMsg.latitude != homet.latitude &&
-                            m_SavedHomePositionMsg.longitude != homet.longitude &&
-                            m_SavedHomePositionMsg.altitude != homet.altitude)
-                        {
-                            //COUT_INFO("New HP? "<< m_SavedHomePositionMsg.latitude<<"/"<<homet.latitude);
-
-                            std::memset(&this->m_SavedHomePositionMsg,0,sizeof(homet));
-                            std::memcpy(&this->m_SavedHomePositionMsg,&homet,sizeof(homet));
-                            COUT_INFO("Saved NEW HOME POSITION");
-                        }                        
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_VIBRATION://#241
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_POSITION_TARGET_GLOBAL_INT://#86
-                    {
-                        //COUT_INFO("TARGET GLOBAL INT");
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_STATUSTEXT://#253
-                    {
-                        COUT_INFO("STATUS TEXT")
-                        char textresponse[512];
-                        mavlink_msg_statustext_get_text(&msg,textresponse);
-                        COUT_INFO(textresponse);
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_COMMAND_LONG://#76
-                    {
-                        COUT_INFO("MAVLINK_MSG_ID_COMMAND_LONG")
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_POSITION_TARGET_LOCAL_NED://#85
-                    {
-                        //COUT_INFO("MAVLINK_MSG_ID_POSITION_TARGET_LOCAL_NED")//this happens alot
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW://#36
-                    {
-                        //COUT_INFO("MAVLINK_MSG_ID_SERVO_OUTPUT_RAW")//this happens alot
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_MISSION_COUNT://#44
-                    {
-                        mavlink_mission_count_t mcount;
-                        mavlink_msg_mission_count_decode(&msg,&mcount);
-                        COUT_INFO("RX COUNT " << mcount.count);
-                        
-                        //m_recvMissionCount=mcount.count;//only need if we are going to read waypoint list
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_MISSION_ACK://#47
-                    {
-                        COUT_INFO("MAVLINK_MSG_ID_MISSION_ACK");
-                        mavlink_mission_ack_t mack;
-                        mavlink_msg_mission_ack_decode(&msg,&mack);
-                        if(m_missionSendState == SENT_CLEAR)
-                        {
-                            COUT_INFO("Finished clear (ack), sending count");
-                            //reset the safety count
-                            this->m_missionStateLastSendCount = -1; 
-                            MissionUpdate_SendNewWayPointCount();
-                        }
-                        else if(m_missionSendState == SENT_LAST_WAYPOINT)
-                        {
-                            COUT_INFO("Finished waypoint write, got ACK");
-                            //Set active waypoint here ???
-                            //MissionUpdate_SetActiveWaypoint(2);
-                        }
-                        else
-                        {
-                            COUT_INFO("GOT ACK FOR NO REASON???")
-                        }
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_MISSION_REQUEST_INT://#51
-                    {
-                        COUT_INFO("MAVLINK_MSG_ID_MISSION_REQUEST_INT");
-                        if(m_missionSendState == SENT_COUNT)
-                        {
-                            //send first waypoint in my list
-                            COUT_INFO("Rq: Sending 1st WP INT # " << m_wpIterator);
-                            MissionUpdate_SendWayPointInt();
-                        }
-                        else if(m_missionSendState == SENT_WAYPOINT && m_wpIterator < m_newWaypointCount)
-                        {
-                            //send next waypoint
-                            this->m_wpIterator++;
-                            COUT_INFO("Rq: Sending next INT WP # " << m_wpIterator);
-                            MissionUpdate_SendWayPointInt();
-                        }
-                        else if(m_missionSendState == SENT_ACTIVE_WAYPOINT)
-                        {
-                            COUT_INFO("Mission send done");
-                        }
-                        else
-                        {
-                            COUT_INFO("MISSION ACK ERROR");
-                            COUT_INFO("Wp i: " << m_wpIterator << " wpcount " << m_newWaypointCount << " state :" << m_missionSendState);
-                        }
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_MISSION_REQUEST://#40
-                    {
-                        COUT_INFO("MAVLINK_MSG_ID_MISSION_REQUEST)");
-                        if(m_missionSendState == SENT_COUNT)
-                        {
-                            //send first waypoint in my list
-                            COUT_INFO("Rq: Sending 1st WP # " << m_wpIterator);
-                            #ifdef USE_MISSION_INT
-                            MissionUpdate_SendWayPointInt();
-                            #else
-                            MissionUpdate_SendWayPoint();
-                            #endif
-
-                        }
-                        else if(m_missionSendState == SENT_WAYPOINT && m_wpIterator < m_newWaypointCount)
-                        {
-                            //send next waypoint
-                            this->m_wpIterator++;
-                            COUT_INFO("Rq: Sending next WP # " << m_wpIterator);
-                            #ifdef USE_MISSION_INT
-                            MissionUpdate_SendWayPointInt();
-                            #else
-                            MissionUpdate_SendWayPoint();
-                            #endif
-                        }
-                        else if(m_missionSendState == SENT_ACTIVE_WAYPOINT)
-                        {
-                            COUT_INFO("Mission send done");
-                        }
-                        else
-                        {
-                            COUT_INFO("MISSION ACK ERROR");
-                        }
-                        break;
-                    }
-                    /*case MAVLINK_MSG_ID_MISSION_ITEM_REQUEST:
-                    {
-                        mavlink_mission_item_request_t mreq;
-                        mavlink_mission_item_request_decode(&msg,&mreq);
-                        COUT_INFO("MISSION ITEM REQUEST");
-                        break;
-                    }*/
-                    case MAVLINK_MSG_ID_UTM_GLOBAL_POSITION://#340 "SITL sents this
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_TIMESYNC://#111
-                    {
-                        //COUT_INFO("TIMESYNC?")
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_SCALED_IMU://#26
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_HIL_SENSOR://#107
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_HIL_ACTUATOR_CONTROLS://#93
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_ACTUATOR_CONTROL_TARGET://#140
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_ODOMETRY://#331
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT://#62
-                    {
-                        break;
-                    }
-                    case MAVLINK_MSG_ID_FILE_TRANSFER_PROTOCOL ://#110
-                    {
-                        break;
-                    }
-                    default:
-                    {
-                        COUT_INFO("####################################### Msg: "<<msg.msgid);
-                        break;
-                    }
-                }
-            }         
+    while (!m_isTerminate)
+    {
+       int recv_ret2 = RecvAndProcessFromSecondaryMAVLINKConnection();
+        if(recv_ret2 < 0)
+        {     
+            COUT_INFO("Secondary recv error")        
         }
     } 
 }
-void PixhawkService::MAVLINK_ProcessNewPosition(bool sendnow, uint64_t vehicleID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems)
+void PixhawkService::MAVLINK_ProcessNewPosition(uint64_t vehicleID, float nAlt, float nCOG, double nLat, double nLon, uint32_t ntimems)
 {
     float newAlt_m = nAlt;
     double lat_d = nLat;
     double lon_d = nLon;
     double cog_d = nCOG;
-    {
-        std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);
-        if(m_Attitude.time_boot_ms!=0)
-        {
-            m_ptr_CurrentAirVehicleState->setPitch(m_Attitude.pitch);
-            m_ptr_CurrentAirVehicleState->setRoll(m_Attitude.roll);
-        }
-        m_ptr_CurrentAirVehicleState->setID(vehicleID);
-        m_ptr_CurrentAirVehicleState->setAirspeed(m_Airspeed);//m/s
-        
-        m_ptr_CurrentAirVehicleState->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);
-        m_ptr_CurrentAirVehicleState->getLocation()->setAltitude(newAlt_m);
-        m_ptr_CurrentAirVehicleState->getLocation()->setLatitude(lat_d);
-        m_ptr_CurrentAirVehicleState->getLocation()->setLongitude(lon_d);
-        m_ptr_CurrentAirVehicleState->setCourse(cog_d);
-        // u, v, w, udot, vdot, wdot
-        m_ptr_CurrentAirVehicleState->setU(0.0);
-        m_ptr_CurrentAirVehicleState->setV(0.0);
-        m_ptr_CurrentAirVehicleState->setW(0.0);
-        m_ptr_CurrentAirVehicleState->setUdot(0.0);
-        m_ptr_CurrentAirVehicleState->setVdot(0.0);
-        m_ptr_CurrentAirVehicleState->setWdot(0.0);
+    
+    std::shared_ptr<afrl::cmasi::AirVehicleState> pAVSnew;
+    pAVSnew.reset(new afrl::cmasi::AirVehicleState());
 
-        //build this from the actual battery...
-        m_ptr_CurrentAirVehicleState->setEnergyAvailable(100);
-        m_ptr_CurrentAirVehicleState->setActualEnergyRate(0.0001);
-        m_ptr_CurrentAirVehicleState->setTime(ntimems);        
-        
-        m_ptr_CurrentAirVehicleState->setCurrentWaypoint(m_CurrentWaypoint-1+m_WaypointOffset);
-        if(sendnow)
-            sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
-        bAVSReady=true;
-        //COUT_INFO("Broadcasting AVS");                     
+    if(m_Attitude.time_boot_ms!=0)
+    {
+        pAVSnew->setPitch(m_Attitude.pitch);
+        pAVSnew->setRoll(m_Attitude.roll);
     }
+    pAVSnew->setID(vehicleID);
+    pAVSnew->setAirspeed(m_Airspeed);//m/s
+    
+    pAVSnew->getLocation()->setAltitudeType(afrl::cmasi::AltitudeType::MSL);
+    pAVSnew->getLocation()->setAltitude(newAlt_m);
+    pAVSnew->getLocation()->setLatitude(lat_d);
+    pAVSnew->getLocation()->setLongitude(lon_d);
+    pAVSnew->setCourse(cog_d);
+    // u, v, w, udot, vdot, wdot
+    pAVSnew->setU(0.0);
+    pAVSnew->setV(0.0);
+    pAVSnew->setW(0.0);
+    pAVSnew->setUdot(0.0);
+    pAVSnew->setVdot(0.0);
+    pAVSnew->setWdot(0.0);
+
+    //build this from the actual battery...
+    pAVSnew->setEnergyAvailable(100);
+    pAVSnew->setActualEnergyRate(0.0001);
+    pAVSnew->setCurrentWaypoint(m_CurrentWaypoint-1+m_WaypointOffset);
+    
+    
+
+    if(vehicleID == this->m_VehicleIDtoWatch)
+    {
+        if(ntimems != 0)
+            pAVSnew->setTime(ntimems);        
+        std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);  
+        this->m_ptr_CurrentAirVehicleState = pAVSnew;   
+    }      
+
+    sendSharedLmcpObjectBroadcastMessage(pAVSnew);
+    bAVSReady=true;
+    
 }
 void PixhawkService::MissionUpdate_ClearAutopilotWaypoints(void)
 {
@@ -1039,7 +1078,7 @@ void PixhawkService::MissionUpdate_ClearAutopilotWaypoints(void)
     mavlink_msg_mission_clear_all_pack(system_id,component_id,&msg,
                                         target_system,target_component,mission_type);
     uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteAddr, sizeof(m_remoteAddr));
     if (send_len == -1)
     {
         COUT_INFO("clear waypoint send error");
@@ -1077,7 +1116,7 @@ void PixhawkService::MissionUpdate_SendNewWayPointCount(void)
     mavlink_msg_mission_count_pack(system_id, component_id, &msg,
                            target_system, target_component, this->m_newWaypointCount,mission_type);
     uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteAddr, sizeof(m_remoteAddr));
     if (send_len == -1)
     {
         COUT_INFO("bad send count " << send_len);
@@ -1154,7 +1193,7 @@ void PixhawkService::MissionUpdate_SendWayPoint(void)
             param1,param2,param3,param4,x,y,z,mission_type);
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteAddr, sizeof(m_remoteAddr));
     if (send_len == -1)
     {
         COUT_INFO("bad WP sent " << send_len);
@@ -1229,7 +1268,7 @@ void PixhawkService::MissionUpdate_SendWayPointInt(void)
             param1,param2,param3,param4,x,y,z,mission_type);
     uint8_t buf[MAVLINK_MAX_PACKET_LEN];
     uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteAddr, sizeof(m_remoteAddr));
     if (send_len == -1)
     {
         COUT_INFO("bad WP sent " << send_len);
@@ -1263,7 +1302,7 @@ void PixhawkService::MissionUpdate_SetActiveWaypoint(uint32_t newWP_px)
     mavlink_msg_mission_set_current_pack(system_id,component_id,&msg,
                                         target_system,target_component,newWP_px);
     uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket));
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteAddr, sizeof(m_remoteAddr));
     if (send_len == -1)
     {
         COUT_INFO("Active waypoint send error");
@@ -1291,7 +1330,7 @@ void PixhawkService::CheckMaxPX4WPDist(void)
 
     mavlink_msg_param_request_read_pack(system_id,component_id,&msg,target_system,target_component,param_id,param_index);
     uint16_t slen = mavlink_msg_to_send_buffer(buf, &msg);
-    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteSocket, sizeof(m_remoteSocket)); 
+    ssize_t send_len = sendto(m_netSocketFD, buf, slen, 0, (struct sockaddr *) &m_remoteAddr, sizeof(m_remoteAddr)); 
     if(send_len < 0)
     {
         COUT_INFO("WP Dist sendto error")
