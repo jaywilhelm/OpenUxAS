@@ -135,9 +135,9 @@ ZeroMqAddressedAttributedMessageTcpReceiverSender::getNextMessage()
                     // clients in general and not worth tracking spurious
                     // disconnects due to reception of a zero length message
                     // disconnect logic is below if desired
-                    /*  auto clientdisconnect = m_clients.at(clientindex);
-                        m_clients.erase(m_clients.begin()+clientindex);
-                        zframe_destroy(&clientdisconnect); */
+                    auto clientdisconnect = m_clients.at(clientindex);
+                    m_clients.erase(m_clients.begin()+clientindex);
+                    zframe_destroy(&clientdisconnect); 
                 }
                 else
                 {

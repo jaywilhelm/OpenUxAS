@@ -2,7 +2,7 @@ option(
   'force_dep_download',
   description: 'do not link os installed dependencies',
   type: 'boolean',
-  value: false,
+  value: true,
 )
 option(
   'afrl_internal',

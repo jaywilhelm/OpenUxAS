@@ -3,7 +3,7 @@ build
 build_debug
 build_odroid
 build_open
-
+buildarm
 # afrl internal directories
 UxAS-afrl_internal
 
@@ -39,3 +39,4 @@ examples/**/datawork/**
 .vscode/launch.json
 .vscode/settings.json
 3rd/*.wrap
+*__pycache__*

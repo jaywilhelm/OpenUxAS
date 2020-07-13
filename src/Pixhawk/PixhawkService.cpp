@@ -350,7 +350,7 @@ void PixhawkService::SafetyTimer()
     printf("%ld AVS: %4.6f\t %4.6f\t %4.6f\t %4.6f\t %ld\r\n", uxas::common::Time::getInstance().getUtcTimeSinceEpoch_ms(),
                 loc->getLatitude(), loc->getLongitude(), loc->getAltitude(),
                 m_ptr_CurrentAirVehicleState->getCourse(), m_ptr_CurrentAirVehicleState->getCurrentWaypoint());
-    //sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
+    sendSharedLmcpObjectBroadcastMessage(m_ptr_CurrentAirVehicleState);
 
     if(m_missionSendState == this->SENT_CLEAR)
     {
@@ -1048,8 +1048,8 @@ void PixhawkService::MAVLINK_ProcessNewPosition(uint64_t vehicleID, float nAlt, 
         std::lock_guard<std::mutex> lock(m_AirvehicleStateMutex);  
         this->m_ptr_CurrentAirVehicleState = pAVSnew;   
     }      
-
-    sendSharedLmcpObjectBroadcastMessage(pAVSnew);
+    else
+        sendSharedLmcpObjectBroadcastMessage(pAVSnew);
     bAVSReady=true;
     
 }
