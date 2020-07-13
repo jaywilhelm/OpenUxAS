@@ -1,5 +1,6 @@
 # General Imports
 import struct, array, os, zmq,time, sys, json, argparse
+import pickle
 
 # For Dubins Vehicle
 from matplotlib import pyplot as plt
@@ -83,73 +84,66 @@ def finduavbyID(uavlist,uavID):
             return uav
 
     return None
+def findotheruavs(uavlist, uavNOT):
+    otherlist = []
+    for uav in uavlist:
+        if(uav['ID'] != uavNOT):
+            otherlist.append(uav)
 
-# Connect to UxAS port and send Dubins state to AMASE using CMASI messages
-context = zmq.Context()
-socket = context.socket(zmq.STREAM)
-socket.connect("tcp://localhost:9999") # a ZMQ socket connected to UxAS
-# Store the client ID for this socket
-client_id, message = socket.recv_multipart()
-print("Client ID: " + str(client_id))
-print("Message: " + str(message))
+    return otherlist
 
-factory = LMCPFactory.LMCPFactory()
+TEST_DATA = True
+if not TEST_DATA:
+    print('connecting...')
+    # Connect to UxAS port and send Dubins state to AMASE using CMASI messages
+    context = zmq.Context()
+    socket = context.socket(zmq.STREAM)
+    socket.connect("tcp://localhost:9999") # a ZMQ socket connected to UxAS
+    # Store the client ID for this socket
+    client_id, message = socket.recv_multipart()
+    print("Client ID: " + str(client_id))
+    print("Message: " + str(message))
 
-dt=1
-# uavCAS = {'position': (45.3115, -120.9850), 'targetWP': (45.3115, -120.9000),'speed': 0.0001, 'heading': np.deg2rad(270), 'thetaPossible': 30}
-# uavCAS = UAVHeading(uavCAS['position'], uavCAS['targetWP'], uavCAS['speed'], uavCAS['heading'], uavCAS['thetaPossible'])
-# # uavDubins = {'position': (45.3115, -120.9850), 'velocity': 0.0001, 'heading': np.deg2rad(270)}
-# uavDubins = {'position': (45.32043603, -120.99309598 ), 'targetWP': (45.0000, -120.99309598 ),'speed': 0.0001, 'heading': np.deg2rad(180), 'thetaPossible': 30}
-# uavDubins = UAVHeading(uavDubins['position'], uavDubins['targetWP'], uavDubins['speed'], uavDubins['heading'], uavDubins['thetaPossible'])
-   
+    factory = LMCPFactory.LMCPFactory()
 
-# uav = {}
-# uav['CAS'] = uavCAS
-# uav['altitude'] = 100
-# # uav['id'] = 1
-# # uav['mavlink'] = mavutil.mavlink_connection(connstring, source_system=uavx['id'], source_component=1)
-
-# uavx = {}
-# uavx['dubins'] = uavDubins
-# uavx['altitude'] = 100
-# uavx['id'] = 4
-# uavx['mavlink'] = mavutil.mavlink_connection(connstring, source_system=uavx['id'], source_component=1)
-# UAVList.append(uavx)
-wp=0
-wpList = []
-checkMC = 0
-Astar_wpList = []
-koz =[]
-obstX =[]
-obstY =[]
-tmpObstaclePoints = []
-
-uavlist = []
-
-
+    uavlist = []
+####################
+####################
+else:
+    uavlist = pickle.load( open( "uavlist.p", "rb" ) )
+####################
+####################
+start_time = time.time()
 while True:
-    #try:
-    msg_obj = get_from_uxas(socket, factory)
-    #print('\n\tmsg1\t' + str(msg_obj.FULL_LMCP_TYPE_NAME))
-    #except:
-    #    print('\n\tProblem: Sometimes the message does not have enough stuff...not sure why\n')
+    if not TEST_DATA:
+        #try:
+        msg_obj = get_from_uxas(socket, factory)
+            #print('\n\tmsg1\t' + str(msg_obj.FULL_LMCP_TYPE_NAME))
+        #except:
+        #    print('\n\tProblem: Sometimes the message does not have enough stuff...not sure why\n')
 
-    if  (msg_obj.FULL_LMCP_TYPE_NAME == 'afrl.cmasi.AirVehicleState'):      
+        if  (msg_obj.FULL_LMCP_TYPE_NAME == 'afrl.cmasi.AirVehicleState'):      
 
-        uavsearch = finduavbyID(uavlist, msg_obj.get_ID())
-        if(not uavsearch):
-            newuav = {}
-            newuav['ID'] = msg_obj.get_ID()
-            newuav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
-            waypt=[], speed=msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(), tPossible=30)
-            newuav['AVS'] = msg_obj
-            uavlist.append(newuav)
-            print("new uav " + str(newuav['ID']))
-        else:
-            #update uav...
-            uavsearch['AVS'] = msg_obj
+            uavsearch = finduavbyID(uavlist, msg_obj.get_ID())
+            if(not uavsearch):
+                newuav = {}
+                newuav['ID'] = msg_obj.get_ID()
+                newuav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
+                waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(), tPossible=30)
+                newuav['AVS'] = msg_obj
+                uavlist.append(newuav)
+                print("new uav " + str(newuav['ID']))
+            else:
+                #update uav...
+                uavsearch['AVS'] = msg_obj
+    else:
+        time.sleep(1)
 
-        uavsearch = finduavbyID(uavlist, 1)#IDtoWatch
+    check_time = time.time()
+    if(check_time - start_time > 1):
+        #uavsearch = finduavbyID(uavlist, 1)#IDtoWatch
+        #uavh_others = findotheruavs(uavlist, 1)
+        #uavsearch['uavobj'].avoid(uavh_others, [])
         #run ACS here...
         #if needed, send waypoints
 
@@ -162,8 +156,10 @@ while True:
             '\tlon: ' + str(lastAVS.get_Location().get_Longitude()) +
             '\tv: ' + str(lastAVS.get_Airspeed()) + 
             '\tcog: ' + str(lastAVS.get_Heading()))
+    
 
-
+    #if len(uavlist) > 0:
+    #    pickle.dump(uavlist, open('uavlist.p', 'wb'))
 
         # Astar_wpList, koz = uavtemp.avoid([], [])
         # tmpObstaclePoints = []

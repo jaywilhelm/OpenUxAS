@@ -112,7 +112,10 @@ class UAVHeading:
 
     '''
      UAVHeading Function: possibleFlightArea
-        Parameters: NONE
+        Parameters: area_length
+                    uav0            specific UAV to avoid
+                    uavh_others     list of all other UAVs ???
+                    static_kozs     keep out zone(s)
         Description:
                     Returns a polygon defining the possible flight
                     area for the UAV calculated using the init values.
@@ -485,12 +488,7 @@ class UAVHeading:
                     the A* search algorithm.
     '''
     def avoid(self, uavh_others, static_koz):
-        if not uavh_others:
-            intersects = []
-            avoid_areas = []
-            #self.possibleFlightArea(area_length=1,uav0=,uavh_others=[],static_koz=static_koz)
-        else:
-            intersects, avoid_areas = self.__findIntersects(uavh_others, static_koz)
+        intersects, avoid_areas = self.__findIntersects(uavh_others, static_koz)
 
         if len(intersects) == 0:
             if not self.lastClear:
