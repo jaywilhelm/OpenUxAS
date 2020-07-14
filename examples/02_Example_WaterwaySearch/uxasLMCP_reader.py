@@ -93,7 +93,7 @@ def findotheruavs(uavlist, uavNOT):
             otherjustobj.append(uav['uavobj'])
     return otherlist, otherjustobj
 
-TEST_DATA = True
+TEST_DATA = False
 if not TEST_DATA:
     print('connecting...')
     # Connect to UxAS port and send Dubins state to AMASE using CMASI messages
@@ -114,19 +114,20 @@ else:
     uavlist = pickle.load( open( "uavlist.p", "rb" ) )
     #fix for bad file save of degrees
     uavlist[0]['uavobj'].thetaPossible = math.radians(30)
-    uavlist[0]['uavobj'].thetaRef = math.radians(45)
+    uavlist[0]['uavobj'].thetaRef = math.radians(90)
     uavlist[1]['uavobj'].thetaPossible = math.radians(30)
 
 ####################
 ####################
 start_time = time.time()
+avoid = []
 while True:
     if not TEST_DATA:
-        #try:
-        msg_obj = get_from_uxas(socket, factory)
+        try:
+            msg_obj = get_from_uxas(socket, factory)
             #print('\n\tmsg1\t' + str(msg_obj.FULL_LMCP_TYPE_NAME))
-        #except:
-        #    print('\n\tProblem: Sometimes the message does not have enough stuff...not sure why\n')
+        except:
+            print('\n\tProblem: Sometimes the message does not have enough stuff...not sure why\n')
 
         if  (msg_obj.FULL_LMCP_TYPE_NAME == 'afrl.cmasi.AirVehicleState'):      
 
@@ -142,37 +143,55 @@ while True:
                 print("new uav " + str(newuav['ID']))
             else:
                 #update uav...
+                print('Updating UAV' + str(msg_obj.get_ID()))
                 uavsearch['AVS'] = msg_obj
+                newuav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
+                waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(), 
+                tPossible=math.radians(30))
     else:
         time.sleep(1)
 
     check_time = time.time()
     if(check_time - start_time > 1):
         uavsearch = finduavbyID(uavlist, 1)#IDtoWatch
-        uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
-        print(uavlist[0]['AVS'].get_Location().get_Longitude())
-        print(uavlist[0]['AVS'].get_Location().get_Latitude())
+        try:
+            uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
+        except: 
+            print('buffer issues')
+        # print('ID: ' + str(uavlist[0]['AVS'].get_ID()))
+        # print(uavlist[0]['AVS'].get_Location().get_Longitude())
+        # print(uavlist[0]['AVS'].get_Location().get_Latitude())
+        # print('ID: ' + str(uavlist[1]['AVS'].get_ID()))
+        # print(uavlist[1]['AVS'].get_Location().get_Longitude())
+        # print(uavlist[1]['AVS'].get_Location().get_Latitude())
 
         #must have waypoint list???
-        wp, avoid = uavsearch['uavobj'].avoid(uavh_others, [])
-        # print('avoid')
-        # print(avoid)
-        lon = []
-        lat = []
-        for pt in avoid[0]:
-            print('pt')
-            print(pt)
-            lon.append(pt[1])
-            lat.append(pt[0])
-        # print('check')
-        # print(lon)
-        # print(lat)
-        plt.plot(lon, lat)
+        if len(uavlist) > 1:
+            wp, avoid = uavsearch['uavobj'].avoid(uavh_others, [])
+            print('avoid')
+            # print(avoid)
+            lon = []
+            lat = []
+            for pt in avoid[0]:
+                # print('pt')
+                lon.append(pt[1])
+                lat.append(pt[0])
+            # print('check')
+            # print(lon)
+            # print(lat)
+            # print(pt)
+            print('wp: ')
+            print(wp)
+            plt.plot(lon, lat)
         #plt.plot([pt[1] for pt in avoid], [pt[0] for pt in avoid])
-
+        else:
+            print('\tOnly one UAV')
         pts = uavsearch['uavobj'].possibleFlightArea(area_length=1, uav0=uavsearch['uavobj'], uavh_others=uavh_others, static_kozs=[])
         
+        print('koz pts: ')
         print(pts)
+        
+
 
         plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
         #run ACS here...
@@ -299,10 +318,10 @@ while True:
    
     plt.axis('equal')
     plt.grid(True)
-    #plt.ylim((45.31, 45.33))
-    #plt.xlim((-120.994, -120.991 ))
+    plt.ylim((uavlist[0]['AVS'].get_Location().get_Latitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Latitude() + 0.005))
+    plt.xlim((uavlist[0]['AVS'].get_Location().get_Longitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Longitude() + 0.005))
     #plt.pause(0.0000000001)
-    plt.pause(120)
+    plt.pause(0.5)
     # else:
     #     print('\tUse previously valid path: ')
     #     # wpList = lastWPlist  # Use the last valid wp path

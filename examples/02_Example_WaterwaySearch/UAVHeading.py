@@ -133,7 +133,7 @@ class UAVHeading:
 
         if self.staticAreaLength:
             area_length = self.staticAreaLength
-            side_decision = self.__weightedSideDecision(uav0, uavh_others, static_kozs) # stub uav_others and koz lists for now
+            side_decision = self.__weightedSideDecision(uav0, uavh_others, static_kozs) # stub uav_others and koz lists for now # Browne: commented our b/c Dubins UAV does not have a waypoint variable
 
             if side_decision < 0:
                 points[-1][0] = self.position[0] + (3 * area_length * math.cos(theta_ref - (theta_possible / 2)))
@@ -498,6 +498,14 @@ class UAVHeading:
                     the A* search algorithm.
     '''
     def avoid(self, uavh_others, static_koz):
+        
+        if(not self.waypoint):
+            xy = (self.position[0], self.position[1])
+            r = 10
+            px = xy[0] + r * np.sin(self.thetaRef)
+            py = xy[1] + r * np.cos(self.thetaRef)
+            self.waypoint = [px,py]
+
         intersects, avoid_areas = self.__findIntersects(uavh_others, static_koz)
 
         if len(intersects) == 0:
