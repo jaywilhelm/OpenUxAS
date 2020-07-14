@@ -93,7 +93,20 @@ def findotheruavs(uavlist, uavNOT):
             otherjustobj.append(uav['uavobj'])
     return otherlist, otherjustobj
 
-TEST_DATA = False
+def syncAVSfromDubins(uav):
+    newloc = Location3D.Location3D()
+    newloc.set_Latitude(uav['dubins'].x)
+    newloc.set_Longitude(uav['dubins'].y)
+    newloc.set_Altitude(50)
+    uav['AVS'].set_Location(newloc)
+    uav['AVS'].set_Heading(uav['dubins'].heading)
+    msg_obj = uav['AVS']
+    uav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
+    waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(), 
+    tPossible=math.radians(30))
+    return uav
+
+TEST_DATA = True
 if not TEST_DATA:
     print('connecting...')
     # Connect to UxAS port and send Dubins state to AMASE using CMASI messages
@@ -108,15 +121,28 @@ if not TEST_DATA:
     factory = LMCPFactory.LMCPFactory()
 
     uavlist = []
+    dt = 0.00001
 ####################
 ####################
 else:
+    dt = 1
     uavlist = pickle.load( open( "uavlist.p", "rb" ) )
     #fix for bad file save of degrees
-    uavlist[0]['uavobj'].thetaPossible = math.radians(30)
-    uavlist[0]['uavobj'].thetaRef = math.radians(90)
-    uavlist[1]['uavobj'].thetaPossible = math.radians(30)
+    uavlist[0]['uavobj'].thetaPossible = np.deg2rad(30)
+    uavlist[0]['uavobj'].thetaRef = np.deg2rad(90)
+    uavlist[1]['uavobj'].thetaPossible = np.deg2rad(30)
+    uavlist[1]['uavobj'].thetaRef = np.deg2rad(45)
 
+    v = 0.01
+    simUAV = {'position': (uavlist[0]['AVS'].get_Location().get_Latitude(),uavlist[0]['AVS'].get_Location().get_Longitude()),
+     'velocity': v, 'heading': uavlist[0]['uavobj'].thetaRef}
+    uavlist[0]['dubins'] = dubinsUAV(position=simUAV['position'], velocity=simUAV['velocity'], heading=simUAV['heading'], dt=dt)
+
+    simUAV = {'position': (uavlist[1]['AVS'].get_Location().get_Latitude(),uavlist[1]['AVS'].get_Location().get_Longitude()),
+     'velocity': v, 'heading': uavlist[1]['uavobj'].thetaRef}
+    uavlist[1]['dubins'] = dubinsUAV(position=simUAV['position'], velocity=simUAV['velocity'], heading=simUAV['heading'], dt=dt)
+    uavlist[0] = syncAVSfromDubins(uavlist[0])
+    uavlist[1] = syncAVSfromDubins(uavlist[1])
 ####################
 ####################
 start_time = time.time()
@@ -154,49 +180,21 @@ while True:
     check_time = time.time()
     if(check_time - start_time > 1):
         uavsearch = finduavbyID(uavlist, 1)#IDtoWatch
-        try:
-            uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
-        except: 
-            print('buffer issues')
-        # print('ID: ' + str(uavlist[0]['AVS'].get_ID()))
-        # print(uavlist[0]['AVS'].get_Location().get_Longitude())
-        # print(uavlist[0]['AVS'].get_Location().get_Latitude())
-        # print('ID: ' + str(uavlist[1]['AVS'].get_ID()))
-        # print(uavlist[1]['AVS'].get_Location().get_Longitude())
-        # print(uavlist[1]['AVS'].get_Location().get_Latitude())
-
-        #must have waypoint list???
+        uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
+        
         if len(uavlist) > 1:
             wp, avoid = uavsearch['uavobj'].avoid(uavh_others, [])
-            print('avoid')
-            # print(avoid)
-            lon = []
-            lat = []
-            for pt in avoid[0]:
-                # print('pt')
-                lon.append(pt[1])
-                lat.append(pt[0])
-            # print('check')
-            # print(lon)
-            # print(lat)
-            # print(pt)
-            print('wp: ')
-            print(wp)
-            plt.plot(lon, lat)
-        #plt.plot([pt[1] for pt in avoid], [pt[0] for pt in avoid])
+
+            plt.plot([pt[1] for pt in avoid[0]],[pt[0] for pt in avoid[0]])
         else:
             print('\tOnly one UAV')
-        pts = uavsearch['uavobj'].possibleFlightArea(area_length=1, uav0=uavsearch['uavobj'], uavh_others=uavh_others, static_kozs=[])
-        
-        print('koz pts: ')
-        print(pts)
-        
 
-
+        pts = uavsearch['uavobj'].possibleFlightArea(area_length=0.1, uav0=uavsearch['uavobj'], uavh_others=uavh_others, static_kozs=[])
+        
         plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
         #run ACS here...
         #if needed, send waypoints
-
+       
         for uav in uavlist:
             lastAVS = uav['AVS']
             plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
@@ -206,6 +204,12 @@ while True:
             '\tlon: ' + str(lastAVS.get_Location().get_Longitude()) +
             '\tv: ' + str(lastAVS.get_Airspeed()) + 
             '\tcog: ' + str(lastAVS.get_Heading()))
+
+            uav['dubins'].update_pos()
+            uav = syncAVSfromDubins(uav)
+
+                
+        #uavlist = uavlistnew
             # xy = (lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
             # r = 10
             # theta = 1.57
@@ -318,10 +322,10 @@ while True:
    
     plt.axis('equal')
     plt.grid(True)
-    plt.ylim((uavlist[0]['AVS'].get_Location().get_Latitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Latitude() + 0.005))
-    plt.xlim((uavlist[0]['AVS'].get_Location().get_Longitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Longitude() + 0.005))
+    #plt.ylim((uavlist[0]['AVS'].get_Location().get_Latitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Latitude() + 0.005))
+    #plt.xlim((uavlist[0]['AVS'].get_Location().get_Longitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Longitude() + 0.005))
     #plt.pause(0.0000000001)
-    plt.pause(0.5)
+    plt.pause(dt)
     # else:
     #     print('\tUse previously valid path: ')
     #     # wpList = lastWPlist  # Use the last valid wp path

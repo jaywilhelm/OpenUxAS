@@ -52,7 +52,7 @@ class dubinsUAV():
         self.x = self.x + self.vx * self.dt
         self.y = self.y + self.vy * self.dt
         self.position = [(self.x, self.y)] # added for CAS
-
+        print(self.y)
         # Update History
         self.xs = np.append(self.xs, self.x)
         self.ys = np.append(self.ys, self.y)
