@@ -1,7 +1,7 @@
 # General Imports
 import struct, array, os, zmq,time, sys, json, argparse
 import pickle
-
+import math
 # For Dubins Vehicle
 from matplotlib import pyplot as plt
 import numpy as np
@@ -86,11 +86,12 @@ def finduavbyID(uavlist,uavID):
     return None
 def findotheruavs(uavlist, uavNOT):
     otherlist = []
+    otherjustobj = []
     for uav in uavlist:
         if(uav['ID'] != uavNOT):
             otherlist.append(uav)
-
-    return otherlist
+            otherjustobj.append(uav['uavobj'])
+    return otherlist, otherjustobj
 
 TEST_DATA = True
 if not TEST_DATA:
@@ -111,6 +112,11 @@ if not TEST_DATA:
 ####################
 else:
     uavlist = pickle.load( open( "uavlist.p", "rb" ) )
+    #fix for bad file save of degrees
+    uavlist[0]['uavobj'].thetaPossible = math.radians(30)
+    uavlist[0]['uavobj'].thetaRef = math.radians(45)
+    uavlist[1]['uavobj'].thetaPossible = math.radians(30)
+
 ####################
 ####################
 start_time = time.time()
@@ -129,7 +135,8 @@ while True:
                 newuav = {}
                 newuav['ID'] = msg_obj.get_ID()
                 newuav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
-                waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(), tPossible=30)
+                waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(), 
+                tPossible=math.radians(30))
                 newuav['AVS'] = msg_obj
                 uavlist.append(newuav)
                 print("new uav " + str(newuav['ID']))
@@ -141,22 +148,52 @@ while True:
 
     check_time = time.time()
     if(check_time - start_time > 1):
-        #uavsearch = finduavbyID(uavlist, 1)#IDtoWatch
-        #uavh_others = findotheruavs(uavlist, 1)
-        #uavsearch['uavobj'].avoid(uavh_others, [])
+        uavsearch = finduavbyID(uavlist, 1)#IDtoWatch
+        uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
+        print(uavlist[0]['AVS'].get_Location().get_Longitude())
+        print(uavlist[0]['AVS'].get_Location().get_Latitude())
+
+        #must have waypoint list???
+        wp, avoid = uavsearch['uavobj'].avoid(uavh_others, [])
+        # print('avoid')
+        # print(avoid)
+        lon = []
+        lat = []
+        for pt in avoid[0]:
+            print('pt')
+            print(pt)
+            lon.append(pt[1])
+            lat.append(pt[0])
+        # print('check')
+        # print(lon)
+        # print(lat)
+        plt.plot(lon, lat)
+        #plt.plot([pt[1] for pt in avoid], [pt[0] for pt in avoid])
+
+        pts = uavsearch['uavobj'].possibleFlightArea(area_length=1, uav0=uavsearch['uavobj'], uavh_others=uavh_others, static_kozs=[])
+        
+        print(pts)
+
+        plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
         #run ACS here...
         #if needed, send waypoints
 
         for uav in uavlist:
             lastAVS = uav['AVS']
-            plt.scatter(lastAVS.get_Location().get_Latitude(), lastAVS.get_Location().get_Longitude())
+            plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
             print(str(lastAVS.get_Time()) + 
             '\tAVS ID: ' + str(lastAVS.get_ID()) + 
             '\tlat: ' + str(lastAVS.get_Location().get_Latitude()) + 
             '\tlon: ' + str(lastAVS.get_Location().get_Longitude()) +
             '\tv: ' + str(lastAVS.get_Airspeed()) + 
             '\tcog: ' + str(lastAVS.get_Heading()))
-    
+            # xy = (lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
+            # r = 10
+            # theta = 1.57
+            # px = xy[0] + r * np.sin(theta)#lastAVS.get_Heading())
+            # py = xy[1] + r * np.cos(theta)#lastAVS.get_Heading())
+            # self_line=[xy,(px,py)]
+            # plt.plot([pt[1] for pt in self_line], [pt[0] for pt in self_line])
 
     #if len(uavlist) > 0:
     #    pickle.dump(uavlist, open('uavlist.p', 'wb'))
@@ -264,7 +301,8 @@ while True:
     plt.grid(True)
     #plt.ylim((45.31, 45.33))
     #plt.xlim((-120.994, -120.991 ))
-    plt.pause(0.0000000001)
+    #plt.pause(0.0000000001)
+    plt.pause(120)
     # else:
     #     print('\tUse previously valid path: ')
     #     # wpList = lastWPlist  # Use the last valid wp path

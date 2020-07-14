@@ -4,6 +4,7 @@
 
 import math
 import matplotlib.pyplot as plt
+import numpy as np
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
@@ -33,8 +34,8 @@ class UAVHeading:
                     pos: UAV position (x, y),
                     waypt: UAV target position (x, y),
                     speed: UAV Speed (m/s),
-                    heading: UAV heading (degrees),
-                    tPossible: possible turn angle for UAV (degrees)
+                    heading: UAV heading (radians),
+                    tPossible: possible turn angle for UAV (radians)
         Description:
                     Constructor for UAVHeading Class.
     '''
@@ -61,7 +62,7 @@ class UAVHeading:
     def __weightedSideDecision(self, uav0, uav_others, keepOutZones):
         side_sum = 0
 
-        if (45 < self.thetaRef < 135) or (225 < self.thetaRef < 315): # use y position difference
+        if (math.radians(45) < self.thetaRef < math.radians(135)) or (math.radians(225) < self.thetaRef < math.radians(315)): # use y position difference
         
             side_sum += DECISION_WEIGHTS[0] * abs(self.position[1] - uav0.position[1])
             side_sum += DECISION_WEIGHTS[1] * abs(self.position[1] - uav0.waypoint[1])
@@ -75,7 +76,7 @@ class UAVHeading:
                 kPoly = Polygon(koz)
                 side_sum -= DECISION_WEIGHTS[3] * kPoly.area * abs(self.position[1] - centroid[1])
 
-            if abs(self.thetaRef - 90) > abs(self.thetaRef - 270):
+            if abs(self.thetaRef - math.radians(90)) > abs(self.thetaRef - math.radians(270)):
                 if side_sum > 0:
                     return 1
                 else:
@@ -99,7 +100,7 @@ class UAVHeading:
                 kPoly = Polygon(koz)
                 side_sum -= DECISION_WEIGHTS[3] * kPoly.area * abs(self.position[0] - centroid[0])
 
-            if abs(self.thetaRef) > abs(self.thetaRef - 180):
+            if abs(self.thetaRef) > abs(self.thetaRef - math.radians(180)):
                 if side_sum > 0:
                     return -1
                 else:
@@ -121,9 +122,11 @@ class UAVHeading:
                     area for the UAV calculated using the init values.
     '''
     def possibleFlightArea(self, area_length, uav0, uavh_others, static_kozs):
-        theta_ref = math.radians(self.thetaRef)
-        theta_possible = math.radians(self.thetaPossible)
-    
+        # theta_ref = math.radians(self.thetaRef)
+        # theta_possible = math.radians(self.thetaPossible)
+        theta_ref = self.thetaRef
+        theta_possible = self.thetaPossible
+
         side_decision = 0
 
         points = [list(self.position)]
@@ -239,7 +242,14 @@ class UAVHeading:
     def __findIntersects(self, uavh_others, static_kozs):
         intersects = []
         koz_areas = []
-        self_line = [(self.position[0], self.position[1]), (self.waypoint[0], self.waypoint[1])]
+        if(not self.waypoint):
+            xy = (self.position[0], self.position[1])
+            r = 10
+            px = xy[0] + r * np.sin(self.thetaRef)
+            py = xy[1] + r * np.cos(self.thetaRef)
+            self_line=[xy,(px,py)]
+        else:
+            self_line = [(self.position[0], self.position[1]), (self.waypoint[0], self.waypoint[1])]
 
         # check for potential UAV collisions
         for uavh_other in uavh_others:
