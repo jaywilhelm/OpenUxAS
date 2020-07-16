@@ -10,17 +10,17 @@ from dubinsUAV import dubinsUAV
 # Include LMCP Python files
 lmcplocation = '../../src/LMCP/py'
 sys.path.append(lmcplocation)
-from lmcp import LMCPFactory
-from afrl.cmasi import *
+#from lmcp import LMCPFactory
+#from afrl.cmasi import *
 
-sys.path.append(lmcplocation + '/afrl')
-sys.path.append(lmcplocation + '/uxas')
-from afrl.cmasi import SessionStatus
-from uxas.messages.uxnative import StartupComplete
-from afrl.cmasi import AirVehicleState
-from afrl.cmasi import Location3D
-from afrl.cmasi import EntityState
-from afrl.cmasi import AirVehicleConfiguration
+# sys.path.append(lmcplocation + '/afrl')
+# sys.path.append(lmcplocation + '/uxas')
+# from afrl.cmasi import SessionStatus
+# from uxas.messages.uxnative import StartupComplete
+# from afrl.cmasi import AirVehicleState
+# from afrl.cmasi import Location3D
+# from afrl.cmasi import EntityState
+# from afrl.cmasi import AirVehicleConfiguration
 
 # For Collision Avoidance
 from lineSegmentAoE import *
@@ -94,116 +94,148 @@ def findotheruavs(uavlist, uavNOT):
     return otherlist, otherjustobj
 
 def syncAVSfromDubins(uav):
-    newloc = Location3D.Location3D()
-    newloc.set_Latitude(uav['dubins'].x)
-    newloc.set_Longitude(uav['dubins'].y)
-    newloc.set_Altitude(50)
-    uav['AVS'].set_Location(newloc)
-    uav['AVS'].set_Heading(uav['dubins'].heading)
-    msg_obj = uav['AVS']
-    uav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
-    waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(), 
-    tPossible=math.radians(30))
+    # newloc = Location3D.Location3D()
+    # newloc.set_Latitude(uav['dubins'].x)
+    # newloc.set_Longitude(uav['dubins'].y)
+    # newloc.set_Altitude(50)
+    # uav['AVS'].set_Location(newloc)
+    # uav['AVS'].set_Heading(uav['dubins'].heading)
+    # msg_obj = uav['AVS']
+    # uav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
+    # waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(),
+    # tPossible=math.radians(30))
+    lat = uav['dubins'].x
+    lon = uav['dubins'].y
+    vel = uav['dubins'].v
+    heading = uav['dubins'].heading
+    uav['uavobj'] = UAVHeading(pos=[lat, lon],
+                               waypt=[], speed=vel, heading=heading,
+                               tPossible=math.radians(45))
     return uav
 
 TEST_DATA = True
 if not TEST_DATA:
     print('connecting...')
-    # Connect to UxAS port and send Dubins state to AMASE using CMASI messages
-    context = zmq.Context()
-    socket = context.socket(zmq.STREAM)
-    socket.connect("tcp://localhost:9999") # a ZMQ socket connected to UxAS
-    # Store the client ID for this socket
-    client_id, message = socket.recv_multipart()
-    print("Client ID: " + str(client_id))
-    print("Message: " + str(message))
-
-    factory = LMCPFactory.LMCPFactory()
-
-    uavlist = []
-    dt = 0.00001
+    # # Connect to UxAS port and send Dubins state to AMASE using CMASI messages
+    # context = zmq.Context()
+    # socket = context.socket(zmq.STREAM)
+    # socket.connect("tcp://localhost:9999") # a ZMQ socket connected to UxAS
+    # # Store the client ID for this socket
+    # client_id, message = socket.recv_multipart()
+    # print("Client ID: " + str(client_id))
+    # print("Message: " + str(message))
+    #
+    # factory = LMCPFactory.LMCPFactory()
+    #
+    # uavlist = []
+    # dt = 0.00001
 ####################
 ####################
 else:
     dt = 1
-    uavlist = pickle.load( open( "uavlist.p", "rb" ) )
-    #fix for bad file save of degrees
-    uavlist[0]['uavobj'].thetaPossible = np.deg2rad(30)
-    uavlist[0]['uavobj'].thetaRef = np.deg2rad(90)
-    uavlist[1]['uavobj'].thetaPossible = np.deg2rad(30)
-    uavlist[1]['uavobj'].thetaRef = np.deg2rad(45)
-
     v = 0.01
-    simUAV = {'position': (uavlist[0]['AVS'].get_Location().get_Latitude(),uavlist[0]['AVS'].get_Location().get_Longitude()),
-     'velocity': v, 'heading': uavlist[0]['uavobj'].thetaRef}
-    uavlist[0]['dubins'] = dubinsUAV(position=simUAV['position'], velocity=simUAV['velocity'], heading=simUAV['heading'], dt=dt)
 
-    simUAV = {'position': (uavlist[1]['AVS'].get_Location().get_Latitude(),uavlist[1]['AVS'].get_Location().get_Longitude()),
-     'velocity': v, 'heading': uavlist[1]['uavobj'].thetaRef}
-    uavlist[1]['dubins'] = dubinsUAV(position=simUAV['position'], velocity=simUAV['velocity'], heading=simUAV['heading'], dt=dt)
+    #uavlist = pickle.load( open( "uavlist.p", "rb" ) )
+    uavlist = []
+    uav1 = {}
+    uavlist.append(uav1)
+    uav2 = {}
+    uavlist.append(uav2)
+    #fix for bad file save of degrees
+    np.deg2rad(30)
+    thetaRef = np.deg2rad(270)
+    uavlist[0]['dubins'] = dubinsUAV(position=[45.3394889, -120.87], velocity=v,
+                                     heading=thetaRef, dt=dt)
+    uavlist[0]['ID'] = 1
+    np.deg2rad(30)
+    thetaRef = np.deg2rad(90)
+    uavlist[1]['dubins'] = dubinsUAV(position=[45.32, -121.0719], velocity=v,
+                                     heading=thetaRef, dt=dt)
+    uavlist[1]['ID'] = 4
+
+    #simUAV = {'position': (uavlist[0]['AVS'].get_Location().get_Latitude(),uavlist[0]['AVS'].get_Location().get_Longitude()),
+    # 'velocity': v, 'heading': uavlist[0]['uavobj'].thetaRef}
+
+    #simUAV = {'position': (uavlist[1]['AVS'].get_Location().get_Latitude(),uavlist[1]['AVS'].get_Location().get_Longitude()),
+    # 'velocity': v, 'heading': uavlist[1]['uavobj'].thetaRef}
+    #uavlist[1]['dubins'] = dubinsUAV(position=simUAV['position'], velocity=simUAV['velocity'], heading=simUAV['heading'], dt=dt)
     uavlist[0] = syncAVSfromDubins(uavlist[0])
     uavlist[1] = syncAVSfromDubins(uavlist[1])
 ####################
 ####################
+
+fig, ax = plt.subplots()
+
 start_time = time.time()
 avoid = []
 while True:
-    if not TEST_DATA:
-        try:
-            msg_obj = get_from_uxas(socket, factory)
-            #print('\n\tmsg1\t' + str(msg_obj.FULL_LMCP_TYPE_NAME))
-        except:
-            print('\n\tProblem: Sometimes the message does not have enough stuff...not sure why\n')
+    # if not TEST_DATA:
+        # try:
+        #     msg_obj = get_from_uxas(socket, factory)
+        #     #print('\n\tmsg1\t' + str(msg_obj.FULL_LMCP_TYPE_NAME))
+        # except:
+        #     print('\n\tProblem: Sometimes the message does not have enough stuff...not sure why\n')
 
-        if  (msg_obj.FULL_LMCP_TYPE_NAME == 'afrl.cmasi.AirVehicleState'):      
-
-            uavsearch = finduavbyID(uavlist, msg_obj.get_ID())
-            if(not uavsearch):
-                newuav = {}
-                newuav['ID'] = msg_obj.get_ID()
-                newuav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
-                waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(), 
-                tPossible=math.radians(30))
-                newuav['AVS'] = msg_obj
-                uavlist.append(newuav)
-                print("new uav " + str(newuav['ID']))
-            else:
-                #update uav...
-                print('Updating UAV' + str(msg_obj.get_ID()))
-                uavsearch['AVS'] = msg_obj
-                newuav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
-                waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(), 
-                tPossible=math.radians(30))
-    else:
-        time.sleep(1)
-
+        # if  (msg_obj.FULL_LMCP_TYPE_NAME == 'afrl.cmasi.AirVehicleState'):
+        #
+        #     uavsearch = finduavbyID(uavlist, msg_obj.get_ID())
+        #     if(not uavsearch):
+        #         newuav = {}
+        #         newuav['ID'] = msg_obj.get_ID()
+        #         newuav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
+        #         waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(),
+        #         tPossible=math.radians(30))
+        #         newuav['AVS'] = msg_obj
+        #         uavlist.append(newuav)
+        #         print("new uav " + str(newuav['ID']))
+        #     else:
+        #         #update uav...
+        #         print('Updating UAV' + str(msg_obj.get_ID()))
+        #         uavsearch['AVS'] = msg_obj
+        #         newuav['uavobj'] = UAVHeading(pos=[msg_obj.get_Location().get_Latitude(),msg_obj.get_Location().get_Longitude()],
+        #         waypt=[], speed = msg_obj.get_Airspeed(), heading=msg_obj.get_Heading(),
+        #         tPossible=math.radians(30))
+    # else:
+    #     time.sleep(dt)
+    area_length = 0.1
     check_time = time.time()
     if(check_time - start_time > 1):
-        uavsearch = finduavbyID(uavlist, 1)#IDtoWatch
+        mainUAV = finduavbyID(uavlist, 1)#IDtoWatch
         uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
         
         if len(uavlist) > 1:
-            wp, avoid = uavsearch['uavobj'].avoid(uavh_others, [])
+            replan, wp, avoid = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
 
-            plt.plot([pt[1] for pt in avoid[0]],[pt[0] for pt in avoid[0]])
+            #plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]])
+
+            if(replan):
+                #plt.scatter([pt[1] for pt in wp], [pt[0] for pt in wp])
+                print(wp)
+                plt.pause(10000)
         else:
             print('\tOnly one UAV')
 
-        pts = uavsearch['uavobj'].possibleFlightArea(area_length=0.1, uav0=uavsearch['uavobj'], uavh_others=uavh_others, static_kozs=[])
-        
-        plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
+        #
         #run ACS here...
         #if needed, send waypoints
-       
+        ax.scatter(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0])
         for uav in uavlist:
-            lastAVS = uav['AVS']
-            plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
-            print(str(lastAVS.get_Time()) + 
-            '\tAVS ID: ' + str(lastAVS.get_ID()) + 
-            '\tlat: ' + str(lastAVS.get_Location().get_Latitude()) + 
-            '\tlon: ' + str(lastAVS.get_Location().get_Longitude()) +
-            '\tv: ' + str(lastAVS.get_Airspeed()) + 
-            '\tcog: ' + str(lastAVS.get_Heading()))
+            #lastAVS = uav['AVS']
+            #plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
+            ax.scatter(uav['dubins'].y, uav['dubins'].x)
+
+            pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length)
+
+            ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
+            #plt.show()
+
+            # plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
+            # print(str(lastAVS.get_Time()) +
+            # '\tAVS ID: ' + str(lastAVS.get_ID()) +
+            # '\tlat: ' + str(lastAVS.get_Location().get_Latitude()) +
+            # '\tlon: ' + str(lastAVS.get_Location().get_Longitude()) +
+            # '\tv: ' + str(lastAVS.get_Airspeed()) +
+            # '\tcog: ' + str(lastAVS.get_Heading()))
 
             uav['dubins'].update_pos()
             uav = syncAVSfromDubins(uav)
@@ -319,7 +351,6 @@ while True:
     #     print('\tHead for target Coordinates: ')
     #     #wpList = [uav['CAS'].waypoint]
     #     print("\t\tWaypoint solution:" + str(wpList))
-   
     plt.axis('equal')
     plt.grid(True)
     #plt.ylim((uavlist[0]['AVS'].get_Location().get_Latitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Latitude() + 0.005))

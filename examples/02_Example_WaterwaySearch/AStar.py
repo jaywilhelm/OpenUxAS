@@ -62,8 +62,7 @@ def a_star_planning(sx, sy, gx, gy, ox, oy, reso, rr):
     openset[calc_index(nstart, xw, minx, miny)] = nstart
 
     while 1:
-        c_id = min(
-            openset, key=lambda o: openset[o].cost + calc_heuristic(ngoal, openset[o]))
+        c_id = min(openset, key=lambda o: openset[o].cost + calc_heuristic(ngoal, openset[o]))
         current = openset[c_id]
 
         # show graph

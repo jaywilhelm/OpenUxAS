@@ -1,5 +1,8 @@
 # File: UAVHeading.py
-# Author: Jacob English, je787413@ohio.edu
+# Author(s):
+#           Jacob English, je787413@ohio.edu (Original)
+#           Jay Wilhelm, jwilhelm@ohio.edu
+#           Jeremy Browne
 ############################################
 
 import math
@@ -12,6 +15,7 @@ from AStar import a_star_planning
 from UAVHcfg import *
 from TerminalColors import TerminalColors as TC
 
+import pickle
 '''
  Class: UAVHeading
 '''
@@ -111,6 +115,44 @@ class UAVHeading:
                 else:
                     return -1
 
+    def possibleFlightAreaStatic(self, area_length):
+        theta_ref = self.thetaRef
+        theta_possible = self.thetaPossible
+
+        side_decision = 0
+
+        points = [list(self.position)]
+
+        if self.staticAreaLength:
+            area_length = self.staticAreaLength
+            # side_decision = self.__weightedSideDecision(uav0, uavh_others, static_kozs) # stub uav_others and koz lists for now # Browne: commented our b/c Dubins UAV does not have a waypoint variable
+            #
+            # if side_decision < 0:
+            #     points[-1][0] = self.position[0] + (3 * area_length * math.cos(theta_ref - (theta_possible / 2)))
+            #     points[-1][1] = self.position[1] + (3 * area_length * math.sin(theta_ref - (theta_possible / 2)))
+
+        for div in range(-2, -5, -1):
+            pt_x = self.position[0] + (area_length * math.cos(theta_ref + (theta_possible / div)))
+            pt_y = self.position[1] + (area_length * math.sin(theta_ref + (theta_possible / div)))
+            points.append([pt_x, pt_y])
+
+        # +-0
+        pt_x = self.position[0] + (area_length * math.cos(theta_ref))
+        pt_y = self.position[1] + (area_length * math.sin(theta_ref))
+        points.append([pt_x, pt_y])
+
+        for div in range(4, 1, -1):
+            pt_x = self.position[0] + (area_length * math.cos(theta_ref + (theta_possible / div)))
+            pt_y = self.position[1] + (area_length * math.sin(theta_ref + (theta_possible / div)))
+            points.append([pt_x, pt_y])
+
+        # if self.staticAreaLength and side_decision > 0:
+        #     points[-1][0] = self.position[0] + (2 * area_length * math.cos(theta_ref + (theta_possible / 2)))
+        #     points[-1][1] = self.position[1] + (2 * area_length * math.sin(theta_ref + (theta_possible / 2)))
+
+        points.append(list(self.position))
+        return points
+
     '''
      UAVHeading Function: possibleFlightArea
         Parameters: area_length
@@ -133,11 +175,11 @@ class UAVHeading:
 
         if self.staticAreaLength:
             area_length = self.staticAreaLength
-            side_decision = self.__weightedSideDecision(uav0, uavh_others, static_kozs) # stub uav_others and koz lists for now # Browne: commented our b/c Dubins UAV does not have a waypoint variable
-
-            if side_decision < 0:
-                points[-1][0] = self.position[0] + (3 * area_length * math.cos(theta_ref - (theta_possible / 2)))
-                points[-1][1] = self.position[1] + (3 * area_length * math.sin(theta_ref - (theta_possible / 2)))
+            # side_decision = self.__weightedSideDecision(uav0, uavh_others, static_kozs) # stub uav_others and koz lists for now # Browne: commented our b/c Dubins UAV does not have a waypoint variable
+            #
+            # if side_decision < 0:
+            #     points[-1][0] = self.position[0] + (3 * area_length * math.cos(theta_ref - (theta_possible / 2)))
+            #     points[-1][1] = self.position[1] + (3 * area_length * math.sin(theta_ref - (theta_possible / 2)))
 
         for div in range(-2, -5, -1):
             pt_x = self.position[0] + (area_length * math.cos(theta_ref + (theta_possible / div)))
@@ -154,9 +196,9 @@ class UAVHeading:
             pt_y = self.position[1] + (area_length * math.sin(theta_ref + (theta_possible / div)))
             points.append([pt_x, pt_y])
 
-        if self.staticAreaLength and side_decision > 0:
-            points[-1][0] = self.position[0] + (2 * area_length * math.cos(theta_ref + (theta_possible / 2)))
-            points[-1][1] = self.position[1] + (2 * area_length * math.sin(theta_ref + (theta_possible / 2)))
+        # if self.staticAreaLength and side_decision > 0:
+        #     points[-1][0] = self.position[0] + (2 * area_length * math.cos(theta_ref + (theta_possible / 2)))
+        #     points[-1][1] = self.position[1] + (2 * area_length * math.sin(theta_ref + (theta_possible / 2)))
 
         points.append(list(self.position))
 
@@ -489,6 +531,121 @@ class UAVHeading:
 
         return start_pt, goal_pt, border_pts, koz_pts, use_pseudo_target
 
+    def __convertToScaleInt(self, item, scalef):
+        newitem = []
+        for i in item:
+            i = int(i*scalef)
+            newitem.append(i)
+        return newitem
+
+    def make_border_cells(self, mypos, scalef, offset):
+        border_pts = np.array([[mypos[0] - offset, mypos[1] - offset],
+                               [mypos[0] + offset, mypos[1] + offset]])
+        border_pts[0] = self.__convertToScaleInt(border_pts[0], scalef)
+        border_pts[1] = self.__convertToScaleInt(border_pts[1], scalef)
+        zero_x = border_pts[0][0]
+        zero_y = border_pts[0][1]
+        zero_pos = np.array([zero_x, zero_y])
+        border_pts -= zero_pos
+
+        # bottom-left to br
+        border_fill = np.arange(border_pts[0][0], border_pts[1][0], 1)
+        bsize = len(border_fill)  # will be square
+        border_cell = [border_fill, np.ones(bsize) * border_pts[0][1]]
+        # bottom-right to tr
+        border_fill = np.array([np.ones(bsize) * border_pts[1][0],
+                                np.arange(border_pts[0][1], border_pts[1][1], 1)])
+        border_cell = np.concatenate((border_cell, border_fill), axis=1)
+        # top-right to tl
+        border_fill = np.array([np.arange(border_pts[1][0], border_pts[0][0], -1),
+                                np.ones(bsize) * border_pts[1][1]])
+
+        border_cell = np.concatenate((border_cell, border_fill), axis=1)
+        # top-left to bl
+        border_fill = np.array([np.ones(bsize) * border_pts[0][0],
+                                np.arange(border_pts[1][1], border_pts[0][1], -1), ])
+        border_cell = np.concatenate((border_cell, border_fill), axis=1)
+
+        border_cell = np.transpose(border_cell)
+        return border_cell, zero_pos
+
+    def make_uavtoavoid_koz(self, kozList, scalef, zero_pos):
+        newkoz = np.array([])
+        firstpt = True
+        for pts in kozList:
+            pts = self.__convertToScaleInt(pts, scalef)
+            pts -= zero_pos
+
+            if(firstpt):
+                firstpt = False
+
+            else:
+                newset = self.__intermediates(lastpt, pts, 1)
+                for i in newset:
+                    fo = np.array([[i[0]], [i[1]]])
+                    if(len(newkoz) == 0):
+                        newkoz = fo
+                    else:
+                        newkoz = np.concatenate((newkoz, fo), axis=1)
+
+            lastpt = pts
+
+        return np.transpose(newkoz)
+    def format_astar_input(self, kozList, scalef):
+        mypos = self.position
+        mygoal = self.waypoint
+
+        offset = 0.5 #in deg.
+        #scalef = 50#10e7
+
+        border_pts, zero_pos = self.make_border_cells(mypos, scalef, offset)
+        mypos = self.__convertToScaleInt(mypos, scalef)
+        mygoal = self.__convertToScaleInt(mygoal, scalef)
+
+        mypos = np.array(mypos) - zero_pos
+        mygoal = np.array(mygoal) - zero_pos
+
+        newkoz = self.make_uavtoavoid_koz(kozList, scalef, zero_pos)
+
+
+        use_pseudo_target = False
+        start_pt = mypos
+        goal_pt = mygoal
+        koz_pts = newkoz
+
+        # fig, ax = plt.subplots()
+        # #ax.plot(t, s)
+        # ax.scatter(mypos[1], mypos[0])
+        # ax.scatter(mygoal[1], mygoal[0])
+        # ax.scatter([pt[1] for pt in border_pts], [pt[0] for pt in border_pts])
+        # ax.scatter([pt[1] for pt in newkoz], [pt[0] for pt in newkoz])
+        #
+        # ax.set(xlabel='Lon', ylabel='Lat',
+        #        title='A* formatted map')
+        # ax.grid()
+        #
+        # #fig.savefig("test.png")
+        # plt.show()
+        # plt.pause(120)
+        return start_pt, goal_pt, border_pts, koz_pts, zero_pos
+
+    def findPotentialIntersects(self, uavh_others, area_length):
+
+        mypot_area = self.possibleFlightAreaStatic(area_length)
+        mypoly = Polygon(mypot_area)
+
+        PinP = False
+        avoid_areas = []
+        for ouav in uavh_others:
+            thier_area = ouav.possibleFlightAreaStatic(area_length)
+            thier_poly = Polygon(thier_area)
+            if(thier_poly.intersects(mypoly)):
+                PinP = True
+                avoid_areas = thier_area
+                print("Pot. Collision")
+                break
+
+        return PinP, avoid_areas
     '''
     UAVHeading Function: avoid
         Parameters:
@@ -497,54 +654,72 @@ class UAVHeading:
                     Returns the list of waypoints generated by
                     the A* search algorithm.
     '''
-    def avoid(self, uavh_others, static_koz):
+    def avoid(self, uavh_others, area_length, static_koz):
         
         if(not self.waypoint):
             xy = (self.position[0], self.position[1])
-            r = 10
-            px = xy[0] + r * np.sin(self.thetaRef)
-            py = xy[1] + r * np.cos(self.thetaRef)
-            self.waypoint = [px,py]
+            r = 0.3
+            px = xy[0] + r * np.cos(self.thetaRef)
+            py = xy[1] + r * np.sin(self.thetaRef)
+            self.waypoint = [px, py]
 
-        intersects, avoid_areas = self.__findIntersects(uavh_others, static_koz)
+        intersects, avoid_areas = self.findPotentialIntersects(uavh_others, area_length)
+
+        if(intersects):
+            intersects = [1, 1]
+        else:
+            intersects = {}
+        #intersects, avoid_areas = self.__findIntersects(uavh_others, static_koz)
 
         if len(intersects) == 0:
             if not self.lastClear:
                 print(TC.OKGREEN + 'PATH CLEAR.' + TC.ENDC)
             self.lastClear = True
-            return [self.waypoint], avoid_areas
+            return False, [self.waypoint], avoid_areas
 
         print(TC.WARNING + 'AVOID.' + TC.ENDC)
         self.lastClear = False
-
         use_pseudo_target = False
-        try: # get optimal path to destination
-            # format UAVHeading data for A* input
-            start, goal, border, koz, use_pseudo_target = self.__format_astar_input(avoid_areas, True)#bool(uavh_other.staticAreaLength))
+        # get optimal path to destination
+        # format UAVHeading data for A* input
+        scalefactor = 50
+        start, goal, border, koz, offset = self.format_astar_input(avoid_areas, scalefactor)
+        #start, goal, border, koz, use_pseudo_target = self.__format_astar_input(avoid_areas, False)
+        pickle.dump({"start": start,
+                     "goal": goal,
+                     "border": border,
+                     "koz": koz,
+                     "scale": scalefactor,
+                     "offset": offset}, open('astar_input.p', 'wb'))
+        #bool(uavh_other.staticAreaLength))
 
-            ox, oy = [], []
-            for pt in border:
-                ox.append(pt[0])
-                oy.append(pt[1])
-                
-            for pt in koz:
-                ox.append(pt[0])
-                oy.append(pt[1])
-                
-            if SHOW_ANIMATION:  # pragma: no cover
-                plt.plot(ox, oy, ".k", label='Search Area Obstacles')
-                plt.plot(start[0], start[1], "xr", label='UAV0 Position')
-                plt.plot(goal[0], goal[1], "xb", label='UAV0 Goal')
-                plt.grid(True)
-                plt.axis("equal")
+        ox, oy = [], []
+        for pt in border:
+            ox.append(pt[0])
+            oy.append(pt[1])
 
+        for pt in koz:
+            ox.append(pt[0])
+            oy.append(pt[1])
+
+        #if SHOW_ANIMATION:  # pragma: no cover
+        fig, ax = plt.subplots()
+        ax.plot(ox, oy, ".k", label='Search Area Obstacles')
+        ax.plot(start[0], start[1], "xg", label='UAV0 Position')
+        ax.plot(goal[0], goal[1], "xr", label='UAV0 Goal')
+        ax.grid(True)
+        ax.axis("equal")
+
+
+        try:
+            INTERVAL_SIZE = 10000
             path_x, path_y = a_star_planning(start[0], start[1],
                                              goal[0], goal[1],
                                              ox, oy,
                                              INTERVAL_SIZE, (2 * INTERVAL_SIZE))
         except ValueError:
             print(TC.FAIL + '\t\t**No valid path found.**' + TC.ENDC)
-            return [], avoid_areas
+            return False, [], avoid_areas
 
         if SHOW_ANIMATION:  # pragma: no cover
             plt.plot(path_x, path_y, "-r", label='Shortest Path')
@@ -559,19 +734,21 @@ class UAVHeading:
             pt = []
             pt.append(path_x[i] - self.shift_x)
             pt.append(path_y[i] - self.shift_y)
+            path_pts.append(pt)
 
             # ignore extra waypoints that are between the previous and next
-            if (i > 0) and (i < len(path_x) - 1):
-                last_pt = []
-                last_pt.append(path_x[i-1] - self.shift_x)
-                last_pt.append(path_y[i-1] - self.shift_y)
+            # if (i > 0) and (i < len(path_x) - 1):
+            #     last_pt = []
+            #     last_pt.append(path_x[i-1] - self.shift_x)
+            #     last_pt.append(path_y[i-1] - self.shift_y)
+            #
+            #     next_pt = []
+            #     next_pt.append(path_x[i+1] - self.shift_x)
+            #     next_pt.append(path_y[i+1] - self.shift_y)
+            #
+            #     if not (self.__isBetween(last_pt, pt, next_pt)):
+            #         path_pts.append(pt)
+            # else:
+            #     path_pts.append(pt)
 
-                next_pt = []    
-                next_pt.append(path_x[i+1] - self.shift_x)
-                next_pt.append(path_y[i+1] - self.shift_y)
-
-                if not (self.__isBetween(last_pt, pt, next_pt)):
-                    path_pts.append(pt)
-            else:
-                path_pts.append(pt)
-        return path_pts, avoid_areas
+        return True, path_pts, avoid_areas
