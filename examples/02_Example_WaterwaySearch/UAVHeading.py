@@ -8,6 +8,8 @@
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import stats
+
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
@@ -646,6 +648,38 @@ class UAVHeading:
                 break
 
         return PinP, avoid_areas
+
+    @staticmethod
+    def convertPathToUniqueWaypoints(path_x, path_y):
+        path_x = np.array(path_x)
+        path_y = np.array(path_y)
+        # waypoints come out goal first
+        path_x = np.flip(path_x)
+        path_y = np.flip(path_y)
+
+        psize = len(path_x)
+        waypoints = np.array([[path_x[0], path_y[0]]])
+        for i in range(2, psize):
+            x = [path_x[i - 2], path_x[i - 1]]
+            y = [path_y[i - 2], path_y[i - 1]]
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+
+            # print("slope: "+str(slope)+ "\t Intercept:"+str(intercept))
+            testy = slope * path_x[i] + intercept
+            # print("testy :" + str(testy) + "y: " + str(path_y[i]))
+            if (np.isnan(slope) and path_x[i] == path_x[i - 1]):
+                # print("x still on line")
+                continue
+            elif (np.isnan(slope) and path_y[i] == path_y[i - 1]):
+                # print("y still on line")
+                continue
+            elif (testy == path_y[i]):
+                # print("same " + str(i))
+                continue
+            else:
+                # print("diff " + str(i))
+                waypoints = np.concatenate((waypoints, [[path_x[i - 1], path_y[i - 1]]]), axis=0)
+        return waypoints
     '''
     UAVHeading Function: avoid
         Parameters:
@@ -721,20 +755,22 @@ class UAVHeading:
             print(TC.FAIL + '\t\t**No valid path found.**' + TC.ENDC)
             return False, [], avoid_areas
 
+        waypoints = self.convertPathToUniqueWaypoints(path_x, path_y)
+
         if SHOW_ANIMATION:  # pragma: no cover
             plt.plot(path_x, path_y, "-r", label='Shortest Path')
             plt.legend()
             plt.show()
 
         # format A* output for waypoint list
-        path_pts = []
-        if use_pseudo_target:
-            path_pts.append(self.waypoint)
-        for i in range(len(path_x)):
-            pt = []
-            pt.append(path_x[i] - self.shift_x)
-            pt.append(path_y[i] - self.shift_y)
-            path_pts.append(pt)
+        # path_pts = []
+        # if use_pseudo_target:
+        #     path_pts.append(self.waypoint)
+        # for i in range(len(path_x)):
+        #     pt = []
+        #     pt.append(path_x[i] - self.shift_x)
+        #     pt.append(path_y[i] - self.shift_y)
+        #     path_pts.append(pt)
 
             # ignore extra waypoints that are between the previous and next
             # if (i > 0) and (i < len(path_x) - 1):
@@ -751,4 +787,4 @@ class UAVHeading:
             # else:
             #     path_pts.append(pt)
 
-        return True, path_pts, avoid_areas
+        return True, waypoints, avoid_areas
