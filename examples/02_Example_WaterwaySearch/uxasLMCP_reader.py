@@ -144,8 +144,9 @@ else:
     #fix for bad file save of degrees
     np.deg2rad(30)
     thetaRef = np.deg2rad(270)
-    uavlist[0]['dubins'] = dubinsUAV(position=[45.3394889, -120.87], velocity=v,
+    uavlist[0]['dubins'] = dubinsUAV(position=[45.3394889, -120.6], velocity=v,
                                      heading=thetaRef, dt=dt)
+    deadpoint = [45.3394889, -121.0]
     uavlist[0]['ID'] = 1
     np.deg2rad(30)
     thetaRef = np.deg2rad(90)
@@ -165,7 +166,12 @@ else:
 ####################
 
 fig, ax = plt.subplots()
-
+CAScone = None
+NCcone = None
+wpt = None
+path = None
+useWPfollower = False
+replanCount = 0
 start_time = time.time()
 avoid = []
 while True:
@@ -204,29 +210,55 @@ while True:
         uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
         
         if len(uavlist) > 1:
-            replan, wp, avoid = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
-
-            #plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]])
-
+            replan, wp01, avoid = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
+            # Comment the above line and uncomment to use a dummy wpList for testing purposes
+            # replan = True
+            # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
+            
+            # plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]])
             if(replan):
-                #plt.scatter([pt[1] for pt in wp], [pt[0] for pt in wp])
-                print(wp)
-                plt.pause(10000)
+                '''If replan is True x number of times, use the new A* wpList wp01'''
+                if replanCount == 2:
+                    wp = wp01
+                    print("WHAT IS WP PRECIOUS????")
+                    print(wp)
+                    print("NOW YOU KNOW SAM")
+                    deadpoint = wp[0]
+                    path, = plt.plot([pt[1] for pt in wp], [pt[0] for pt in wp])
+                    print(wp)
+                    print(deadpoint)
+                    useWPfollower = True
+                    uavlist[0]['dubins'].currentWPIndex = 1 
+                    uavlist[0]['dubins'].withinThreshold = False 
+                    replanCount = 0
+
+                replanCount += 1
+                print('Replan Count: ' + str(replanCount))
         else:
             print('\tOnly one UAV')
 
         #
         #run ACS here...
         #if needed, send waypoints
-        ax.scatter(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0])
+        # wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
         for uav in uavlist:
             #lastAVS = uav['AVS']
             #plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
             ax.scatter(uav['dubins'].y, uav['dubins'].x)
 
             pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length)
+            # Calculate new Dubins heading: 
+            if uav['ID'] == 1:
+                CAScone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
+                if useWPfollower == True:
+                    uav['dubins'].simulateWPDubins(wpList = wp, wpRadius = 0.05)
+                else:
+                    uav['dubins'].update_pos_simple()
 
-            ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
+            if uav['ID'] == 4:
+                NCcone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
+                uav['dubins'].update_pos_simple()
+
             #plt.show()
 
             # plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
@@ -237,7 +269,12 @@ while True:
             # '\tv: ' + str(lastAVS.get_Airspeed()) +
             # '\tcog: ' + str(lastAVS.get_Heading()))
 
-            uav['dubins'].update_pos()
+            #Update Positions
+            # uav['dubins'].simulateWPDubins(wpList = wp, wpRadius = 0.0005, tmax=1)
+
+            print('ID: ' + str(uav['ID']) + '\tHeading: ' + str((uav['dubins'].heading)) + '\tlat: ' + str(uav['dubins'].x) +
+            '\tlon: ' + str(uav['dubins'].y))
+
             uav = syncAVSfromDubins(uav)
 
                 
@@ -314,7 +351,7 @@ while True:
     #     obstY = [pt[1] for pt in obst]
         
     #     tmpObstaclePoints.append(plotLine)
-    #     print('In obst')
+    #     print('In ob        CAScone.set_visible(False)
     # plotLine, = plt.plot(obstX, obstY, '--r')
 
     # if len(Astar_wpList) > 1:
@@ -356,7 +393,26 @@ while True:
     #plt.ylim((uavlist[0]['AVS'].get_Location().get_Latitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Latitude() + 0.005))
     #plt.xlim((uavlist[0]['AVS'].get_Location().get_Longitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Longitude() + 0.005))
     #plt.pause(0.0000000001)
+
     plt.pause(dt)
+    if CAScone != None:
+        CAScone.remove()
+    if NCcone != None:
+        NCcone.remove()
+    if wpt != None:
+        wpt.remove()
+    # if path != None:
+    #     path.remove()
+
+    # if uav['ID'] == 1:
+    #     CAScone.remove()
+    #     del CAScone
+    # if uav['ID'] == 4:
+    #     NCone.remove()
+    #     del NCone
+    
+
+
     # else:
     #     print('\tUse previously valid path: ')
     #     # wpList = lastWPlist  # Use the last valid wp path

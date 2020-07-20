@@ -737,16 +737,16 @@ class UAVHeading:
             oy.append(pt[1])
 
         #if SHOW_ANIMATION:  # pragma: no cover
-        fig, ax = plt.subplots()
-        ax.plot(ox, oy, ".k", label='Search Area Obstacles')
-        ax.plot(start[0], start[1], "xg", label='UAV0 Position')
-        ax.plot(goal[0], goal[1], "xr", label='UAV0 Goal')
-        ax.grid(True)
-        ax.axis("equal")
+        # fig, ax = plt.subplots()
+        # ax.plot(ox, oy, ".k", label='Search Area Obstacles')
+        # ax.plot(start[0], start[1], "xg", label='UAV0 Position')
+        # ax.plot(goal[0], goal[1], "xr", label='UAV0 Goal')
+        # ax.grid(True)
+        # ax.axis("equal")
 
 
         try:
-            INTERVAL_SIZE = 10000
+            INTERVAL_SIZE = 1
             path_x, path_y = a_star_planning(start[0], start[1],
                                              goal[0], goal[1],
                                              ox, oy,
@@ -756,7 +756,8 @@ class UAVHeading:
             return False, [], avoid_areas
 
         waypoints = self.convertPathToUniqueWaypoints(path_x, path_y)
-
+        waypoints += offset
+        waypoints /= scalefactor
         if SHOW_ANIMATION:  # pragma: no cover
             plt.plot(path_x, path_y, "-r", label='Shortest Path')
             plt.legend()
