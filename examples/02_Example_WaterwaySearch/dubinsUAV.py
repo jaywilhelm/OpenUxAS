@@ -14,7 +14,7 @@ class dubinsUAV():
         self.v = velocity
         self.dt = dt
         self.t = 0
-        self.turnrate = 100 #0.35
+        self.turnrate = 200 # 60 has strange results for A* # 0.35
         self.turn_radius = []
 
         #Current state

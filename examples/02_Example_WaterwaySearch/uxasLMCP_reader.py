@@ -146,7 +146,7 @@ else:
     thetaRef = np.deg2rad(270)
     uavlist[0]['dubins'] = dubinsUAV(position=[45.3394889, -120.6], velocity=v,
                                      heading=thetaRef, dt=dt)
-    deadpoint = [45.3394889, -121.0]
+    deadpoint = [45.3394889, -121.2]
     uavlist[0]['ID'] = 1
     np.deg2rad(30)
     thetaRef = np.deg2rad(90)
@@ -174,6 +174,7 @@ useWPfollower = False
 replanCount = 0
 start_time = time.time()
 avoid = []
+hasPlan = False
 while True:
     # if not TEST_DATA:
         # try:
@@ -216,31 +217,35 @@ while True:
             # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
             
             # plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]])
-            if(replan):
+            if(replan and not hasPlan):
+                hasPlan = True
                 '''If replan is True x number of times, use the new A* wpList wp01'''
-                if replanCount == 2:
-                    wp = wp01
-                    print("WHAT IS WP PRECIOUS????")
-                    print(wp)
-                    print("NOW YOU KNOW SAM")
-                    deadpoint = wp[0]
-                    path, = plt.plot([pt[1] for pt in wp], [pt[0] for pt in wp])
-                    print(wp)
-                    print(deadpoint)
-                    useWPfollower = True
-                    uavlist[0]['dubins'].currentWPIndex = 1 
-                    uavlist[0]['dubins'].withinThreshold = False 
-                    replanCount = 0
-
-                replanCount += 1
-                print('Replan Count: ' + str(replanCount))
+                
+                print('POS: ' + str(mainUAV['uavobj'].position))
+                print('WP: ' + str(wp01))
+                print('DP: ' + str(deadpoint))
+                wp01 = wp01[1:]     # remove first coordinate
+                # wp01 = wp01[:-1]    # Remove last waypoint
+                # wp = np.append(wp01, [[mainUAV['uavobj'].waypoint[0], mainUAV['uavobj'].waypoint[1]]], axis = 0)                    
+                wp = np.insert(wp01, 0, [[mainUAV['uavobj'].position[0], mainUAV['uavobj'].position[1]]], axis = 0)                         
+                wp = np.append(wp, [[deadpoint[0], deadpoint[1]]], axis = 0)                         
+                print("WHAT IS WP PRECIOUS????")
+                print(wp)
+                print("NOW YOU KNOW SAM")
+                path, = plt.plot([pt[1] for pt in wp], [pt[0] for pt in wp])
+                print(wp)
+                print(deadpoint)
+                useWPfollower = True
+                uavlist[0]['dubins'].currentWPIndex = 1 
+                uavlist[0]['dubins'].withinThreshold = False 
+            else:
+                print("Not re-planning")
         else:
             print('\tOnly one UAV')
 
         #
         #run ACS here...
         #if needed, send waypoints
-        # wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
         for uav in uavlist:
             #lastAVS = uav['AVS']
             #plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
@@ -252,8 +257,11 @@ while True:
                 CAScone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
                 if useWPfollower == True:
                     uav['dubins'].simulateWPDubins(wpList = wp, wpRadius = 0.05)
+                    #wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
+
                 else:
                     uav['dubins'].update_pos_simple()
+                    #wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
 
             if uav['ID'] == 4:
                 NCcone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
