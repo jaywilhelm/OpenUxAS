@@ -80,6 +80,8 @@ class dubinsUAV():
 
         RHeading = np.arctan2(self.y - activeWP[1], self.x - activeWP[0])
         RHeading += np.deg2rad(180)
+        if(RHeading >= np.pi*2):
+            RHeading -= np.pi*2
         self.update_pos(RHeading)
 
         self.lastDist = dist
@@ -112,7 +114,8 @@ class dubinsUAV():
             #     theta = RequestedHeading
         else:
             theta = RequestedHeading
-
+        if(theta >= np.pi*2):
+            theta -= np.pi*2
         print('Req: '+ str(np.rad2deg(RequestedHeading)) + '\ttheta ' + str(np.rad2deg(theta)))
         # Update States
         self.t = self.t + self.dt
