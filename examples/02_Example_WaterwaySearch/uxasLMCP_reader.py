@@ -228,10 +228,8 @@ while True:
                 # wp01 = wp01[:-1]    # Remove last waypoint
                 # wp = np.append(wp01, [[mainUAV['uavobj'].waypoint[0], mainUAV['uavobj'].waypoint[1]]], axis = 0)                    
                 wp = np.insert(wp01, 0, [[mainUAV['uavobj'].position[0], mainUAV['uavobj'].position[1]]], axis = 0)                         
-                wp = np.append(wp, [[deadpoint[0], deadpoint[1]]], axis = 0)                         
-                print("WHAT IS WP PRECIOUS????")
+                wp = np.append(wp, [[deadpoint[0], deadpoint[1]]], axis = 0)                  
                 print(wp)
-                print("NOW YOU KNOW SAM")
                 path, = plt.plot([pt[1] for pt in wp], [pt[0] for pt in wp])
                 print(wp)
                 print(deadpoint)
@@ -285,117 +283,6 @@ while True:
 
             uav = syncAVSfromDubins(uav)
 
-                
-        #uavlist = uavlistnew
-            # xy = (lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
-            # r = 10
-            # theta = 1.57
-            # px = xy[0] + r * np.sin(theta)#lastAVS.get_Heading())
-            # py = xy[1] + r * np.cos(theta)#lastAVS.get_Heading())
-            # self_line=[xy,(px,py)]
-            # plt.plot([pt[1] for pt in self_line], [pt[0] for pt in self_line])
-
-    #if len(uavlist) > 0:
-    #    pickle.dump(uavlist, open('uavlist.p', 'wb'))
-
-        # Astar_wpList, koz = uavtemp.avoid([], [])
-        # tmpObstaclePoints = []
-        # print(koz)
-        # print(Astar_wpList)
-        # for obst in koz:
-        #     obstX = [pt[0] for pt in obst]
-        #     obstY = [pt[1] for pt in obst]
-        #     print(str(obstX) + "\t" +str(obstY))
-        #     plotLine, = plt.plot(obstX, obstY, '--r')
-        #     tmpObstaclePoints.append(plotLine)
-        #     print('In obst')
-      
-
-        # update uav objects
-        #if msg_obj.get_ID() == 1: #UxAS 1
-        #    ID = msg_obj.get_ID()
-        #    loc = msg_obj.get_Location()
-        #    wpTarget = msg_obj.get_CurrentWaypoint()
-            # wp1 = msg_obj.get_CurrentWaypoint().get_Latitude()
-
-            # print('\tAVS ID:  ' + str(ID) + '\tAVS Loc:  ' + str(loc.get_Latitude()) + ' ' + str(loc.get_Longitude()))
-
-            #uavCAS.position = (msg_obj.get_Location().get_Latitude(), msg_obj.get_Location().get_Longitude())
-            #uavCAS.speed = msg_obj.get_Airspeed()
-            #uavCAS.waypoint = wpList[wpTarget]
-            # print('\tAVS ID:  ' + str(ID) + '\tAVS Loc:  ' + str(uavCAS.position[0]) + '\t' + str(uavCAS.position[1]))
-
-        #elif msg_obj.get_ID() == 4: #Dubins 4
-        #    ID = msg_obj.get_ID()
-        #    loc = msg_obj.get_Location()
-            # print('\tAVS ID:  ' + str(ID) + '\tAVS Loc:  ' + str(loc.get_Latitude()) + ' ' + str(loc.get_Longitude()))
-
-        #    uavDubins.position = (msg_obj.get_Location().get_Latitude(), msg_obj.get_Location().get_Longitude())
-        #    uavDubins.speed = msg_obj.get_Airspeed()
-        #    uavDubins.thetaRef = msg_obj.get_Heading()
-            # print('\t\t\t\t\t\t\t\t\t\t\tAVS ID:  ' + str(ID) + '\tAVS Loc:  ' + str(uavDubins.position[0]) + '\t' + str(uavDubins.position[1]))
-
-        #print('\tAVS ID: 1 ' + '\tAVS Loc:  ' +  str(uavCAS.position[0]) + '\t' + 
-        #        str(uavCAS.position[1]) + '')#'\tTargetWP: ' + str(uavCAS.waypoint) + 
-                #('\t\t\t\t\tAVS ID: 4 ' + '\tAVS Loc:  ' + str(uavDubins.position[0]) + 
-                #'\t' + str(uavDubins.position[1])+ '\t' + str(uavDubins.thetaRef)))
-
-        #uavCASPositionPlot = plt.plot(uavCAS.position[1], uavCAS.position[0], 'oc', label='CAS UAV Position')
-        #uavDubinsPositionPlot, = plt.plot(uavDubins.position[1], uavDubins.position[0], 'or', label='ncUAV UAV Position')
-
-        
-
-        # wpPathPlot, = plt.plot([pt[0] for pt in uav0Dubins.stepDictWPVF['lastWPList']], [pt[1] for pt in uav0Dubins.stepDictWPVF['lastWPList']], '--g', label='Avoidance UAV Waypoint Path')
-
-    # if (checkMC == 1):
-    #     Astar_wpList, koz = uavCAS.avoid([uavDubins], [])
-
-    # if tmpObstaclePoints is not None:
-    #     for tmp in tmpObstaclePoints:
-    #         tmp.remove()
-    # tmpObstaclePoints = []
-    # for obst in koz:
-    #     obstX = [pt[0] for pt in obst]
-    #     obstY = [pt[1] for pt in obst]
-        
-    #     tmpObstaclePoints.append(plotLine)
-    #     print('In ob        CAScone.set_visible(False)
-    # plotLine, = plt.plot(obstX, obstY, '--r')
-
-    # if len(Astar_wpList) > 1:
-    #     print('\tUsing Astar Path: ')
-    #     wpList = Astar_wpList[::-1][1:] # reverse output and remove first element
-    #     print("\t\tWaypoint solution:" + str(wpList))
-
-    #     # make Waypoints for uavCAS and send MissionCommand
-    #     waypoint_obj_list = []
-    #     wpt_id = 201
-    #     for i in range(len(wpList)):
-    #         wp_obj = factory.createObjectByName("CMASI", "Waypoint")
-    #         wp_obj.set_Number(wpt_id)
-    #         wp_obj.set_Speed(uavCAS.speed)
-    #         wp_obj.set_Latitude(wpList[i][0])
-    #         wp_obj.set_Longitude(wpList[i][1])
-    #         wp_obj.set_Altitude(500.0)
-    #         if i < (len(wpList) - 1):
-    #             wp_obj.set_NextWaypoint(wpt_id + 1)
-
-    #         waypoint_obj_list.append(wp_obj)
-    #         wpt_id += 1
-        
-    #     mc21_obj = factory.createObjectByName("CMASI", "MissionCommand")
-    #     mc21_obj.set_FirstWaypoint(wpt_id)
-    #     mc21_obj.set_CommandID(21)
-    #     mc21_obj.set_VehicleID(1)
-    #     mc21_obj.WaypointList = waypoint_obj_list
-
-    #     # time.sleep(0.1)
-    #     send_to_uxas(mc21_obj, socket, client_id)
-
-    # elif len(wpList)==0:
-    #     print('\tHead for target Coordinates: ')
-    #     #wpList = [uav['CAS'].waypoint]
-    #     print("\t\tWaypoint solution:" + str(wpList))
     plt.axis('equal')
     plt.grid(True)
     #plt.ylim((uavlist[0]['AVS'].get_Location().get_Latitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Latitude() + 0.005))
