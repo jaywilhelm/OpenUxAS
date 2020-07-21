@@ -132,7 +132,7 @@ if not TEST_DATA:
 ####################
 ####################
 else:
-    dt = 1
+    dt = 0.25
     v = 0.01
 
     #uavlist = pickle.load( open( "uavlist.p", "rb" ) )
@@ -252,7 +252,7 @@ while True:
             #lastAVS = uav['AVS']
             #plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
             ax.scatter(uav['dubins'].y, uav['dubins'].x)
-            ax.scatter([pt[1] for pt in full_path], [pt[0] for pt in full_path])
+            #ax.scatter([pt[1] for pt in full_path], [pt[0] for pt in full_path])
             
             pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length)
             # Calculate new Dubins heading: 
