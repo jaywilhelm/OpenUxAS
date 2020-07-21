@@ -213,7 +213,7 @@ while True:
         
         if len(uavlist) > 1:
             #if(not hasPlan):
-            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length*1.25, static_koz=[])
+            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
             # Comment the above line and uncomment to use a dummy wpList for testing purposes
             # replan = True
             # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
@@ -236,7 +236,7 @@ while True:
                 #wplist = np.insert(wp01, 0, [[mainUAV['uavobj'].position[0], mainUAV['uavobj'].position[1]]], axis = 0)                         
                 wplist = np.append(wplist, [[deadpoint[0], deadpoint[1]]], axis = 0)    
                 uavlist[0]['dubins'].setWaypoints(wplist, newradius=0.01)
-                uavlist[0]['dubins'].currentWPIndex = 1               
+                uavlist[0]['dubins'].currentWPIndex = 2               
                 print(wplist)
                 path, = plt.plot([pt[1] for pt in wplist], [pt[0] for pt in wplist])
                 print(deadpoint)

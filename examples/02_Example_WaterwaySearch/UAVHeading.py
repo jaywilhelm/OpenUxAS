@@ -711,6 +711,8 @@ class UAVHeading:
             self.lastClear = True
             return False, [self.waypoint], avoid_areas, []
 
+        #do it again with larger KOZ
+        intersects, avoid_areas = self.findPotentialIntersects(uavh_others, area_length*1.33)
         print(TC.WARNING + 'AVOID.' + TC.ENDC)
         self.lastClear = False
         use_pseudo_target = False
