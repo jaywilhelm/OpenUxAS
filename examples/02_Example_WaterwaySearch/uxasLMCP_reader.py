@@ -144,7 +144,7 @@ else:
     #fix for bad file save of degrees
     np.deg2rad(30)
     thetaRef = np.deg2rad(270)
-    uavlist[0]['dubins'] = dubinsUAV(position=[45.3394889, -120.6], velocity=v,
+    uavlist[0]['dubins'] = dubinsUAV(position=[45.3394889, -120.5], velocity=v,
                                      heading=thetaRef, dt=dt)
     deadpoint = [45.3394889, -121.2]
     uavlist[0]['ID'] = 1
@@ -212,7 +212,8 @@ while True:
         uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
         
         if len(uavlist) > 1:
-            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
+            #if(not hasPlan):
+            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length*1.25, static_koz=[])
             # Comment the above line and uncomment to use a dummy wpList for testing purposes
             # replan = True
             # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
@@ -234,7 +235,7 @@ while True:
                 wplist[0][1] = mainUAV['uavobj'].position[1]
                 #wplist = np.insert(wp01, 0, [[mainUAV['uavobj'].position[0], mainUAV['uavobj'].position[1]]], axis = 0)                         
                 wplist = np.append(wplist, [[deadpoint[0], deadpoint[1]]], axis = 0)    
-                uavlist[0]['dubins'].setWaypoints(wplist, newradius=0.02)
+                uavlist[0]['dubins'].setWaypoints(wplist, newradius=0.01)
                 uavlist[0]['dubins'].currentWPIndex = 1               
                 print(wplist)
                 path, = plt.plot([pt[1] for pt in wplist], [pt[0] for pt in wplist])
@@ -254,10 +255,13 @@ while True:
             ax.scatter(uav['dubins'].y, uav['dubins'].x)
             #ax.scatter([pt[1] for pt in full_path], [pt[0] for pt in full_path])
             
-            pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length)
+            pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
             # Calculate new Dubins heading: 
             if uav['ID'] == 1:
-                CAScone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
+                color = '-g'
+                if(replan):
+                    color = '-y'
+                CAScone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts], color)
                 if useWPfollower == True:
                     uav['dubins'].simulateWPDubins()
                     #wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
@@ -267,7 +271,7 @@ while True:
                     #wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
 
             if uav['ID'] == 4:
-                NCcone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
+                NCcone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts], "-r")
                 uav['dubins'].update_pos_simple()
 
             #plt.show()

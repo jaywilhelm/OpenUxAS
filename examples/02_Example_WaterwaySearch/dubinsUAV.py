@@ -14,7 +14,7 @@ class dubinsUAV():
         self.v = velocity
         self.dt = dt
         self.t = 0
-        self.turnrate = np.deg2rad(35)
+        self.turnrate = np.deg2rad(20)
         #self.turn_radius = []
 
 
