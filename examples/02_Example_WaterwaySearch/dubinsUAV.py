@@ -92,13 +92,24 @@ class dubinsUAV():
 
         if self.turnRateLimited:
             theta = self.heading 
-            if(np.abs(RequestedHeading - theta) > self.turnrate * self.dt):
+            if abs(theta - RequestedHeading) < np.pi:
                 if theta - RequestedHeading < 0:
-                     theta = theta + self.turnrate * self.dt
+                    theta = theta + self.turnrate * self.dt
                 else:
-                     theta = theta - self.turnrate * self.dt
+                    theta = theta - self.turnrate * self.dt
+
             else:
-                theta = RequestedHeading
+                if theta - RequestedHeading > 0:
+                    theta = theta + self.turnrate * self.dt
+                else:
+                    theta = theta - self.turnrate * self.dt
+            # if(np.abs(RequestedHeading - theta) > self.turnrate * self.dt):
+            #     if theta - RequestedHeading < 0:
+            #          theta = theta + self.turnrate * self.dt
+            #     else:
+            #          theta = theta - self.turnrate * self.dt
+            # else:
+            #     theta = RequestedHeading
         else:
             theta = RequestedHeading
 

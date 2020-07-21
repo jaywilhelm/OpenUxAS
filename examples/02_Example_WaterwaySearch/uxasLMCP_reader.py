@@ -175,6 +175,7 @@ replanCount = 0
 start_time = time.time()
 avoid = []
 hasPlan = False
+full_path = []
 while True:
     # if not TEST_DATA:
         # try:
@@ -211,7 +212,7 @@ while True:
         uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
         
         if len(uavlist) > 1:
-            replan, wplist, avoid = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
+            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
             # Comment the above line and uncomment to use a dummy wpList for testing purposes
             # replan = True
             # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
@@ -251,7 +252,8 @@ while True:
             #lastAVS = uav['AVS']
             #plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
             ax.scatter(uav['dubins'].y, uav['dubins'].x)
-
+            ax.scatter([pt[1] for pt in full_path], [pt[0] for pt in full_path])
+            
             pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length)
             # Calculate new Dubins heading: 
             if uav['ID'] == 1:

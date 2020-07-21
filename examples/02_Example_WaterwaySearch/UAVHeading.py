@@ -709,7 +709,7 @@ class UAVHeading:
             if not self.lastClear:
                 print(TC.OKGREEN + 'PATH CLEAR.' + TC.ENDC)
             self.lastClear = True
-            return False, [self.waypoint], avoid_areas
+            return False, [self.waypoint], avoid_areas, []
 
         print(TC.WARNING + 'AVOID.' + TC.ENDC)
         self.lastClear = False
@@ -753,11 +753,16 @@ class UAVHeading:
                                              INTERVAL_SIZE, (2 * INTERVAL_SIZE))
         except ValueError:
             print(TC.FAIL + '\t\t**No valid path found.**' + TC.ENDC)
-            return False, [], avoid_areas
+            return False, [], avoid_areas, []
 
         waypoints = self.convertPathToUniqueWaypoints(path_x, path_y)
         waypoints += offset
         waypoints /= scalefactor
+
+        full_path = np.transpose(np.array([path_x, path_y]))
+        full_path += offset
+        full_path /= scalefactor
+
         if SHOW_ANIMATION:  # pragma: no cover
             plt.plot(path_x, path_y, "-r", label='Shortest Path')
             plt.legend()
@@ -788,4 +793,4 @@ class UAVHeading:
             # else:
             #     path_pts.append(pt)
 
-        return True, waypoints, avoid_areas
+        return True, waypoints, avoid_areas, full_path
