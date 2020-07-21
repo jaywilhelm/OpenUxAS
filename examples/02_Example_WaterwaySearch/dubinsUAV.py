@@ -70,7 +70,7 @@ class dubinsUAV():
 
 
         if (dist < wpRadius and dist > self.lastDist):
-            if(self.currentWPIndex < len(self.waypoints)):
+            if(self.currentWPIndex < len(self.waypoints)-1):
                 self.currentWPIndex += 1
                 print("WP Increment")
                 #update distance...
@@ -79,11 +79,8 @@ class dubinsUAV():
                 print("end of list, do something")
 
         RHeading = np.arctan2(self.y - activeWP[1], self.x - activeWP[0])
-        #if(RHeading < 0):
         RHeading += np.deg2rad(180)
-        #print('Head2: ' + str(np.rad2deg(heading)))
         self.update_pos(RHeading)
-        #print('Head3: ' + str(np.rad2deg(heading)))
 
         self.lastDist = dist
 
@@ -94,17 +91,7 @@ class dubinsUAV():
     def update_pos(self, RequestedHeading):
 
         if self.turnRateLimited:
-            theta = self.heading #np.arctan2(self.vy, self.vx)
-            # if abs(theta - RequestedHeading) < np.pi:
-            #     if theta - RequestedHeading < 0:
-            #         theta = theta + self.turnrate * self.dt
-            #     else:
-            #         theta = theta - self.turnrate * self.dt
-            # else:
-            #     if theta - RequestedHeading > 0:
-            #         theta = theta + self.turnrate * self.dt
-            #     else:
-            #         theta = theta - self.turnrate * self.dt
+            theta = self.heading 
             if(np.abs(RequestedHeading - theta) > self.turnrate * self.dt):
                 if theta - RequestedHeading < 0:
                      theta = theta + self.turnrate * self.dt
