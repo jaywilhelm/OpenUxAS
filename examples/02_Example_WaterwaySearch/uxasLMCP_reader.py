@@ -298,6 +298,10 @@ while True:
     #plt.xlim((uavlist[0]['AVS'].get_Location().get_Longitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Longitude() + 0.005))
     #plt.pause(0.0000000001)
 
+    plt.ylim(45.25,45.45)
+    plt.xlim(-121.25, -120.45)
+    
+
     plt.pause(dt)
     if CAScone != None:
         CAScone.remove()
