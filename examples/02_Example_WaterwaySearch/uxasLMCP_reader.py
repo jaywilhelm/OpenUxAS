@@ -108,9 +108,10 @@ def syncAVSfromDubins(uav):
     lon = uav['dubins'].y
     vel = uav['dubins'].v
     heading = uav['dubins'].heading
+    avoidanceUAV = uav['avoidanceUAV']
     uav['uavobj'] = UAVHeading(pos=[lat, lon],
                                waypt=[], speed=vel, heading=heading,
-                               tPossible=math.radians(45))
+                               tPossible=math.radians(45), avoidanceUAV=avoidanceUAV)
     return uav
 
 TEST_DATA = True
@@ -144,16 +145,18 @@ else:
     #fix for bad file save of degrees
     np.deg2rad(30)
     thetaRef = np.deg2rad(270)
-    uavlist[0]['dubins'] = dubinsUAV(position=[45.3394889, -120.5], velocity=v,
+    uavlist[0]['dubins'] = dubinsUAV(position=[45.33, -120.5], velocity=v,
                                      heading=thetaRef, dt=dt)
     deadpoint = [45.3394889, -121.2]
     uavlist[0]['ID'] = 1
+    uavlist[0]['avoidanceUAV'] = True
     np.deg2rad(30)
     thetaRef = np.deg2rad(90)
+
     uavlist[1]['dubins'] = dubinsUAV(position=[45.32, -120.8], velocity=v,
                                      heading=thetaRef, dt=dt)
     uavlist[1]['ID'] = 4
-
+    uavlist[1]['avoidanceUAV'] = False
     #simUAV = {'position': (uavlist[0]['AVS'].get_Location().get_Latitude(),uavlist[0]['AVS'].get_Location().get_Longitude()),
     # 'velocity': v, 'heading': uavlist[0]['uavobj'].thetaRef}
 
@@ -210,10 +213,30 @@ while True:
     if(check_time - start_time > 1):
         mainUAV = finduavbyID(uavlist, 1)#IDtoWatch
         uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
-        
+        print('MainUAV: ' + str(mainUAV) + '\n' + str( mainUAV['uavobj']))
+       
+        points = [list(mainUAV['uavobj'].position)] 
+
+        for div in range(2, 5, 1):
+            pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*3 / div)))
+            pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*3 / div)))
+            points.append([pt_x, pt_y])
+
+        # +-0
+        pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef))
+        pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef))
+        points.append([pt_x, pt_y]) 
+
+        for div in range(-4, -1, 1):
+            pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*3 / div)))
+            pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*3 / div)))
+            points.append([pt_x, pt_y])
+
+        points = [list(mainUAV['uavobj'].position)] 
+
         if len(uavlist) > 1:
             #if(not hasPlan):
-            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
+            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[points])
             # Comment the above line and uncomment to use a dummy wpList for testing purposes
             # replan = True
             # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
@@ -256,8 +279,12 @@ while True:
             #ax.scatter([pt[1] for pt in full_path], [pt[0] for pt in full_path])
             
             pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
+            print('points:' + str(pts))
             # Calculate new Dubins heading: 
+            # ax.scatter([pt[1] for pt in pts], [pt[0] for pt in pts])
+
             if uav['ID'] == 1:
+
                 color = '-g'
                 if(replan):
                     color = '-y'
@@ -288,14 +315,14 @@ while True:
             # uav['dubins'].simulateWPDubins(wpList = wp, wpRadius = 0.0005, tmax=1)
 
             print('ID: ' + str(uav['ID']) + '\tHeading: ' + str((uav['dubins'].heading)) + '\tlat: ' + str(uav['dubins'].x) +
-            '\tlon: ' + str(uav['dubins'].y))
+            '\tlon: ' + str(uav['dubins'].y) + '\tIs CAS?: ' + str(uav['avoidanceUAV']))
 
             uav = syncAVSfromDubins(uav)
 
     plt.axis('equal')
     plt.grid(True)
-    #plt.ylim((uavlist[0]['AVS'].get_Location().get_Latitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Latitude() + 0.005))
-    #plt.xlim((uavlist[0]['AVS'].get_Location().get_Longitude() - 0.005, uavlist[0]['AVS'].get_Location().get_Longitude() + 0.005))
+    # plt.ylim((uavlist[0]['dubins'].x - 0.1, uavlist[0]['dubins'].x + 0.1))
+    # plt.xlim((uavlist[0]['dubins'].y - 0.1, uavlist[0]['dubins'].y + 0.1))
     #plt.pause(0.0000000001)
 
     plt.ylim(45.25,45.45)

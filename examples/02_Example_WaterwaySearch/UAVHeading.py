@@ -29,6 +29,8 @@ class UAVHeading:
     thetaRef = 0
     thetaPossible = 0
 
+    avoidanceUAV = False
+
     staticAreaLength = False
     shift_x = 0
     shift_y = 0
@@ -45,7 +47,7 @@ class UAVHeading:
         Description:
                     Constructor for UAVHeading Class.
     '''
-    def __init__(self, pos, waypt, speed, heading, tPossible):
+    def __init__(self, pos, waypt, speed, heading, tPossible, avoidanceUAV):
         self.position = list(pos)
         self.waypoint = list(waypt)
         self.speed = speed
@@ -53,7 +55,7 @@ class UAVHeading:
         # self.thetaRef = 90 - heading
         self.thetaPossible = tPossible
         # self.staticAreaLength = False
-
+        self.avoidanceUAV = avoidanceUAV
 
     '''
      UAVHeading Function: __weightedSideDecision
@@ -120,10 +122,9 @@ class UAVHeading:
     def possibleFlightAreaStatic(self, area_length):
         theta_ref = self.thetaRef
         theta_possible = self.thetaPossible
-
         side_decision = 0
 
-        points = [list(self.position)]
+        points = [list(self.position)] 
 
         if self.staticAreaLength:
             area_length = self.staticAreaLength
@@ -132,7 +133,7 @@ class UAVHeading:
             # if side_decision < 0:
             #     points[-1][0] = self.position[0] + (3 * area_length * math.cos(theta_ref - (theta_possible / 2)))
             #     points[-1][1] = self.position[1] + (3 * area_length * math.sin(theta_ref - (theta_possible / 2)))
-
+        
         for div in range(-2, -5, -1):
             pt_x = self.position[0] + (area_length * math.cos(theta_ref + (theta_possible / div)))
             pt_y = self.position[1] + (area_length * math.sin(theta_ref + (theta_possible / div)))
@@ -148,9 +149,26 @@ class UAVHeading:
             pt_y = self.position[1] + (area_length * math.sin(theta_ref + (theta_possible / div)))
             points.append([pt_x, pt_y])
 
-        # if self.staticAreaLength and side_decision > 0:
-        #     points[-1][0] = self.position[0] + (2 * area_length * math.cos(theta_ref + (theta_possible / 2)))
-        #     points[-1][1] = self.position[1] + (2 * area_length * math.sin(theta_ref + (theta_possible / 2)))
+        # ===========================
+
+        if self.avoidanceUAV:
+            points.append(list(self.position))
+
+            for div in range(2, 5, 1):
+                pt_x = self.position[0] - (area_length * math.cos(theta_ref - (theta_possible*3 / div)))
+                pt_y = self.position[1] - (area_length * math.sin(theta_ref - (theta_possible*3 / div)))
+                points.append([pt_x, pt_y])
+
+            # +-0
+            pt_x = self.position[0] - (area_length * math.cos(theta_ref))
+            pt_y = self.position[1] - (area_length * math.sin(theta_ref))
+            points.append([pt_x, pt_y]) 
+
+            for div in range(-4, -1, 1):
+                pt_x = self.position[0] - (area_length * math.cos(theta_ref - (theta_possible*3 / div)))
+                pt_y = self.position[1] - (area_length * math.sin(theta_ref - (theta_possible*3 / div)))
+                points.append([pt_x, pt_y])
+
 
         points.append(list(self.position))
         return points
@@ -738,13 +756,15 @@ class UAVHeading:
             ox.append(pt[0])
             oy.append(pt[1])
 
-        #if SHOW_ANIMATION:  # pragma: no cover
-        # fig, ax = plt.subplots()
-        # ax.plot(ox, oy, ".k", label='Search Area Obstacles')
-        # ax.plot(start[0], start[1], "xg", label='UAV0 Position')
-        # ax.plot(goal[0], goal[1], "xr", label='UAV0 Goal')
-        # ax.grid(True)
-        # ax.axis("equal")
+        # SHOW_ANIMATION = True
+
+        if SHOW_ANIMATION:  # pragma: no cover
+            fig, ax = plt.subplots()
+            ax.plot(ox, oy, ".k", label='Search Area Obstacles')
+            ax.plot(start[0], start[1], "xg", label='UAV0 Position')
+            ax.plot(goal[0], goal[1], "xr", label='UAV0 Goal')
+            ax.grid(True)
+            ax.axis("equal")
 
 
         try:
