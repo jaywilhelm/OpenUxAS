@@ -58,16 +58,56 @@ class dubinsUAV():
     def getActiveWaypoint(self):
         return self.waypoints[self.currentWPIndex]
 
+    def CarrotChaseWP(self):
+        ''' Determine target carrot point coordinates between waypoints '''
+
+        delta = 0.01
+        wp_1 = self.waypoints[self.currentWPIndex-1]
+        wp_2 = self.waypoints[self.currentWPIndex]
+
+        dist2wp = self.distance(wp_2, (self.x, self.y))
+
+        # if self.currentWPIndex >= (len(self.waypoints)-1):
+        #     print('Last Waypoint')
+        #     carrotTarget_x = wp_2[0]
+        #     carrotTarget_y = wp_2[1]
+        # else:
+        R_u = self.distance(wp_1, (self.x, self.y))
+        dely = wp_2[1] - wp_1[1]
+        delx = wp_2[0] - wp_1[0]
+        theta = np.arctan2(dely, delx)
+
+        dely = self.y - wp_1[1]
+        delx = self.x - wp_1[0]
+        theta_u = np.arctan2(dely, delx)
+
+
+        beta = theta - theta_u
+
+        print('Carrot Point Angles: ' 
+                    + str(np.degrees(theta)) + 
+                ' ' + str(np.degrees(theta_u)) + 
+                ' ' + str(np.degrees(beta)) )
+
+
+        R = np.sqrt(R_u**2 - ((R_u*np.sin(beta))**2))
+        carrotTarget_x = wp_1[0] + (R+delta)*np.cos(theta)
+        carrotTarget_y = wp_1[1] + (R+delta)*np.sin(theta)
+
+        carrotPos = [carrotTarget_x, carrotTarget_y]
+        return carrotPos
+
     def simulateWPDubins(self):
         # currentWPIndex = 0
         # withinThreshold = False
         # lastDist = sys.maxsize
+        UseCarrotChaseWP = True
         wpRadius = self.wpRadius
         activeWP = self.getActiveWaypoint()
+        carrotPoint = self.CarrotChaseWP()
         dist = self.distance(activeWP, (self.x, self.y))
 
         print('D: ' + str(dist) + '\t ' + str(dist < wpRadius) + '\t ' + str(dist > self.lastDist) + '\t# ' + str(self.currentWPIndex) + '\tLast: ' + str(self.lastDist))
-
 
         if (dist < wpRadius and dist > self.lastDist):
             if(self.currentWPIndex < len(self.waypoints)-1):
@@ -78,11 +118,18 @@ class dubinsUAV():
             else:
                 print("end of list, do something")
 
-        RHeading = np.arctan2(self.y - activeWP[1], self.x - activeWP[0])
-        RHeading += np.deg2rad(180)
-        if(RHeading >= np.pi*2):
-            RHeading -= np.pi*2
-        self.update_pos(RHeading)
+        if UseCarrotChaseWP:
+            RHeading = np.arctan2(self.y - carrotPoint[1], self.x - carrotPoint[0])
+            RHeading += np.deg2rad(180)
+            if(RHeading >= np.pi*2):
+                RHeading -= np.pi*2 
+            self.update_pos(RHeading)
+        else:
+            RHeading = np.arctan2(self.y - activeWP[1], self.x - activeWP[0])
+            RHeading += np.deg2rad(180)
+            if(RHeading >= np.pi*2):
+                RHeading -= np.pi*2
+            self.update_pos(RHeading)
 
         self.lastDist = dist
 

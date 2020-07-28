@@ -145,7 +145,7 @@ else:
     #fix for bad file save of degrees
     np.deg2rad(30)
     thetaRef = np.deg2rad(270)
-    uavlist[0]['dubins'] = dubinsUAV(position=[45.33, -120.5], velocity=v,
+    uavlist[0]['dubins'] = dubinsUAV(position=[45.35, -120.5], velocity=v,
                                      heading=thetaRef, dt=dt)
     deadpoint = [45.3394889, -121.2]
     uavlist[0]['ID'] = 1
@@ -169,8 +169,15 @@ else:
 ####################
 
 fig, ax = plt.subplots()
+pos = None
+CASpos = None
+NCpos = None
+CASkoz = None
+NCkoz = None
+avoidArea = None
 CAScone = None
 NCcone = None
+plotCarrot = None
 wpt = None
 path = None
 useWPfollower = False
@@ -215,11 +222,19 @@ while True:
         uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
         print('MainUAV: ' + str(mainUAV) + '\n' + str( mainUAV['uavobj']))
        
-        points = [list(mainUAV['uavobj'].position)] 
+        # Thought that including the UAVs position in the reverse koz would cause problems
+        # so this would offset the koz off of the UAV current position
+        offsetPos = [0,0]
+        offsetPos[0] = mainUAV['uavobj'].position[0] + 0.0
+        offsetPos[1] = mainUAV['uavobj'].position[1] + 0.0
 
+        print('offset: ' + str(offsetPos))
+        points = [list(offsetPos)] 
+
+        alpha = 4 # Change the arc lengh of the CAS UAV koz
         for div in range(2, 5, 1):
-            pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*3 / div)))
-            pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*3 / div)))
+            pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
+            pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
             points.append([pt_x, pt_y])
 
         # +-0
@@ -228,11 +243,11 @@ while True:
         points.append([pt_x, pt_y]) 
 
         for div in range(-4, -1, 1):
-            pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*3 / div)))
-            pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*3 / div)))
+            pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
+            pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
             points.append([pt_x, pt_y])
 
-        points = [list(mainUAV['uavobj'].position)] 
+        points.append((offsetPos))
 
         if len(uavlist) > 1:
             #if(not hasPlan):
@@ -240,14 +255,20 @@ while True:
             # Comment the above line and uncomment to use a dummy wpList for testing purposes
             # replan = True
             # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
-            
-            # plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]])
+
+            # plotting in the following way breaks the .remove() function...not sure why yet
+            # for i in range(len(avoid)):
+            #     for pts in avoid:
+            #         avoidArea, = plt.plot([pt[1] for pt in avoid[i]], [pt[0] for pt in avoid[i]])
+            #         print('avoid poly: ' + str(pts))
+            #         # plt.pause(dt) # check plotting fucntion
+
+
             if(replan and not hasPlan):
                 hasPlan = True
-                
-
+            
                 '''If replan is True x number of times, use the new A* wpList wp01'''
-                
+                # plt.ax([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]])
                 print('POS: ' + str(mainUAV['uavobj'].position))
                 print('WP: ' + str(wplist))
                 print('DP: ' + str(deadpoint))
@@ -259,10 +280,9 @@ while True:
                 #wplist = np.insert(wp01, 0, [[mainUAV['uavobj'].position[0], mainUAV['uavobj'].position[1]]], axis = 0)                         
                 wplist = np.append(wplist, [[deadpoint[0], deadpoint[1]]], axis = 0)    
                 uavlist[0]['dubins'].setWaypoints(wplist, newradius=0.01)
-                uavlist[0]['dubins'].currentWPIndex = 2               
-                print(wplist)
+                uavlist[0]['dubins'].currentWPIndex = 1               
+                print('\nUpdated WP List: ' + str(wplist))
                 path, = plt.plot([pt[1] for pt in wplist], [pt[0] for pt in wplist])
-                print(deadpoint)
                 useWPfollower = True
             else:
                 print("Not re-planning")
@@ -275,8 +295,8 @@ while True:
         for uav in uavlist:
             #lastAVS = uav['AVS']
             #plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
-            ax.scatter(uav['dubins'].y, uav['dubins'].x)
-            #ax.scatter([pt[1] for pt in full_path], [pt[0] for pt in full_path])
+            # ax.scatter(uav['dubins'].y, uav['dubins'].x)
+            # pos, = ax.plot(uav['dubins'].y, uav['dubins'].x, 'o')
             
             pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
             print('points:' + str(pts))
@@ -284,20 +304,31 @@ while True:
             # ax.scatter([pt[1] for pt in pts], [pt[0] for pt in pts])
 
             if uav['ID'] == 1:
-
+                print('Current WP: ' + str(uav['dubins'].currentWPIndex))
+                CASpos, = ax.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
                 color = '-g'
                 if(replan):
                     color = '-y'
                 CAScone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts], color)
                 if useWPfollower == True:
                     uav['dubins'].simulateWPDubins()
-                    #wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
+                    carrot = uav['dubins'].CarrotChaseWP()
+                    plotCarrot, = plt.plot(carrot[1], carrot[0], c='black', marker='^' )
+                    # wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
+                    if len(avoid)>1:
+                        CASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
+                        NCkoz, = plt.plot([pt[1] for pt in avoid[2]], [pt[0] for pt in avoid[2]], '--m')
+                    else:
+                        NCkoz = None
+                        CASkoz = None
+
 
                 else:
                     uav['dubins'].update_pos_simple()
                     #wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
 
             if uav['ID'] == 4:
+                NCpos, = ax.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
                 NCcone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts], "-r")
                 uav['dubins'].update_pos_simple()
 
@@ -321,21 +352,31 @@ while True:
 
     plt.axis('equal')
     plt.grid(True)
-    # plt.ylim((uavlist[0]['dubins'].x - 0.1, uavlist[0]['dubins'].x + 0.1))
-    # plt.xlim((uavlist[0]['dubins'].y - 0.1, uavlist[0]['dubins'].y + 0.1))
+    plt.ylim((uavlist[0]['dubins'].x - 0.1, uavlist[0]['dubins'].x + 0.1))
+    plt.xlim((uavlist[0]['dubins'].y - 0.1, uavlist[0]['dubins'].y + 0.1))
     #plt.pause(0.0000000001)
 
-    plt.ylim(45.25,45.45)
-    plt.xlim(-121.25, -120.45)
+    # plt.ylim(45.25,45.45)
+    # plt.xlim(-121.25, -120.45)
     
 
     plt.pause(dt)
+    if pos != None:
+        pos.remove()
+    # if CASpos != None:
+    #     CASpos.remove()
+    # if NCpos != None:
+    #     NCpos.remove()
     if CAScone != None:
         CAScone.remove()
     if NCcone != None:
         NCcone.remove()
     if wpt != None:
         wpt.remove()
+    if plotCarrot != None:
+        plotCarrot.remove()
+    if avoidArea != None:
+        avoidArea.remove()
     # if path != None:
     #     path.remove()
 
@@ -345,7 +386,14 @@ while True:
     # if uav['ID'] == 4:
     #     NCone.remove()
     #     del NCone
+
+    if CASkoz != None:
+        CASkoz.remove()
+    if NCkoz != None:
+        NCkoz.remove()
+
     
+    # plt.pause(dt) # additional pause to make sure that .remove() fucntions are working
 
 
     # else:

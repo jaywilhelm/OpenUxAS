@@ -151,23 +151,23 @@ class UAVHeading:
 
         # ===========================
 
-        if self.avoidanceUAV:
-            points.append(list(self.position))
+        # if self.avoidanceUAV:
+        #     points.append(list(self.position))
 
-            for div in range(2, 5, 1):
-                pt_x = self.position[0] - (area_length * math.cos(theta_ref - (theta_possible*3 / div)))
-                pt_y = self.position[1] - (area_length * math.sin(theta_ref - (theta_possible*3 / div)))
-                points.append([pt_x, pt_y])
+        #     for div in range(2, 5, 1):
+        #         pt_x = self.position[0] - (area_length * math.cos(theta_ref - (theta_possible / div)))
+        #         pt_y = self.position[1] - (area_length * math.sin(theta_ref - (theta_possible / div)))
+        #         points.append([pt_x, pt_y])
 
-            # +-0
-            pt_x = self.position[0] - (area_length * math.cos(theta_ref))
-            pt_y = self.position[1] - (area_length * math.sin(theta_ref))
-            points.append([pt_x, pt_y]) 
+        #     # +-0
+        #     pt_x = self.position[0] - (area_length * math.cos(theta_ref))
+        #     pt_y = self.position[1] - (area_length * math.sin(theta_ref))
+        #     points.append([pt_x, pt_y]) 
 
-            for div in range(-4, -1, 1):
-                pt_x = self.position[0] - (area_length * math.cos(theta_ref - (theta_possible*3 / div)))
-                pt_y = self.position[1] - (area_length * math.sin(theta_ref - (theta_possible*3 / div)))
-                points.append([pt_x, pt_y])
+        #     for div in range(-4, -1, 1):
+        #         pt_x = self.position[0] - (area_length * math.cos(theta_ref - (theta_possible / div)))
+        #         pt_y = self.position[1] - (area_length * math.sin(theta_ref - (theta_possible / div)))
+        #         points.append([pt_x, pt_y])
 
 
         points.append(list(self.position))
@@ -591,7 +591,7 @@ class UAVHeading:
 
     def make_uavtoavoid_koz(self, kozList, scalef, zero_pos):
         newkoz = np.array([])
-        firstpt = True
+        firstpt = True        
         for pts in kozList:
             pts = self.__convertToScaleInt(pts, scalef)
             pts -= zero_pos
@@ -610,7 +610,11 @@ class UAVHeading:
 
             lastpt = pts
 
+        if len(kozList) > 15:
+            mybreakpoint = 1
+
         return np.transpose(newkoz)
+
     def format_astar_input(self, kozList, scalef):
         mypos = self.position
         mygoal = self.waypoint
@@ -625,7 +629,9 @@ class UAVHeading:
         mypos = np.array(mypos) - zero_pos
         mygoal = np.array(mygoal) - zero_pos
 
-        newkoz = self.make_uavtoavoid_koz(kozList, scalef, zero_pos)
+        newkoz = []
+        for koz in kozList:
+            newkoz = self.make_uavtoavoid_koz(koz, scalef, zero_pos)
 
 
         use_pseudo_target = False
@@ -649,21 +655,30 @@ class UAVHeading:
         # plt.pause(120)
         return start_pt, goal_pt, border_pts, koz_pts, zero_pos
 
-    def findPotentialIntersects(self, uavh_others, area_length):
+    def findPotentialIntersects(self, uavh_others, area_length, static_koz):
 
         mypot_area = self.possibleFlightAreaStatic(area_length)
         mypoly = Polygon(mypot_area)
 
+
         PinP = False
-        avoid_areas = []
+        # avoid_areas = [] 
+        avoid_areas = static_koz
+
         for ouav in uavh_others:
             thier_area = ouav.possibleFlightAreaStatic(area_length)
             thier_poly = Polygon(thier_area)
             if(thier_poly.intersects(mypoly)):
                 PinP = True
-                avoid_areas = thier_area
+                avoid_areas.append(thier_area)
                 print("Pot. Collision")
                 break
+        # Testing for keep out zone directly behind CAS UAV
+        # Note that static_koz is a list
+        # if len(static_koz) > 0:
+        #     for pt in static_koz[0]:
+        #         avoid_areas.append(pt)
+
 
         return PinP, avoid_areas
 
@@ -715,7 +730,7 @@ class UAVHeading:
             py = xy[1] + r * np.sin(self.thetaRef)
             self.waypoint = [px, py]
 
-        intersects, avoid_areas = self.findPotentialIntersects(uavh_others, area_length)
+        intersects, avoid_areas = self.findPotentialIntersects(uavh_others, area_length, static_koz)
 
         if(intersects):
             intersects = [1, 1]
@@ -730,7 +745,7 @@ class UAVHeading:
             return False, [self.waypoint], avoid_areas, []
 
         #do it again with larger KOZ
-        intersects, avoid_areas = self.findPotentialIntersects(uavh_others, area_length*1.33)
+        intersects, avoid_areas = self.findPotentialIntersects(uavh_others, area_length*1.33, static_koz)
         print(TC.WARNING + 'AVOID.' + TC.ENDC)
         self.lastClear = False
         use_pseudo_target = False
