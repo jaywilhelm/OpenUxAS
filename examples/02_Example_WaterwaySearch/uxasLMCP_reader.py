@@ -78,6 +78,9 @@ def send_to_uxas(obj, socket, client_id):
     socket.send(totalmsg, copy=False)
     print("\n  Sent:   " + obj.FULL_LMCP_TYPE_NAME + "\n")
 
+# def SelectDeadPoint():
+
+
 def finduavbyID(uavlist,uavID):
     for uav in uavlist:
         if(uav['ID'] == uavID):
@@ -226,25 +229,25 @@ while True:
         # so this would offset the koz off of the UAV current position
         offsetPos = [0,0]
         offsetPos[0] = mainUAV['uavobj'].position[0] + 0.0
-        offsetPos[1] = mainUAV['uavobj'].position[1] + 0.0
+        offsetPos[1] = mainUAV['uavobj'].position[1] + 0.013
 
         print('offset: ' + str(offsetPos))
         points = [list(offsetPos)] 
 
         alpha = 4 # Change the arc lengh of the CAS UAV koz
         for div in range(2, 5, 1):
-            pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
-            pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
+            pt_x = offsetPos[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
+            pt_y = offsetPos[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
             points.append([pt_x, pt_y])
 
         # +-0
-        pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef))
-        pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef))
+        pt_x = offsetPos[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef))
+        pt_y = offsetPos[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef))
         points.append([pt_x, pt_y]) 
 
         for div in range(-4, -1, 1):
-            pt_x = mainUAV['uavobj'].position[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
-            pt_y = mainUAV['uavobj'].position[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
+            pt_x = offsetPos[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
+            pt_y = offsetPos[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
             points.append([pt_x, pt_y])
 
         points.append((offsetPos))
@@ -278,7 +281,7 @@ while True:
                 wplist[0][0] = mainUAV['uavobj'].position[0]
                 wplist[0][1] = mainUAV['uavobj'].position[1]
                 #wplist = np.insert(wp01, 0, [[mainUAV['uavobj'].position[0], mainUAV['uavobj'].position[1]]], axis = 0)                         
-                wplist = np.append(wplist, [[deadpoint[0], deadpoint[1]]], axis = 0)    
+                # wplist = np.append(wplist, [[deadpoint[0], deadpoint[1]]], axis = 0)    
                 uavlist[0]['dubins'].setWaypoints(wplist, newradius=0.01)
                 uavlist[0]['dubins'].currentWPIndex = 1               
                 print('\nUpdated WP List: ' + str(wplist))
@@ -310,14 +313,16 @@ while True:
                 if(replan):
                     color = '-y'
                 CAScone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts], color)
+                wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
+                print('Dubbs WP: ' + str(mainUAV['uavobj'].waypoint))
+
                 if useWPfollower == True:
                     uav['dubins'].simulateWPDubins()
                     carrot = uav['dubins'].CarrotChaseWP()
-                    plotCarrot, = plt.plot(carrot[1], carrot[0], c='black', marker='^' )
-                    # wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
+                    plotCarrot, = plt.plot(carrot[1], carrot[0], c='orange', marker='^' )
                     if len(avoid)>1:
                         CASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
-                        NCkoz, = plt.plot([pt[1] for pt in avoid[2]], [pt[0] for pt in avoid[2]], '--m')
+                        NCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
                     else:
                         NCkoz = None
                         CASkoz = None
@@ -352,12 +357,12 @@ while True:
 
     plt.axis('equal')
     plt.grid(True)
-    plt.ylim((uavlist[0]['dubins'].x - 0.1, uavlist[0]['dubins'].x + 0.1))
-    plt.xlim((uavlist[0]['dubins'].y - 0.1, uavlist[0]['dubins'].y + 0.1))
+    # plt.ylim((uavlist[0]['dubins'].x - 0.1, uavlist[0]['dubins'].x + 0.1))
+    # plt.xlim((uavlist[0]['dubins'].y - 0.1, uavlist[0]['dubins'].y + 0.1))
     #plt.pause(0.0000000001)
 
-    # plt.ylim(45.25,45.45)
-    # plt.xlim(-121.25, -120.45)
+    plt.ylim(45.25,45.45)
+    plt.xlim(-121.25, -120.45)
     
 
     plt.pause(dt)

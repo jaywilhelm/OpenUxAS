@@ -610,14 +610,12 @@ class UAVHeading:
 
             lastpt = pts
 
-        if len(kozList) > 15:
-            mybreakpoint = 1
-
         return np.transpose(newkoz)
 
     def format_astar_input(self, kozList, scalef):
         mypos = self.position
         mygoal = self.waypoint
+        print('MyGoal: ' + str(mygoal))
 
         offset = 0.5 #in deg.
         #scalef = 50#10e7
@@ -631,8 +629,11 @@ class UAVHeading:
 
         newkoz = []
         for koz in kozList:
-            newkoz = self.make_uavtoavoid_koz(koz, scalef, zero_pos)
-
+            temp = self.make_uavtoavoid_koz(koz, scalef, zero_pos)
+            if (len(newkoz) == 0):
+                newkoz = [temp.tolist()]
+            else:
+                newkoz.append(temp.tolist())
 
         use_pseudo_target = False
         start_pt = mypos
@@ -644,15 +645,18 @@ class UAVHeading:
         # ax.scatter(mypos[1], mypos[0])
         # ax.scatter(mygoal[1], mygoal[0])
         # ax.scatter([pt[1] for pt in border_pts], [pt[0] for pt in border_pts])
-        # ax.scatter([pt[1] for pt in newkoz], [pt[0] for pt in newkoz])
-        #
+        # for koz in newkoz:
+        #     for pt in koz:
+        #         print(pt)
+        #     ax.scatter([pt[1] for pt in koz], [pt[0] for pt in koz])
+        
         # ax.set(xlabel='Lon', ylabel='Lat',
         #        title='A* formatted map')
         # ax.grid()
-        #
+        
         # #fig.savefig("test.png")
         # plt.show()
-        # plt.pause(120)
+        # plt.pause(1)
         return start_pt, goal_pt, border_pts, koz_pts, zero_pos
 
     def findPotentialIntersects(self, uavh_others, area_length, static_koz):
@@ -660,10 +664,8 @@ class UAVHeading:
         mypot_area = self.possibleFlightAreaStatic(area_length)
         mypoly = Polygon(mypot_area)
 
-
-        PinP = False
-        # avoid_areas = [] 
-        avoid_areas = static_koz
+        PinP = False 
+        avoid_areas = static_koz[:] # [:] removes python references to static_koz, so I can make a copy
 
         for ouav in uavh_others:
             thier_area = ouav.possibleFlightAreaStatic(area_length)
@@ -725,10 +727,11 @@ class UAVHeading:
         
         if(not self.waypoint):
             xy = (self.position[0], self.position[1])
-            r = 0.3
+            r = 0.45
             px = xy[0] + r * np.cos(self.thetaRef)
             py = xy[1] + r * np.sin(self.thetaRef)
             self.waypoint = [px, py]
+            print('Set Dubs WP: ' + str(self.waypoint))
 
         intersects, avoid_areas = self.findPotentialIntersects(uavh_others, area_length, static_koz)
 
@@ -767,9 +770,10 @@ class UAVHeading:
             ox.append(pt[0])
             oy.append(pt[1])
 
-        for pt in koz:
-            ox.append(pt[0])
-            oy.append(pt[1])
+        for pts in koz:
+            for pt in pts:
+                ox.append(pt[0])
+                oy.append(pt[1])
 
         # SHOW_ANIMATION = True
 

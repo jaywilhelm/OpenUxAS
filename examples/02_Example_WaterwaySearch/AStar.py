@@ -69,7 +69,7 @@ def a_star_planning(sx, sy, gx, gy, ox, oy, reso, rr):
         if SHOW_ANIMATION:  # pragma: no cover
             plt.plot(current.x * reso, current.y * reso, "xc")
             if len(closedset.keys()) % 10 == 0:
-                plt.pause(0.001)
+                plt.pause(1)
 
         if current.x == ngoal.x and current.y == ngoal.y:
             ngoal.pind = current.pind
