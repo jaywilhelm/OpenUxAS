@@ -95,6 +95,7 @@ def findotheruavs(uavlist, uavNOT):
             otherlist.append(uav)
             otherjustobj.append(uav['uavobj'])
     return otherlist, otherjustobj
+    
 
 def syncAVSfromDubins(uav):
     # newloc = Location3D.Location3D()
@@ -172,6 +173,9 @@ else:
 ####################
 
 fig, ax = plt.subplots()
+TargetWPList = None
+plotDetectRange = None
+plotTargetWP = None
 pos = None
 CASpos = None
 NCpos = None
@@ -223,38 +227,26 @@ while True:
     if(check_time - start_time > 1):
         mainUAV = finduavbyID(uavlist, 1)#IDtoWatch
         uavh_others_all, uavh_others = findotheruavs(uavlist, 1)
-        print('MainUAV: ' + str(mainUAV) + '\n' + str( mainUAV['uavobj']))
-       
-        # Thought that including the UAVs position in the reverse koz would cause problems
-        # so this would offset the koz off of the UAV current position
-        offsetPos = [0,0]
-        offsetPos[0] = mainUAV['uavobj'].position[0] + 0.0
-        offsetPos[1] = mainUAV['uavobj'].position[1] + 0.013
 
-        print('offset: ' + str(offsetPos))
-        points = [list(offsetPos)] 
+        if TargetWPList == None:
+            ''' Generate the main path. Goal is to reconncet to this path after avoiding another UAV/obstacle'''
+            usetargetPath = True
+            TargetWPList = mainUAV['dubins'].makePath(pathType='Sine', numbOfPoints=20, dist=0.08)
+            TargetPath, = plt.plot([pt[1] for pt in TargetWPList], [pt[0] for pt in TargetWPList], c='b', marker='.')
+            uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=0.01)
+            uavlist[0]['dubins'].currentWPIndex = 1
+            print('TargetWPList: ' + str(TargetWPList))
 
-        alpha = 4 # Change the arc lengh of the CAS UAV koz
-        for div in range(2, 5, 1):
-            pt_x = offsetPos[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
-            pt_y = offsetPos[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
-            points.append([pt_x, pt_y])
-
-        # +-0
-        pt_x = offsetPos[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef))
-        pt_y = offsetPos[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef))
-        points.append([pt_x, pt_y]) 
-
-        for div in range(-4, -1, 1):
-            pt_x = offsetPos[0] - (area_length * math.cos(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
-            pt_y = offsetPos[1] - (area_length * math.sin(mainUAV['uavobj'].thetaRef - (mainUAV['uavobj'].thetaPossible*alpha / div)))
-            points.append([pt_x, pt_y])
-
-        points.append((offsetPos))
+        detectRange, targetWP, targetIndex = mainUAV['dubins'].detectClosestWP(dist=0.3, theta_possible=mainUAV['uavobj'].thetaPossible, alpha=4, targetPath=TargetWPList)
+        plotDetectRange, = plt.plot([pt[1] for pt in detectRange], [pt[0] for pt in detectRange], c='y')
+        if len(targetWP) > 0:
+            plotTargetWP, = plt.plot(targetWP[1], targetWP[0], c='r', marker = '*')
+        else:
+            plotTargetWP = None
 
         if len(uavlist) > 1:
             #if(not hasPlan):
-            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[points])
+            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
             # Comment the above line and uncomment to use a dummy wpList for testing purposes
             # replan = True
             # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
@@ -287,6 +279,7 @@ while True:
                 print('\nUpdated WP List: ' + str(wplist))
                 path, = plt.plot([pt[1] for pt in wplist], [pt[0] for pt in wplist])
                 useWPfollower = True
+                usetargetPath = False
             else:
                 print("Not re-planning")
         else:
@@ -316,8 +309,25 @@ while True:
                 wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
                 print('Dubbs WP: ' + str(mainUAV['uavobj'].waypoint))
 
-                if useWPfollower == True:
-                    uav['dubins'].simulateWPDubins()
+                if usetargetPath: 
+                    print('\tUse Target Path')
+                    uav['dubins'].simulateWPDubins(UseCarrotChase=False)
+                    carrot = uav['dubins'].CarrotChaseWP()
+                    # plotCarrot, = plt.plot(carrot[1], carrot[0], c='orange', marker='^' )
+                    plotCarrot = None
+                elif useWPfollower == True:
+                    print('\tUse Avoid Path')
+                    if uav['dubins'].lastWP:
+                        print('\tRevert to original path')
+                        useWPfollower = False
+                        usetargetPath = True
+                        uav['dubins'].lastWP = False
+                        uav['dubins'].setWaypoints(TargetWPList, newradius=0.01)
+                        detectRange, targetWP, targetIndex = uav['dubins'].detectClosestWP(dist=0.3, theta_possible=uav['uavobj'].thetaPossible, alpha=4, targetPath=TargetWPList)
+                        uav['dubins'].currentWPIndex = targetIndex
+
+
+                    uav['dubins'].simulateWPDubins(UseCarrotChase=True)
                     carrot = uav['dubins'].CarrotChaseWP()
                     plotCarrot, = plt.plot(carrot[1], carrot[0], c='orange', marker='^' )
                     if len(avoid)>1:
@@ -396,7 +406,11 @@ while True:
         CASkoz.remove()
     if NCkoz != None:
         NCkoz.remove()
-
+    if plotDetectRange != None:
+        plotDetectRange.remove()
+    if plotTargetWP != None:
+        plotTargetWP.remove()
+        
     
     # plt.pause(dt) # additional pause to make sure that .remove() fucntions are working
 

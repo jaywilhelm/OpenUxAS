@@ -659,13 +659,52 @@ class UAVHeading:
         # plt.pause(1)
         return start_pt, goal_pt, border_pts, koz_pts, zero_pos
 
+    def reverseKOZ(self, area_length):
+        ''' Keep out zone places behind the CAS UAV
+            Prevents A* from generating a path going backwards '''
+
+        # Thought that including the UAVs position in the reverse koz would cause problems
+        # so the "offset" would offset the koz off of the UAV current position
+        offsetPos = [0,0]
+        offsetPos[0] = self.position[0] + 0.0
+        offsetPos[1] = self.position[1] + 0.013
+
+        # print('offset: ' + str(offsetPos))
+        points = [list(offsetPos)] 
+
+        # Generate two sets of points to make an arc behind the CAS UAV
+        alpha = 4 # Change the arc lengh of the CAS UAV koz
+        for div in range(2, 5, 1):
+            pt_x = offsetPos[0] - (area_length * math.cos(self.thetaRef - (self.thetaPossible*alpha / div)))
+            pt_y = offsetPos[1] - (area_length * math.sin(self.thetaRef - (self.thetaPossible*alpha / div)))
+            points.append([pt_x, pt_y])
+
+        # +-0
+        pt_x = offsetPos[0] - (area_length * math.cos(self.thetaRef))
+        pt_y = offsetPos[1] - (area_length * math.sin(self.thetaRef))
+        points.append([pt_x, pt_y]) 
+
+        for div in range(-4, -1, 1):
+            pt_x = offsetPos[0] - (area_length * math.cos(self.thetaRef - (self.thetaPossible*alpha / div)))
+            pt_y = offsetPos[1] - (area_length * math.sin(self.thetaRef - (self.thetaPossible*alpha / div)))
+            points.append([pt_x, pt_y])
+
+        points.append((offsetPos))
+
+        return points
+
+
     def findPotentialIntersects(self, uavh_others, area_length, static_koz):
 
         mypot_area = self.possibleFlightAreaStatic(area_length)
         mypoly = Polygon(mypot_area)
 
         PinP = False 
-        avoid_areas = static_koz[:] # [:] removes python references to static_koz, so I can make a copy
+        # Include other keep out zones not associated with other UAVs 
+        avoid_areas = static_koz[:] # '[:]' removes python references to static_koz, so I can make a copy
+
+        if self.avoidanceUAV:
+            avoid_areas.append(self.reverseKOZ(area_length))
 
         for ouav in uavh_others:
             thier_area = ouav.possibleFlightAreaStatic(area_length)
@@ -727,7 +766,7 @@ class UAVHeading:
         
         if(not self.waypoint):
             xy = (self.position[0], self.position[1])
-            r = 0.45
+            r = 0.3
             px = xy[0] + r * np.cos(self.thetaRef)
             py = xy[1] + r * np.sin(self.thetaRef)
             self.waypoint = [px, py]
