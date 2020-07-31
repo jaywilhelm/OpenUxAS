@@ -130,6 +130,8 @@ class dubinsUAV():
         detectedPtIndex = []    # Index of the detected waypoints in the targetPath 
         targetPt = []           # coordinates of the closest wp after completing the A* path
         targetIndex = []        # index of the closest wp - will be used to update currentWPIndex
+        astarGoalPt = []
+        astarGoalIndex = []
         # Check to see if targetPath is inside detection area
         detect_polygon = Polygon(points)
         targetPath_polygon = Polygon(targetPath)
@@ -144,6 +146,7 @@ class dubinsUAV():
             if len(detectedPt)>0:
                 index = 0   # reset index
                 closestPt = 9999999 # temporary large distance
+                furthestPt = 0      # most distant point away from UAV - used to determing A* goal point
                 for pt in detectedPt:
                     # Find closes waypoint between the UAV and detected wps from targetPath
                     dist2WP = self.distance(pt, (self.x, self.y))
@@ -153,10 +156,20 @@ class dubinsUAV():
                         targetPt = pt
                         targetIndex = temp
                     index += 1
+                index = 0   # reset index
+                for pt in detectedPt:
+                    # Find closes waypoint between the UAV and detected wps from targetPath
+                    dist2WP = self.distance(pt, (self.x, self.y))
+                    temp = detectedPtIndex[index]
+                    if dist2WP > furthestPt:
+                        furthestPt = dist2WP
+                        astarGoalPt = pt
+                        astarGoalIndex = temp
+                    index += 1
 
-                return points, targetPt, targetIndex
+                return points, targetPt, targetIndex, astarGoalIndex, astarGoalPt
                 
-        return points, targetPt, targetIndex
+        return points, targetPt, targetIndex, astarGoalIndex, astarGoalPt
 
     def CarrotChaseWP(self):
         ''' Determine carrot point coordinates between waypoints '''

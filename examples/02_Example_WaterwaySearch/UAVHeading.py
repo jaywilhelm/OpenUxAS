@@ -654,9 +654,9 @@ class UAVHeading:
         #        title='A* formatted map')
         # ax.grid()
         
-        # #fig.savefig("test.png")
-        # plt.show()
-        # plt.pause(1)
+        # # fig.savefig("test.png")
+        # # plt.show()
+        # plt.pause(2)
         return start_pt, goal_pt, border_pts, koz_pts, zero_pos
 
     def reverseKOZ(self, area_length):
@@ -754,6 +754,14 @@ class UAVHeading:
                 # print("diff " + str(i))
                 waypoints = np.concatenate((waypoints, [[path_x[i - 1], path_y[i - 1]]]), axis=0)
         return waypoints
+    
+
+    def a_star_goal(self):
+        goal = []
+
+        return goal
+
+    
     '''
     UAVHeading Function: avoid
         Parameters:
@@ -847,6 +855,27 @@ class UAVHeading:
             plt.plot(path_x, path_y, "-r", label='Shortest Path')
             plt.legend()
             plt.show()
+
+        ## v== Plot Astar result ==v #
+        # fig, ax = plt.subplots()
+        # # ax.plot(t, s)
+        # ax.scatter(start[1], start[0])
+        # ax.scatter(goal[1], goal[0])
+        # ax.scatter([pt[1] for pt in border], [pt[0] for pt in border])
+        # ax.scatter([path_y], [path_x])
+        # for x in koz:
+        #     for pt in x:
+        #         print(pt)
+        #     ax.scatter([pt[1] for pt in x], [pt[0] for pt in x])
+        
+        # ax.set(xlabel='Lon', ylabel='Lat',
+        #        title='A* formatted map')
+        # ax.grid()
+        
+        # fig.savefig("test.png")
+        # plt.show()
+        # plt.pause(3)
+        ## ^== Plot Astar result ==^ #
 
         # format A* output for waypoint list
         # path_pts = []
