@@ -135,7 +135,7 @@ class dubinsUAV():
         # Check to see if targetPath is inside detection area
         detect_polygon = Polygon(points)
         targetPath_polygon = Polygon(targetPath)
-        if detect_polygon.intersects(targetPath_polygon):
+        if detect_polygon.intersects(targetPath_polygon) or detect_polygon.touches(targetPath_polygon):
             for pt in targetPath:
                 checkPT = Point(pt)
                 if detect_polygon.contains(checkPT):
@@ -173,7 +173,7 @@ class dubinsUAV():
 
     def CarrotChaseWP(self):
         ''' Determine carrot point coordinates between waypoints '''
-        delta = 0.01
+        delta = 0.01 # distance carrot is placed ahead of UAV
         wp_1 = self.waypoints[self.currentWPIndex-1]
         wp_2 = self.waypoints[self.currentWPIndex]
 
@@ -191,10 +191,10 @@ class dubinsUAV():
 
         beta = theta - theta_u
 
-        print('Carrot Point Angles: ' 
-                    + str(np.degrees(theta)) + 
-                ' ' + str(np.degrees(theta_u)) + 
-                ' ' + str(np.degrees(beta)) )
+        # print('Carrot Point Angles: ' 
+        #             + str(np.degrees(theta)) + 
+        #         ' ' + str(np.degrees(theta_u)) + 
+        #         ' ' + str(np.degrees(beta)) )
 
 
         R = np.sqrt(R_u**2 - ((R_u*np.sin(beta))**2))
@@ -212,16 +212,16 @@ class dubinsUAV():
         if UseCarrotChase:
             carrotPoint = self.CarrotChaseWP()
             CarrotDist = self.distance(activeWP, carrotPoint)
-            print('Carrot2WP: ' + str(CarrotDist) + '\t ' + str(CarrotDist < wpRadius) + '\t ' + str(CarrotDist > self.lastDist) + '\t# ' + str(self.currentWPIndex) + '\tLast: ' + str(self.lastDist))
+            # print('Carrot2WP: ' + str(CarrotDist) + '\t ' + str(CarrotDist < wpRadius) + '\t ' + str(CarrotDist > self.lastDist) + '\t# ' + str(self.currentWPIndex) + '\tLast: ' + str(self.lastDist))
 
             if (CarrotDist < wpRadius and CarrotDist > self.lastDist):
                 if(self.currentWPIndex < len(self.waypoints)-1):
                     self.currentWPIndex += 1
-                    print("WP Increment")
+                    #print("WP Increment")
                     #update distance...
                     CarrotDist = self.distance(self.getActiveWaypoint(), carrotPoint)
                 else:
-                    print("Last Waypoint")
+                    #print("Last Waypoint")
                     # Used to tell system to switch from A* path back to original path
                     self.lastWP = True 
 
@@ -234,16 +234,16 @@ class dubinsUAV():
 
         else:
             UAVdist = self.distance(activeWP, (self.x, self.y))
-            print('Carrot2WP: ' + str(UAVdist) + '\t ' + str(UAVdist < wpRadius) + '\t ' + str(UAVdist > self.lastDist) + '\t# ' + str(self.currentWPIndex) + '\tLast: ' + str(self.lastDist))
+            #print('Carrot2WP: ' + str(UAVdist) + '\t ' + str(UAVdist < wpRadius) + '\t ' + str(UAVdist > self.lastDist) + '\t# ' + str(self.currentWPIndex) + '\tLast: ' + str(self.lastDist))
 
             if (UAVdist < wpRadius and UAVdist > self.lastDist):
                 if(self.currentWPIndex < len(self.waypoints)-1):
                     self.currentWPIndex += 1
-                    print("WP Increment")
+                    #print("WP Increment")
                     #update distance...
                     UAVdist = self.distance(self.getActiveWaypoint(), activeWP)
                 else:
-                    print("Last Waypoint")
+                    #print("Last Waypoint")
                     # Used to tell system to switch from A* path back to original path
                     self.lastWP = True
 
@@ -288,9 +288,13 @@ class dubinsUAV():
             #     theta = RequestedHeading
         else:
             theta = RequestedHeading
+
+        # Ensures positve theta values between 0-360
         if(theta >= np.pi*2):
             theta -= np.pi*2
-        print('Req: '+ str(np.rad2deg(RequestedHeading)) + '\ttheta ' + str(np.rad2deg(theta)))
+        if(theta < 0):
+            theta += np.pi*2
+        #print('Req: '+ str(np.rad2deg(RequestedHeading)) + '\ttheta ' + str(np.rad2deg(theta)))
         # Update States
         self.t = self.t + self.dt
         self.heading = theta

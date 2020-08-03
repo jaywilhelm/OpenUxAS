@@ -9,6 +9,8 @@ import os
 import subprocess
 import numpy as np
 from dubinsUAV import dubinsUAV
+from TerminalColors import TerminalColors as TC
+
 
 # Include LMCP Python files
 lmcplocation = '../../src/LMCP/py'
@@ -115,7 +117,7 @@ def syncAVSfromDubins(uav):
     lon = uav['dubins'].y
     vel = uav['dubins'].v
     heading = uav['dubins'].heading
-    avoidanceUAV = uav['avoidanceUAV']
+    avoidanceUAV = uav['IsAvoidanceUAV']
     uav['uavobj'] = UAVHeading(pos=[lat, lon],
                                waypt=[], speed=vel, heading=heading,
                                tPossible=math.radians(45), avoidanceUAV=avoidanceUAV)
@@ -140,6 +142,7 @@ if not TEST_DATA:
 ####################
 ####################
 else:
+
     dt = 0.25
     v = 0.01
 
@@ -156,14 +159,14 @@ else:
                                      heading=thetaRef, dt=dt)
     deadpoint = [45.3394889, -121.2]
     uavlist[0]['ID'] = 1
-    uavlist[0]['avoidanceUAV'] = True
+    uavlist[0]['IsAvoidanceUAV'] = True
     np.deg2rad(30)
     thetaRef = np.deg2rad(90)
 
     uavlist[1]['dubins'] = dubinsUAV(position=[45.32, -120.8], velocity=v,
                                      heading=thetaRef, dt=dt)
     uavlist[1]['ID'] = 4
-    uavlist[1]['avoidanceUAV'] = False
+    uavlist[1]['IsAvoidanceUAV'] = False
     #simUAV = {'position': (uavlist[0]['AVS'].get_Location().get_Latitude(),uavlist[0]['AVS'].get_Location().get_Longitude()),
     # 'velocity': v, 'heading': uavlist[0]['uavobj'].thetaRef}
 
@@ -172,40 +175,74 @@ else:
     #uavlist[1]['dubins'] = dubinsUAV(position=simUAV['position'], velocity=simUAV['velocity'], heading=simUAV['heading'], dt=dt)
     uavlist[0] = syncAVSfromDubins(uavlist[0])
     uavlist[1] = syncAVSfromDubins(uavlist[1])
+
+    useMoreNCuav = True
+    if useMoreNCuav:
+        
+        uav3 = {}
+        uavlist.append(uav3)
+        v = 0.01                    # custom velocity
+        thetaRef = np.deg2rad(90)   # custom heading/angle
+        uavlist[2]['dubins'] = dubinsUAV(position=[45.29, -120.8], velocity=v,
+                                     heading=thetaRef, dt=dt)
+        uavlist[2]['ID'] = 4
+        uavlist[2]['IsAvoidanceUAV'] = False
+        uavlist[2] = syncAVSfromDubins(uavlist[2])
+
+        # uav4 = {}
+        # uavlist.append(uav4)
+        # v = 0.01                    # custom velocity
+        # thetaRef = np.deg2rad(0)   # custom heading/angle
+        # uavlist[3]['dubins'] = dubinsUAV(position=[45.1, -121.0], velocity=v,
+        #                              heading=thetaRef, dt=dt)
+        # uavlist[3]['ID'] = 5
+        # uavlist[3]['IsAvoidanceUAV'] = False
+        # uavlist[3] = syncAVSfromDubins(uavlist[3])
+
+
 ####################
 ####################
 
+# Video/movie generation variables
 savePlots = []
-NCuavPos = [[uavlist[1]['dubins'].x, uavlist[1]['dubins'].y]]
-CASuavPos = [[uavlist[0]['dubins'].x, uavlist[0]['dubins'].y]]
-previousDist = 9999999
+
+# Various Arrays & Variables
+avoid = []
+full_path = []
 save = []
 saveDistances = []
+previousDist = 9999999
+NCuavPos = [[uavlist[1]['dubins'].x, uavlist[1]['dubins'].y]]
+CASuavPos = [[uavlist[0]['dubins'].x, uavlist[0]['dubins'].y]]
+wplistcCopy=[]
 
+# Figure/plot related variables
 fig, ax = plt.subplots()
-TargetWPList = None
 plotDetectRange = None
 plotTargetWP = None
 plotAstarGoalPt = None
-pos = None
-CASpos = None
-NCpos = None
-CASkoz = None
-NCkoz = None
-avoidArea = None
-CAScone = None
-NCcone = None
+plotPos = None
+plotCASpos = None
+plotNCpos = None
+plotCASkoz = None
+plotNCkoz = None
+plotAvoidArea = None
+plotCAScone = None
+plotNCcone = None
 plotCarrot = None
-wpt = None
-path = None
-useWPfollower = False
-replanCount = 0
-start_time = time.time()
-avoid = []
+plotWypt = None
+plotAstarPath = None
+
+# True/False variables
+TargetWPList = None
 hasPlan = False
-full_path = []
+useWPfollower = False
+
+# Simulation Related variables
+start_time = time.time()
 step = 0
-while step<175:
+while step<320:
+    print('Step: ' + str(step))
     # if not TEST_DATA:
         # try:
         #     msg_obj = get_from_uxas(socket, factory)
@@ -244,13 +281,22 @@ while step<175:
             ''' Generate the main path. Goal is to reconncet to this path after avoiding another UAV/obstacle'''
             usetargetPath = True
             TargetWPList = mainUAV['dubins'].makePath(pathType='Sine', numbOfPoints=20, dist=0.08)
-            TargetPath, = plt.plot([pt[1] for pt in TargetWPList], [pt[0] for pt in TargetWPList], c='b', marker='.')
             uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=0.01)
             uavlist[0]['dubins'].currentWPIndex = 1
             print('TargetWPList: ' + str(TargetWPList))
 
+        if len(TargetWPList) > 0:    
+            TargetPath, = plt.plot([pt[1] for pt in TargetWPList], [pt[0] for pt in TargetWPList], c='b', marker='.')
+
+        if step>89:
+            text = 22
         detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = mainUAV['dubins'].detectClosestWP(dist=0.3, theta_possible=mainUAV['uavobj'].thetaPossible, alpha=4, targetPath=TargetWPList)
+        if len(targetWP)==0 or len(astarGoalPt)==0:
+                    detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = mainUAV['dubins'].detectClosestWP(dist=0.3, theta_possible=mainUAV['uavobj'].thetaPossible, alpha=5, targetPath=TargetWPList)
+
+        
         plotDetectRange, = plt.plot([pt[1] for pt in detectRange], [pt[0] for pt in detectRange], c='y')
+                
         if len(targetWP) > 0:
             plotTargetWP, = plt.plot(targetWP[1], targetWP[0], c='r', marker = '*')
         else:
@@ -260,9 +306,13 @@ while step<175:
         else:
             plotAstarGoalPt = None
 
+        print('ClosestPt: ' + str(targetWP) + ' FarthestPt: ' + str(astarGoalPt))
+
+
         if len(uavlist) > 1:
+
             #if(not hasPlan):
-            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[])
+            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True)
             # Comment the above line and uncomment to use a dummy wpList for testing purposes
             # replan = True
             # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
@@ -270,12 +320,12 @@ while step<175:
             # plotting in the following way breaks the .remove() function...not sure why yet
             # for i in range(len(avoid)):
             #     for pts in avoid:
-            #         avoidArea, = plt.plot([pt[1] for pt in avoid[i]], [pt[0] for pt in avoid[i]])
+            #         plotAvoidArea, = plt.plot([pt[1] for pt in avoid[i]], [pt[0] for pt in avoid[i]])
             #         print('avoid poly: ' + str(pts))
             #         # plt.pause(dt) # check plotting fucntion
 
             if(replan and not hasPlan):
-                hasPlan = True
+                # hasPlan = True
             
                 '''If replan is True x number of times, use the new A* wpList wp01'''
                 # plt.ax([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]])
@@ -294,12 +344,20 @@ while step<175:
                 uavlist[0]['dubins'].setWaypoints(wplist, newradius=0.01)
                 uavlist[0]['dubins'].currentWPIndex = 1               
                 print('\nUpdated WP List: ' + str(wplist))
-                path, = plt.plot([pt[1] for pt in wplist], [pt[0] for pt in wplist])
                 useWPfollower = True
                 usetargetPath = False
                 clearedOtherUAV = False
+                wplistcCopy = wplist
+                plotAstarPath, = plt.plot([pt[1] for pt in wplistcCopy], [pt[0] for pt in wplistcCopy])
+
             else:
-                print("Not re-planning")
+                print("Not re-planning" )
+
+            if len(wplistcCopy)>0:
+                plotAstarPath, = plt.plot([pt[1] for pt in wplistcCopy], [pt[0] for pt in wplistcCopy])
+        
+
+
         else:
             print('\tOnly one UAV')
 
@@ -310,82 +368,89 @@ while step<175:
             # lastAVS = uav['AVS']
             # plt.scatter(lastAVS.get_Location().get_Longitude(), lastAVS.get_Location().get_Latitude())
             # ax.scatter(uav['dubins'].y, uav['dubins'].x)
-            # pos, = ax.plot(uav['dubins'].y, uav['dubins'].x, 'o')
+            # plotPos, = ax.plot(uav['dubins'].y, uav['dubins'].x, 'o')
             
             pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
-            print('points:' + str(pts))
+            # print('points:' + str(pts))
             # Calculate new Dubins heading: 
             # ax.scatter([pt[1] for pt in pts], [pt[0] for pt in pts])
 
             if uav['ID'] == 1:
-                print('Current WP: ' + str(uav['dubins'].currentWPIndex))
-                CASpos, = ax.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
+                # plotCASpos, = plt.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
+                plotCASpos, = plt.plot(uav['dubins'].ys, uav['dubins'].xs, 'o')
+
                 color = '-g'
                 if(replan):
                     color = '-y'
-                CAScone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts], color)
-                wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
-                print('Dubbs WP: ' + str(mainUAV['uavobj'].waypoint))
+                plotCAScone, = plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts], color)
+                plotWypt, = plt.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
+                plotCurrentWypt = plt.plot(mainUAV['dubins'].waypoints[mainUAV['dubins'].currentWPIndex][1], mainUAV['dubins'].waypoints[mainUAV['dubins'].currentWPIndex][0], c='black', marker='X')
+                # print('\tCAS Current WP: ' + str(uav['dubins'].currentWPIndex) + '\tCoordinates: ' + str(mainUAV['uavobj'].waypoint))
 
                 if usetargetPath: 
-                    print('\tUse Target Path')
-                    uav['dubins'].simulateWPDubins(UseCarrotChase=True)
+                    #print(TC.OKBLUE+ '\tUsing Target Path' + TC.ENDC)
+                    uav['dubins'].simulateWPDubins(UseCarrotChase=False)
                     carrot = uav['dubins'].CarrotChaseWP()
-                    plotCarrot, = plt.plot(carrot[1], carrot[0], c='orange', marker='^' )
+                    # plotCarrot, = plt.plot(carrot[1], carrot[0], c='orange', marker='^' )
                     # plotCarrot = None
                     CASuavPos = uav['dubins'].position
 
                 elif useWPfollower == True:
-                    print('\tUse Avoid Path')
+                    #print(TC.WARNING + '\tUsing A* Path' + TC.ENDC)
 
                     if uav['dubins'].lastWP or clearedOtherUAV:
                         # Switch back to original path if the other UAV has moved away
                         # or if the last A* waypoint has been reached
-                        print('\tRevert to original path')
+                        #print(TC.WARNING + '\tRevert to original path' + TC.ENDC)
+
                         useWPfollower = False
                         usetargetPath = True
                         uav['dubins'].lastWP = False
                         uav['dubins'].setWaypoints(TargetWPList, newradius=0.01)
                         detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = uav['dubins'].detectClosestWP(dist=0.3, theta_possible=uav['uavobj'].thetaPossible, alpha=4, targetPath=TargetWPList)
+                        if not targetWP:
+                            detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = uav['dubins'].detectClosestWP(dist=0.3, theta_possible=uav['uavobj'].thetaPossible, alpha=5, targetPath=TargetWPList)
+                            plotDetectRange.remove()
+                            plotTargetWP, = plt.plot(targetWP[1], targetWP[0], c='r', marker = '*')
+                            plotDetectRange, = plt.plot([pt[1] for pt in detectRange], [pt[0] for pt in detectRange], c='y')
+ 
                         uav['dubins'].currentWPIndex = targetIndex
 
                     uav['dubins'].simulateWPDubins(UseCarrotChase=True)
                     carrot = uav['dubins'].CarrotChaseWP()
                     plotCarrot, = plt.plot(carrot[1], carrot[0], c='orange', marker='^' )
-                    if len(avoid)>1:
-                        CASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
-                        NCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
-                    else:
-                        NCkoz = None
-                        CASkoz = None
+                    # if len(avoid)>1:
+                    #     plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
+                    #     plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
+                    # else:
+                    #     plotNCkoz = None
+                    #     plotCASkoz = None
                     CASuavPos = uav['dubins'].position
                 else:
                     uav['dubins'].update_pos_simple()
-                    #wpt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
+                    #plotWypt, = ax.plot(mainUAV['uavobj'].waypoint[1], mainUAV['uavobj'].waypoint[0], 'X')
                     CASuavPos = uav['dubins'].position
 
-            if uav['ID'] == 4:
-                NCpos, = ax.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
-                NCcone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts], "-r")
+            # if uav['ID'] == 4:
+            #     plotNCpos, = ax.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
+            #     plotNCcone, = ax.plot([pt[1] for pt in pts], [pt[0] for pt in pts], "-r")
+            #     uav['dubins'].update_pos_simple()
+            #     NCuavPos = uav['dubins'].position
+
+            if uav['IsAvoidanceUAV'] == False:
+                plotNCpos, = plt.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
+                plotNCcone, = plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts], "-r")
                 uav['dubins'].update_pos_simple()
                 NCuavPos = uav['dubins'].position
+
+            # plot Keep out zones if potential collision detected
+            if len(avoid)>1: # reverse koz is always available so len >1 instead of len >0
+                for koz in avoid:
+                    plotCASkoz, = plt.plot([pt[1] for pt in koz], [pt[0] for pt in koz], '--m')
+
                 
-
-            #plt.show()
-
-            # plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts])
-            # print(str(lastAVS.get_Time()) +
-            # '\tAVS ID: ' + str(lastAVS.get_ID()) +
-            # '\tlat: ' + str(lastAVS.get_Location().get_Latitude()) +
-            # '\tlon: ' + str(lastAVS.get_Location().get_Longitude()) +
-            # '\tv: ' + str(lastAVS.get_Airspeed()) +
-            # '\tcog: ' + str(lastAVS.get_Heading()))
-
-            #Update Positions
-            # uav['dubins'].simulateWPDubins(wpList = wp, wpRadius = 0.0005, tmax=1)
-
-            print('ID: ' + str(uav['ID']) + '\tHeading: ' + str((uav['dubins'].heading)) + '\tlat: ' + str(uav['dubins'].x) +
-            '\tlon: ' + str(uav['dubins'].y) + '\tIs CAS?: ' + str(uav['avoidanceUAV']))
+            print('ID: ' + str(uav['ID']) + '\tHeading: ' + str(np.degrees((uav['dubins'].heading))) + '\tlat: ' + str(uav['dubins'].x) +
+            '\tlon: ' + str(uav['dubins'].y) + '\tIs CAS?: ' + str(uav['IsAvoidanceUAV']))
 
             uav = syncAVSfromDubins(uav)
 
@@ -404,7 +469,7 @@ while step<175:
 
 
 
-        print('Confirm distance: ' + str(dist2UAVs) + ' ' + state)
+        # print('Confirm distance: ' + str(dist2UAVs) + ' ' + state)
 
 
     step += 1
@@ -417,8 +482,8 @@ while step<175:
     plt.ylim(45.25,45.45)
     plt.xlim(-121.25, -120.45)
     
-    # plt.pause(dt)
-    time.sleep(dt) # prevents multiple blank frames at the begining of saved movie
+    plt.pause(0.01)
+    # time.sleep(0.01) # prevents multiple blank frames at the begining of saved movie
     wd = os.getcwd()
     path=(wd + '/Movies')
     fname = '_tmp%03d.png' % step
@@ -426,42 +491,39 @@ while step<175:
     plt.savefig(fname)
     savePlots.append(fname)
 
-    if pos != None:
-        pos.remove()
-    # if CASpos != None:
-    #     CASpos.remove()
-    # if NCpos != None:
-    #     NCpos.remove()
-    if CAScone != None:
-        CAScone.remove()
-    if NCcone != None:
-        NCcone.remove()
-    if wpt != None:
-        wpt.remove()
-    if plotCarrot != None:
-        plotCarrot.remove()
-    if avoidArea != None:
-        avoidArea.remove()
-    # if path != None:
-    #     path.remove()
 
-    # if uav['ID'] == 1:
-    #     CAScone.remove()
-    #     del CAScone
-    # if uav['ID'] == 4:
-    #     NCone.remove()
-    #     del NCone
 
-    if CASkoz != None:
-        CASkoz.remove()
-    if NCkoz != None:
-        NCkoz.remove()
-    if plotDetectRange != None:
-        plotDetectRange.remove()
-    if plotTargetWP != None:
-        plotTargetWP.remove()
-    if plotAstarGoalPt != None:
-        plotAstarGoalPt.remove()
+
+    plt.clf()
+    # if plotPos != None:
+    #     plotPos.remove()
+    # # if plotCASpos != None:
+    # #     plotCASpos.remove()
+    # # if plotNCpos != None:
+    # #     plotNCpos.remove()
+    # if plotCAScone != None:
+    #     plotCAScone.remove()
+    # if plotNCcone != None:
+    #     plotNCcone.remove()
+    # if plotWypt != None:
+    #     plotWypt.remove()
+    # if plotCarrot != None:
+    #     plotCarrot.remove()
+    # if plotAvoidArea != None:
+    #     plotAvoidArea.remove()
+    # # if plotAstarPath != None:
+    # #     plotAstarPath.remove()
+
+    # if plotCASkoz != None:
+    #     plotCASkoz.remove()
+    # if plotNCkoz != None:
+    #     plotNCkoz.remove()
+    # if plotDetectRange != None:
+    #     plotDetectRange.remove()
+    # if plotTargetWP != None:
+    #     plotTargetWP.remove()
+    # if plotAstarGoalPt != None:
+    #     plotAstarGoalPt.remove()
     # plt.pause(dt) # additional pause to make sure that .remove() fucntions are working
 
     # else:
