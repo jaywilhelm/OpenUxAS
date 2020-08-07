@@ -117,10 +117,10 @@ def syncAVSfromDubins(uav):
     lon = uav['dubins'].y
     vel = uav['dubins'].v
     heading = uav['dubins'].heading
-    avoidanceUAV = uav['IsAvoidanceUAV']
+    IsAvoidanceUAV = uav['IsAvoidanceUAV']
     uav['uavobj'] = UAVHeading(pos=[lat, lon],
                                waypt=[], speed=vel, heading=heading,
-                               tPossible=math.radians(45), avoidanceUAV=avoidanceUAV)
+                               tPossible=math.radians(45), IsAvoidanceUAV=IsAvoidanceUAV)
     return uav
 
 TEST_DATA = True
@@ -182,17 +182,17 @@ else:
         uav3 = {}
         uavlist.append(uav3)
         v = 0.01                    # custom velocity
-        thetaRef = np.deg2rad(90)   # custom heading/angle
-        uavlist[2]['dubins'] = dubinsUAV(position=[45.29, -120.8], velocity=v,
+        thetaRef = np.deg2rad(120)   # custom heading/angle remember: 120
+        uavlist[2]['dubins'] = dubinsUAV(position=[45.5, -121.0], velocity=v, # remember [45.5, -121.0]
                                      heading=thetaRef, dt=dt)
-        uavlist[2]['ID'] = 4
+        uavlist[2]['ID'] = 6
         uavlist[2]['IsAvoidanceUAV'] = False
         uavlist[2] = syncAVSfromDubins(uavlist[2])
 
         # uav4 = {}
         # uavlist.append(uav4)
         # v = 0.01                    # custom velocity
-        # thetaRef = np.deg2rad(0)   # custom heading/angle
+        # thetaRef = np.deg2rad(50)   # custom heading/angle
         # uavlist[3]['dubins'] = dubinsUAV(position=[45.1, -121.0], velocity=v,
         #                              heading=thetaRef, dt=dt)
         # uavlist[3]['ID'] = 5
@@ -280,21 +280,19 @@ while step<320:
         if TargetWPList == None:
             ''' Generate the main path. Goal is to reconncet to this path after avoiding another UAV/obstacle'''
             usetargetPath = True
-            TargetWPList = mainUAV['dubins'].makePath(pathType='Sine', numbOfPoints=20, dist=0.08)
+            TargetWPList = mainUAV['dubins'].makePath(pathType='Line', numbOfPoints=20, dist=0.05)
             uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=0.01)
             uavlist[0]['dubins'].currentWPIndex = 1
             print('TargetWPList: ' + str(TargetWPList))
 
-        if len(TargetWPList) > 0:    
-            TargetPath, = plt.plot([pt[1] for pt in TargetWPList], [pt[0] for pt in TargetWPList], c='b', marker='.')
-
-        if step>89:
+        if step>=119:
             text = 22
-        detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = mainUAV['dubins'].detectClosestWP(dist=0.3, theta_possible=mainUAV['uavobj'].thetaPossible, alpha=4, targetPath=TargetWPList)
-        if len(targetWP)==0 or len(astarGoalPt)==0:
-                    detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = mainUAV['dubins'].detectClosestWP(dist=0.3, theta_possible=mainUAV['uavobj'].thetaPossible, alpha=5, targetPath=TargetWPList)
 
-        
+        # Locate closest and furthest waypoints laying on target path
+        detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = mainUAV['dubins'].detectClosestWP(dist=0.3, theta_possible=mainUAV['uavobj'].thetaPossible, alpha=4, targetPath=TargetWPList, returnMethod='useSmalletsAngle')
+        if len(targetWP)==0 or len(astarGoalPt)==0:
+            detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = mainUAV['dubins'].detectClosestWP(dist=0.3, theta_possible=mainUAV['uavobj'].thetaPossible, alpha=5, targetPath=TargetWPList, returnMethod='useSmalletsAngle')
+
         plotDetectRange, = plt.plot([pt[1] for pt in detectRange], [pt[0] for pt in detectRange], c='y')
                 
         if len(targetWP) > 0:
@@ -302,27 +300,24 @@ while step<320:
         else:
             plotTargetWP = None
         if len(astarGoalPt) > 0:
-            plotAstarGoalPt, = plt.plot(astarGoalPt[1], astarGoalPt[0], c='g', marker = '*')
+            plotAstarGoalPt, = plt.plot(astarGoalPt[1], astarGoalPt[0], c='g', marker = 'X', markersize=7)
         else:
             plotAstarGoalPt = None
 
         print('ClosestPt: ' + str(targetWP) + ' FarthestPt: ' + str(astarGoalPt))
 
-
         if len(uavlist) > 1:
 
             #if(not hasPlan):
-            replan, wplist, avoid, full_path = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True)
-            # Comment the above line and uncomment to use a dummy wpList for testing purposes
+            replan, wplist, avoid, full_path, uavID = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True)
+            if len(uavID) > 0:
+                for i in range(0,len(uavID)):
+                    print('Potential Collision with UAV ' + str(uavh_others_all[uavID[i]]['ID']))
+            
+            
+            # Comment the above line and uncomment below to use a dummy wpList for testing purposes
             # replan = True
             # wp = [[  45.32, -120.74], [  45.38, -120.8 ], [  45.38, -120.96], [  45.32, -121.02]]
-
-            # plotting in the following way breaks the .remove() function...not sure why yet
-            # for i in range(len(avoid)):
-            #     for pts in avoid:
-            #         plotAvoidArea, = plt.plot([pt[1] for pt in avoid[i]], [pt[0] for pt in avoid[i]])
-            #         print('avoid poly: ' + str(pts))
-            #         # plt.pause(dt) # check plotting fucntion
 
             if(replan and not hasPlan):
                 # hasPlan = True
@@ -353,10 +348,6 @@ while step<320:
             else:
                 print("Not re-planning" )
 
-            if len(wplistcCopy)>0:
-                plotAstarPath, = plt.plot([pt[1] for pt in wplistcCopy], [pt[0] for pt in wplistcCopy])
-        
-
 
         else:
             print('\tOnly one UAV')
@@ -377,6 +368,10 @@ while step<320:
 
             if uav['ID'] == 1:
                 # plotCASpos, = plt.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
+                uav['dubins'].getDist2otherUAVs(uavh_others_all)
+                dist2nxUAVs = uav['dubins'].getOtherUAVStates(uavh_others_all, uavID)
+                # what UAVs are currenlty causing a pot. Collision
+
                 plotCASpos, = plt.plot(uav['dubins'].ys, uav['dubins'].xs, 'o')
 
                 color = '-g'
@@ -407,9 +402,9 @@ while step<320:
                         usetargetPath = True
                         uav['dubins'].lastWP = False
                         uav['dubins'].setWaypoints(TargetWPList, newradius=0.01)
-                        detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = uav['dubins'].detectClosestWP(dist=0.3, theta_possible=uav['uavobj'].thetaPossible, alpha=4, targetPath=TargetWPList)
+                        detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = uav['dubins'].detectClosestWP(dist=0.3, theta_possible=uav['uavobj'].thetaPossible, alpha=4, targetPath=TargetWPList, returnMethod='useSmalletsAngle')
                         if not targetWP:
-                            detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = uav['dubins'].detectClosestWP(dist=0.3, theta_possible=uav['uavobj'].thetaPossible, alpha=5, targetPath=TargetWPList)
+                            detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = uav['dubins'].detectClosestWP(dist=0.3, theta_possible=uav['uavobj'].thetaPossible, alpha=5, targetPath=TargetWPList, returnMethod='useSmalletsAngle')
                             plotDetectRange.remove()
                             plotTargetWP, = plt.plot(targetWP[1], targetWP[0], c='r', marker = '*')
                             plotDetectRange, = plt.plot([pt[1] for pt in detectRange], [pt[0] for pt in detectRange], c='y')
@@ -454,6 +449,13 @@ while step<320:
 
             uav = syncAVSfromDubins(uav)
 
+        # Path are plotted here so that they appear above the vehicle path. 
+        if len(wplistcCopy)>0:
+            plotAstarPath, = plt.plot([pt[1] for pt in wplistcCopy], [pt[0] for pt in wplistcCopy])
+        if len(TargetWPList) > 0:    
+            TargetPath, = plt.plot([pt[1] for pt in TargetWPList], [pt[0] for pt in TargetWPList], c='b', marker='.')
+
+
         dist2UAVs = uav['dubins'].distance(CASuavPos[0], NCuavPos[0])
         if dist2UAVs < previousDist:
             state = 'Moving towards'
@@ -469,7 +471,7 @@ while step<320:
 
 
 
-        # print('Confirm distance: ' + str(dist2UAVs) + ' ' + state)
+        print('Confirm distance: ' + str(dist2UAVs) + ' ' + state)
 
 
     step += 1

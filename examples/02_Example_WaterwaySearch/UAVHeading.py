@@ -47,7 +47,7 @@ class UAVHeading:
         Description:
                     Constructor for UAVHeading Class.
     '''
-    def __init__(self, pos, waypt, speed, heading, tPossible, avoidanceUAV):
+    def __init__(self, pos, waypt, speed, heading, tPossible, IsAvoidanceUAV):
         self.position = list(pos)
         self.waypoint = list(waypt)
         self.speed = speed
@@ -55,7 +55,7 @@ class UAVHeading:
         # self.thetaRef = 90 - heading
         self.thetaPossible = tPossible
         # self.staticAreaLength = False
-        self.avoidanceUAV = avoidanceUAV
+        self.IsavoidanceUAV = IsAvoidanceUAV
         self.AstarGoal = [] # Browne - goal for A* is either a projected waypoint, or a waypoint on along a target path
 
     '''
@@ -699,25 +699,29 @@ class UAVHeading:
 
 
     def findPotentialIntersects(self, uavh_others, area_length, static_koz):
-
+        
+        CollisionUavIDs =[] # which UAVs have a potential collision?
         mypot_area = self.possibleFlightAreaStatic(area_length)
         mypoly = Polygon(mypot_area)
 
         PinP = False 
         # Include other keep out zones not associated with other UAVs 
-        avoid_areas = static_koz[:] # '[:]' removes python references to static_koz, so I can make a copy
+        avoid_areas = static_koz[:] # '[:]' removes python references to static_koz, so I can make a copy of that list
 
         if self.avoidanceUAV:
             avoid_areas.append(self.reverseKOZ(area_length))
-
+        
+        index = 0
         for ouav in uavh_others:
             thier_area = ouav.possibleFlightAreaStatic(area_length)
             thier_poly = Polygon(thier_area)
             if(thier_poly.intersects(mypoly)):
                 PinP = True
                 avoid_areas.append(thier_area)
-                # print("Pot. Collision")
+                CollisionUavIDs.append(index)
+                # print("Pot. Collision ")
                 # break
+            index +=1
         # Testing for keep out zone directly behind CAS UAV
         # Note that static_koz is a list
         # if len(static_koz) > 0:
@@ -725,7 +729,7 @@ class UAVHeading:
         #         avoid_areas.append(pt)
 
 
-        return PinP, avoid_areas
+        return PinP, avoid_areas, CollisionUavIDs
 
     @staticmethod
     def convertPathToUniqueWaypoints(path_x, path_y):
@@ -787,7 +791,7 @@ class UAVHeading:
         if len(TargetPathWP) > 0:
             self.AstarGoal = TargetPathWP
 
-        intersects, avoid_areas = self.findPotentialIntersects(uavh_others, area_length, static_koz)
+        intersects, avoid_areas, CollisionUavIDs = self.findPotentialIntersects(uavh_others, area_length, static_koz)
 
         if(intersects):
             intersects = [1, 1]
@@ -799,10 +803,10 @@ class UAVHeading:
             if not self.lastClear:
                 print(TC.OKGREEN + 'PATH CLEAR.' + TC.ENDC)
             self.lastClear = True
-            return False, [self.waypoint], avoid_areas, []
+            return False, [self.waypoint], avoid_areas, [], CollisionUavIDs
 
         #do it again with larger KOZ
-        intersects, avoid_areas = self.findPotentialIntersects(uavh_others, area_length*1.33, static_koz)
+        intersects, avoid_areas, CollisionUavIDs = self.findPotentialIntersects(uavh_others, area_length*1.33, static_koz)
         print(TC.WARNING + 'AVOID.' + TC.ENDC)
         self.lastClear = False
         use_pseudo_target = False
@@ -848,7 +852,7 @@ class UAVHeading:
                                              INTERVAL_SIZE, (2 * INTERVAL_SIZE))
         except ValueError:
             print(TC.FAIL + '\t\t**No valid path found.**' + TC.ENDC)
-            return False, [], avoid_areas, []
+            return False, [], avoid_areas, [], CollisionUavIDs
 
         waypoints = self.convertPathToUniqueWaypoints(path_x, path_y)
         waypoints += offset
@@ -909,4 +913,4 @@ class UAVHeading:
             # else:
             #     path_pts.append(pt)
 
-        return True, waypoints, avoid_areas, full_path
+        return True, waypoints, avoid_areas, full_path, CollisionUavIDs
