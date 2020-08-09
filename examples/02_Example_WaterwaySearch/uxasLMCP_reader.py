@@ -179,23 +179,44 @@ else:
     useMoreNCuav = True
     if useMoreNCuav:
         
-        uav3 = {}
-        uavlist.append(uav3)
-        v = 0.01                    # custom velocity
-        thetaRef = np.deg2rad(120)   # custom heading/angle remember: 120
-        uavlist[2]['dubins'] = dubinsUAV(position=[45.5, -121.0], velocity=v, # remember [45.5, -121.0]
-                                     heading=thetaRef, dt=dt)
-        uavlist[2]['ID'] = 6
-        uavlist[2]['IsAvoidanceUAV'] = False
-        uavlist[2] = syncAVSfromDubins(uavlist[2])
+        # uav3 = {}
+        # uavlist.append(uav3)
+        # v = 0.01                    # custom velocity
+        # thetaRef = np.deg2rad(120)   # custom heading/angle remember: 120
+        # uavlist[2]['dubins'] = dubinsUAV(position=[45.5, -121.0], velocity=v, # remember [45.5, -121.0]
+        #                              heading=thetaRef, dt=dt)
+        # uavlist[2]['ID'] = 6
+        # uavlist[2]['IsAvoidanceUAV'] = False
+        # uavlist[2] = syncAVSfromDubins(uavlist[2])
 
+        # For Dual HeadOn
         # uav4 = {}
         # uavlist.append(uav4)
         # v = 0.01                    # custom velocity
-        # thetaRef = np.deg2rad(50)   # custom heading/angle
-        # uavlist[3]['dubins'] = dubinsUAV(position=[45.1, -121.0], velocity=v,
+        # thetaRef = np.deg2rad(90)   # custom heading/angle
+        # uavlist[2]['dubins'] = dubinsUAV(position=[45.35, -120.8], velocity=v,
         #                              heading=thetaRef, dt=dt)
-        # uavlist[3]['ID'] = 5
+        # uavlist[2]['ID'] = 5
+        # uavlist[2]['IsAvoidanceUAV'] = False
+        # uavlist[2] = syncAVSfromDubins(uavlist[2])
+
+        uav4 = {}
+        uavlist.append(uav4)
+        v = 0.01                    # custom velocity
+        thetaRef = np.deg2rad(135)   # custom heading/angle
+        uavlist[2]['dubins'] = dubinsUAV(position=[45.35, -120.8], velocity=v,
+                                     heading=thetaRef, dt=dt)
+        uavlist[2]['ID'] = 5
+        uavlist[2]['IsAvoidanceUAV'] = False
+        uavlist[2] = syncAVSfromDubins(uavlist[2])
+
+        # uav5 = {}
+        # uavlist.append(uav5)
+        # v = 0.05                   # custom velocity
+        # thetaRef = np.deg2rad(270)   # custom heading/angle remember: 120
+        # uavlist[3]['dubins'] = dubinsUAV(position=[45.5, -121.0], velocity=v, # remember [45.5, -121.0]
+        #                              heading=thetaRef, dt=dt)
+        # uavlist[3]['ID'] = 7
         # uavlist[3]['IsAvoidanceUAV'] = False
         # uavlist[3] = syncAVSfromDubins(uavlist[3])
 
@@ -278,15 +299,13 @@ while step<320:
         uavh_others_all, uavh_others = findotheruavs(uavlist, 1) # ID not to watch for
 
         if TargetWPList == None:
+            mainUAV['dubins'].getDist2otherUAVs(uavh_others_all)
             ''' Generate the main path. Goal is to reconncet to this path after avoiding another UAV/obstacle'''
             usetargetPath = True
-            TargetWPList = mainUAV['dubins'].makePath(pathType='Line', numbOfPoints=20, dist=0.05)
+            TargetWPList = mainUAV['dubins'].makePath(pathType='Sine', numbOfPoints=20, dist=0.08)
             uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=0.01)
             uavlist[0]['dubins'].currentWPIndex = 1
             print('TargetWPList: ' + str(TargetWPList))
-
-        if step>=119:
-            text = 22
 
         # Locate closest and furthest waypoints laying on target path
         detectRange, targetWP, targetIndex, astarGoalIndex, astarGoalPt = mainUAV['dubins'].detectClosestWP(dist=0.3, theta_possible=mainUAV['uavobj'].thetaPossible, alpha=4, targetPath=TargetWPList, returnMethod='useSmalletsAngle')
@@ -311,9 +330,10 @@ while step<320:
             #if(not hasPlan):
             replan, wplist, avoid, full_path, uavID = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True)
             if len(uavID) > 0:
-                for i in range(0,len(uavID)):
-                    print('Potential Collision with UAV ' + str(uavh_others_all[uavID[i]]['ID']))
-            
+                for i in range(0, len(uavID)):    
+                    uavID[i] = uavh_others_all[uavID[i]]['ID']
+                    print('Potential Collision with UAV ' + str(uavID[i]))
+
             
             # Comment the above line and uncomment below to use a dummy wpList for testing purposes
             # replan = True
@@ -368,7 +388,8 @@ while step<320:
 
             if uav['ID'] == 1:
                 # plotCASpos, = plt.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
-                uav['dubins'].getDist2otherUAVs(uavh_others_all)
+                if step>=70:
+                    text = 22
                 dist2nxUAVs = uav['dubins'].getOtherUAVStates(uavh_others_all, uavID)
                 # what UAVs are currenlty causing a pot. Collision
 
@@ -442,7 +463,12 @@ while step<320:
             if len(avoid)>1: # reverse koz is always available so len >1 instead of len >0
                 for koz in avoid:
                     plotCASkoz, = plt.plot([pt[1] for pt in koz], [pt[0] for pt in koz], '--m')
-
+                plt.axis('equal')
+                plt.grid(True)
+                plt.ylim(45.25,45.45)
+                plt.xlim(-121.25, -120.45)
+                
+                plt.pause(0.01)
                 
             print('ID: ' + str(uav['ID']) + '\tHeading: ' + str(np.degrees((uav['dubins'].heading))) + '\tlat: ' + str(uav['dubins'].x) +
             '\tlon: ' + str(uav['dubins'].y) + '\tIs CAS?: ' + str(uav['IsAvoidanceUAV']))
@@ -455,23 +481,34 @@ while step<320:
         if len(TargetWPList) > 0:    
             TargetPath, = plt.plot([pt[1] for pt in TargetWPList], [pt[0] for pt in TargetWPList], c='b', marker='.')
 
-
-        dist2UAVs = uav['dubins'].distance(CASuavPos[0], NCuavPos[0])
-        if dist2UAVs < previousDist:
-            state = 'Moving towards'
-        else:
-            state = 'Moving away'
+        checkIfClear = []
+        for i in range(0, len(uavh_others_all)):
+            checkIfClear.append(mainUAV['dubins'].trackUAV[i]['clearedUAV'])
+        
+        if all(checkIfClear): # if all false then still tracking other UAVs
+            #usetargetPath = False
             clearedOtherUAV = True
-            #plt.pause(5)
+        else:
+            #usetargetPath = True
+            clearedOtherUAV = False
+        print('\t\t' + str(checkIfClear))
 
-        previousDist = dist2UAVs
+        # dist2UAVs = uav['dubins'].distance(CASuavPos[0], NCuavPos[0])
+        # if dist2UAVs < previousDist:
+        #     state = 'Moving towards'
+        # else:
+        #     state = 'Moving away'
+        #     clearedOtherUAV = True
+        #     #plt.pause(5)
 
-        save = [dist2UAVs, state]
-        saveDistances.append(save)
+        #previousDist = dist2UAVs
+
+        # save = [dist2UAVs, state]
+        # saveDistances.append(save)
 
 
 
-        print('Confirm distance: ' + str(dist2UAVs) + ' ' + state)
+        #print('Confirm distance: ' + str(dist2UAVs) + ' ' + state)
 
 
     step += 1
@@ -556,6 +593,6 @@ print('Reverting to previous Directory')
 os.chdir(wd)
 
 print('Simulation End')
-print('Distance between waypoints: \n')
-for pt in saveDistances:
-    print(str(pt) + '\n')
+# print('Distance between waypoints: \n')
+# for pt in saveDistances:
+#     print(str(pt) + '\n')

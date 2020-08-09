@@ -708,7 +708,7 @@ class UAVHeading:
         # Include other keep out zones not associated with other UAVs 
         avoid_areas = static_koz[:] # '[:]' removes python references to static_koz, so I can make a copy of that list
 
-        if self.avoidanceUAV:
+        if self.IsavoidanceUAV:
             avoid_areas.append(self.reverseKOZ(area_length))
         
         index = 0
@@ -718,7 +718,7 @@ class UAVHeading:
             if(thier_poly.intersects(mypoly)):
                 PinP = True
                 avoid_areas.append(thier_area)
-                CollisionUavIDs.append(index)
+                CollisionUavIDs.append(index) # reminder: only a Index value, not the actually UAV ID
                 # print("Pot. Collision ")
                 # break
             index +=1

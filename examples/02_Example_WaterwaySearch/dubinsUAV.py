@@ -33,11 +33,7 @@ class dubinsUAV():
         self.withinThreshold = False
         
         self.lastWP = False # Lets system knonw that last waypoint has been reached
-
-        self.OtherUAVdist = []
-        self.OtherUAVlastdist = []
-        self.trackOtherUAVS = []
-
+        
         # History
         self.xs = np.array([])
         self.ys = np.array([])
@@ -67,76 +63,108 @@ class dubinsUAV():
     
 
     def getDist2otherUAVs(self, uavh_others_all):
-        trackUAV = {}
-        uavDistances = []
-        for uav in uavh_others_all:
-            dist = self.distance([self.x, self.y], uav['uavobj'].position)
-            trackUAV['ID'] = uav['ID']
-            trackUAV['dist'] = dist
-            uavDistances.append(trackUAV)
+        uavNameList = []
+        name = 'uav'
+        keys = ['ID', 'dist', 'lastDist', 'tracking', 'avoiding', 'clearedUAV']
+        # for i in range(0, len(uavh_others_all)):
+        #     uavName = name + str(i)
+        #     uavNameList.append(uavName)
 
-        self.OtherUAVlastdist = uavDistances
+        self.trackUAV={ i:{ key:[] for key in keys} for i in range(0, len(uavh_others_all))}
+        
+        for i in range(0, len(uavh_others_all)):
+                dist = self.distance([self.x, self.y], uavh_others_all[i]['uavobj'].position)
+                self.trackUAV[i]['ID'] = uavh_others_all[i]['ID']
+                self.trackUAV[i]['lastDist'] = dist
 
     def getOtherUAVStates(self, uavh_others_all, uavID):
-        uavList =[]
-        trackUAV ={}
-        trackUAV['ID'] = 0
-        trackUAV['dist'] = 0
-        trackUAV['lastDist'] = 0
-        trackUAV['tracking'] = False
-        trackUAV['clearedUAV'] = False
 
-        for uav in uavh_others_all:
-            for otherUAV in self.OtherUAVlastdist:
-                    if otherUAV['ID'] == uav['ID']:
-                        trackUAV['ID'] = uav['ID']
-                        dist = self.distance([self.x, self.y], uav['uavobj'].position)
-                        trackUAV['dist'] = dist
-                        trackUAV['lastDist'] = otherUAV['dist']
-                        if dist < trackUAV['lastDist']:
-                            trackUAV['clearedUAV'] = False
-                            state = 'Moving towards'
-                        else:
-                            state = 'Moving away'
-                            trackUAV['clearedUAV'] = True
+        for i in range(0,len(uavh_others_all)):
+            if self.trackUAV[i]['ID'] == uavh_others_all[i]['ID']: # IDs in both Lists should line up
+                dist = self.distance([self.x, self.y], uavh_others_all[i]['uavobj'].position)
+                self.trackUAV[i]['dist'] = dist
 
-        uavDistances = []
-        for uav in uavh_others_all:
-            dist = self.distance([self.x, self.y], uav['uavobj'].position)
-            self.trackOtherUAVS.append([uav['ID'], dist])
-            uavDistances.append([uav['ID'], dist])
-            trackUAV['ID'] = uav['ID']
-            trackUAV['dist'] = dist
-
-            if len(uavID) > 0:
-                for ID in uavID:
-                    if uav['ID'] == ID:
-                        trackUAV['tracking'] = True
-                        print('Potential Collision with UAV ' + str(ID))
-
-                        if trackUAV['clearedUAV'] == True:
-                            trackUAV['tracking'] = False
-
-
+            # is the distance to other UAV increaseing or decreasing?
+            if dist < self.trackUAV[i]['lastDist']:
+                self.trackUAV[i]['clearedUAV'] = False
+                print('UAV ' + str(self.trackUAV[i]['ID']) + ' is approaching')
             else:
-                print('No pot. collision')
+                print('UAV ' + str(self.trackUAV[i]['ID']) + ' is moving away')
+                self.trackUAV[i]['clearedUAV'] = True
+
+            # Id A* avoiding a UAV?
+            if len(uavID) > 0: # IDs in both lists will not always line up
+                for ID in uavID: # which UAV is being avoided
+                    if self.trackUAV[i]['ID'] == ID:
+                        self.trackUAV[i]['tracking'] = True
+                        self.trackUAV[i]['avoding'] = True
+                        print('Avoiding UAV ' + str(ID))
+                    else:
+                        self.trackUAV[i]['avoding'] = False
+            else:
+                self.trackUAV[i]['avoding'] = False
+
+            # want to keep tracking until far enough away / moving away or clearedUAV = True
+            if self.trackUAV[i]['tracking'] == True and self.trackUAV[i]['clearedUAV'] == False:
+                print('Tracking UAV ' + str(self.trackUAV[i]['ID']))
+            else:
+                print('NOT Tracking UAV ' + str(self.trackUAV[i]['ID']))
+
+            self.trackUAV[i]['lastDist'] = dist
+
+
+        # # comparing two lists for UAV IDs
+        # for uav in uavh_others_all:
+        #     for otherUAV in self.OtherUAVlastdist:
+        #             if otherUAV['ID'] == uav['ID']:
+        #                 trackUAV['ID'] = uav['ID']
+        #                 dist = self.distance([self.x, self.y], uav['uavobj'].position)
+        #                 trackUAV['dist'] = dist
+        #                 trackUAV['lastDist'] = otherUAV['dist']
+        #                 if dist < trackUAV['lastDist']:
+        #                     trackUAV['clearedUAV'] = False
+        #                     state = 'Moving towards'
+        #                 else:
+        #                     state = 'Moving away'
+        #                     trackUAV['clearedUAV'] = True
+
+        # uavDistances = []
+        # for uav in uavh_others_all:
+        #     dist = self.distance([self.x, self.y], uav['uavobj'].position)
+        #     self.trackOtherUAVS.append([uav['ID'], dist])
+        #     uavDistances.append([uav['ID'], dist])
+        #     trackUAV['ID'] = uav['ID']
+        #     trackUAV['dist'] = dist
+
+        #     if len(uavID) > 0:
+        #         for ID in uavID:
+        #             if uav['ID'] == ID:
+        #                 trackUAV['tracking'] = True
+        #                 print('Potential Collision with UAV ' + str(ID))
+
+        #                 if trackUAV['clearedUAV'] == True:
+        #                     trackUAV['tracking'] = False
+
+
+        #     else:
+        #         print('No pot. collision')
                 
-            if dist < self.OtherUAVlastdist:
-                trackUAV['clearedUAV'] = False
-                state = 'Moving towards'
-            else:
-                state = 'Moving away'
-                trackUAV['clearedUAV'] = True
+        #     if dist < self.OtherUAVlastdist:
+        #         trackUAV['clearedUAV'] = False
+        #         state = 'Moving towards'
+        #     else:
+        #         state = 'Moving away'
+        #         trackUAV['clearedUAV'] = True
 
             
             
             
-            uavList.append(trackUAV)
+        #     uavList.append(trackUAV)
 
-        self.OtherUAVlastdist = uavDistances
+        # self.OtherUAVlastdist = uavDistances
 
 
-        return uavDistAndID
+        # return uavDistAndID
 
     def collisionUAVs(self, uavh_others_all, uavID):
         uavDistances = []
