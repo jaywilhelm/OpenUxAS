@@ -90,7 +90,7 @@ class dubinsUAV():
                 print('UAV ' + str(self.trackUAV[i]['ID']) + ' is approaching')
             else:
                 print('UAV ' + str(self.trackUAV[i]['ID']) + ' is moving away')
-                self.trackUAV[i]['clearedUAV'] = True
+                self.trackUAV[i]['clear*clothoid0.SampleXY(500)edUAV'] = True
 
             # Id A* avoiding a UAV?
             if len(uavID) > 0: # IDs in both lists will not always line up
@@ -325,9 +325,9 @@ class dubinsUAV():
                 
         return points, targetPt, targetIndex, astarGoalIndex, astarGoalPt
 
-    def CarrotChaseWP(self):
+    def CarrotChaseWP(self, delta = 0.01):
         ''' Determine carrot point coordinates between waypoints '''
-        delta = 0.01 # distance carrot is placed ahead of UAV
+        # delta = 0.01 # distance carrot is placed ahead of UAV
         wp_1 = self.waypoints[self.currentWPIndex-1]
         wp_2 = self.waypoints[self.currentWPIndex]
 
@@ -361,7 +361,7 @@ class dubinsUAV():
     def simulateWPDubins(self, UseCarrotChase):
         wpRadius = self.wpRadius
         activeWP = self.getActiveWaypoint()
-        carrotPoint = self.CarrotChaseWP()
+        # carrotPoint = self.CarrotChaseWP()
 
         if UseCarrotChase:
             carrotPoint = self.CarrotChaseWP()

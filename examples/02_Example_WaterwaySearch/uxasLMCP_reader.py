@@ -11,6 +11,9 @@ import numpy as np
 from dubinsUAV import dubinsUAV
 from TerminalColors import TerminalColors as TC
 
+clothoidImport = '../../../pyclothoids-master/pyclothoids/TestScript.py'
+import pyclothoids
+from pyclothoids import Clothoid
 
 # Include LMCP Python files
 lmcplocation = '../../src/LMCP/py'
@@ -176,7 +179,7 @@ else:
     uavlist[0] = syncAVSfromDubins(uavlist[0])
     uavlist[1] = syncAVSfromDubins(uavlist[1])
 
-    useMoreNCuav = True
+    useMoreNCuav = False
     if useMoreNCuav:
         
         # uav3 = {}
