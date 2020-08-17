@@ -325,7 +325,7 @@ class dubinsUAV():
                 
         return points, targetPt, targetIndex, astarGoalIndex, astarGoalPt
 
-    def CarrotChaseWP(self, delta = 0.01):
+    def CarrotChaseWP(self, delta ):
         ''' Determine carrot point coordinates between waypoints '''
         # delta = 0.01 # distance carrot is placed ahead of UAV
         wp_1 = self.waypoints[self.currentWPIndex-1]
@@ -355,16 +355,27 @@ class dubinsUAV():
         carrotTarget_x = wp_1[0] + (R+delta)*np.cos(theta)
         carrotTarget_y = wp_1[1] + (R+delta)*np.sin(theta)
 
+        # # bound carrot point between wp1 and wp2 - not working....
+        if carrotTarget_x > wp_2[0]:
+            carrotTarget_x = wp_2[0]
+        # elif carrotTarget_x < wp_1[0]:
+        #     carrotTarget_x = wp_1[0]
+
+        if carrotTarget_y > wp_2[1]:
+            carrotTarget_y = wp_2[1]
+        # elif carrotTarget_y < wp_1[1]:
+        #     carrotTarget_x = wp_1[1]
+
         carrotPos = [carrotTarget_x, carrotTarget_y]
         return carrotPos
 
-    def simulateWPDubins(self, UseCarrotChase):
+    def simulateWPDubins(self, UseCarrotChase, delta):
         wpRadius = self.wpRadius
         activeWP = self.getActiveWaypoint()
         # carrotPoint = self.CarrotChaseWP()
 
         if UseCarrotChase:
-            carrotPoint = self.CarrotChaseWP()
+            carrotPoint = self.CarrotChaseWP(delta)
             CarrotDist = self.distance(activeWP, carrotPoint)
             # print('Carrot2WP: ' + str(CarrotDist) + '\t ' + str(CarrotDist < wpRadius) + '\t ' + str(CarrotDist > self.lastDist) + '\t# ' + str(self.currentWPIndex) + '\tLast: ' + str(self.lastDist))
 
@@ -388,7 +399,6 @@ class dubinsUAV():
 
         else:
             UAVdist = self.distance(activeWP, (self.x, self.y))
-            #print('Carrot2WP: ' + str(UAVdist) + '\t ' + str(UAVdist < wpRadius) + '\t ' + str(UAVdist > self.lastDist) + '\t# ' + str(self.currentWPIndex) + '\tLast: ' + str(self.lastDist))
 
             if (UAVdist < wpRadius and UAVdist > self.lastDist):
                 if(self.currentWPIndex < len(self.waypoints)-1):
