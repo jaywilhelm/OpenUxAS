@@ -51,7 +51,7 @@ class dubinsUAV():
     def getPosition(self):
         return [self.position[0], self.position[1]]
 
-    def setWaypoints(self, newwps, newradius=0.01):
+    def setWaypoints(self, newwps, newradius):
         self.waypoints = newwps
         self.wpRadius = newradius
 
@@ -400,8 +400,8 @@ class dubinsUAV():
         else:
             UAVdist = self.distance(activeWP, (self.x, self.y))
 
-            if (UAVdist < wpRadius and UAVdist > self.lastDist):
-                if(self.currentWPIndex < len(self.waypoints)-1):
+            if (UAVdist <= wpRadius and UAVdist >= self.lastDist):
+                if not self.currentWPIndex == len(self.waypoints)-1:
                     self.currentWPIndex += 1
                     #print("WP Increment")
                     #update distance...
