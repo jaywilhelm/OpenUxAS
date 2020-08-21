@@ -11,10 +11,6 @@ import numpy as np
 from dubinsUAV import dubinsUAV
 from TerminalColors import TerminalColors as TC
 
-clothoidImport = '../../../pyclothoids-master/pyclothoids/TestScript.py'
-import pyclothoids
-from pyclothoids import Clothoid
-
 # Include LMCP Python files
 lmcplocation = '../../src/LMCP/py'
 sys.path.append(lmcplocation)
@@ -408,8 +404,8 @@ while step<320:
 
                 if usetargetPath: 
                     #print(TC.OKBLUE+ '\tUsing Target Path' + TC.ENDC)
-                    uav['dubins'].simulateWPDubins(UseCarrotChase=False)
-                    carrot = uav['dubins'].CarrotChaseWP()
+                    uav['dubins'].simulateWPDubins(UseCarrotChase=False, delta=0.01)
+                    carrot = uav['dubins'].CarrotChaseWP(delta=0.01)
                     # plotCarrot, = plt.plot(carrot[1], carrot[0], c='orange', marker='^' )
                     # plotCarrot = None
                     CASuavPos = uav['dubins'].position
@@ -435,8 +431,8 @@ while step<320:
  
                         uav['dubins'].currentWPIndex = targetIndex
 
-                    uav['dubins'].simulateWPDubins(UseCarrotChase=True)
-                    carrot = uav['dubins'].CarrotChaseWP()
+                    uav['dubins'].simulateWPDubins(UseCarrotChase=True, delta=0.01)
+                    carrot = uav['dubins'].CarrotChaseWP(delta=0.01)
                     plotCarrot, = plt.plot(carrot[1], carrot[0], c='orange', marker='^' )
                     # if len(avoid)>1:
                     #     plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
