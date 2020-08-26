@@ -14,11 +14,16 @@ import os, subprocess, time
 import numpy as np
 from dubinsUAV import dubinsUAV
 from TerminalColors import TerminalColors as TC
-# For clothoid path
+
+# For clothoid path generation
 import pyclothoids
 from pyclothoids import Clothoid
 from scipy import linalg
 
+# For A* Collision Avoidance
+from lineSegmentAoE import *
+sys.path.append('../UAVHeading-CollisionAvoidance/src')
+from UAVHeading import UAVHeading
 def distance(a, b):
     return np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
 
@@ -43,6 +48,7 @@ def fit_circle_2d(x, y, w=[]):
 
 testPath = [[-82.1380578,39.4103728],[-82.1379970,39.4037904],[-82.1379970,39.4037005],[-82.1379973,39.3812916],[-82.1379973,39.3812017],[-82.1368338,39.3816193]]
 
+# [ Long, Lat] QGC kml saved it this way?
 refPath = [[-82.1380578,39.4103728],[-82.1379970,39.4037904],[-82.1379970,39.4037005],[-82.1379973,39.3812916],[-82.1379973,39.3812017],[-82.1368338,39.3816193],
            [-82.1368338,39.3817093],[-82.1368331,39.4037635],[-82.1368331,39.4038534],[-82.1356692,39.4039164],[-82.1356692,39.4038265],[-82.1356703,39.3821269],
            [-82.1356703,39.3820369],[-82.1345067,39.3824546],[-82.1345067,39.3825445],[-82.1345053,39.4038895],[-82.1345053,39.4039794],[-82.1333414,39.4040424],
@@ -68,6 +74,15 @@ refPath = [[-82.1380578,39.4103728],[-82.1379970,39.4037904],[-82.1379970,39.403
            [-82.1007578,39.3945600],[-82.0995939,39.3949773],[-82.0995938,39.3950672],[-82.0995930,39.3965541],[-82.0995929,39.3966440],[-82.0925783,39.3866215],
            [-82.1072662,39.3761598]]
 
+        
+# Convert refPath to km, source: https://sciencing.com/convert-latitude-longtitude-feet-2724.html
+refPathkm = []
+for pos in refPath:
+    Latkm = pos[1] * 10000/90 # distance from the equator
+    Longkm = pos[0] * 10000/90  # distance from prime meridian
+    refPathkm.append([Longkm, Latkm])
+
+print('Ref path in km: ' + str(refPathkm))
 
 fig, ax = plt.subplots()
 
@@ -104,20 +119,25 @@ uav1.setWaypoints(newwps=refPath, newradius = wptRad )
 # from Ch 5 in the Pilot's Handbook of Aernautical Knowledge 
 # Using 50% of maximum turn radius - conservative value - given by np.degrees(uav1.turnrate)/2
 uavTurnRadius = ((uav1.v * 360/(np.degrees(uav1.turnrate)))/np.pi)/2
-halfTurnRadius = uavTurnRadius/2
-print('UAV turn radius: ' + str(uavTurnRadius))
+halfTurnRadius = uavTurnRadius*2
+
+print('UAV turn radius with full turn rate: ' + str(uavTurnRadius) + ' and half turn rate: ' + str(halfTurnRadius))
 Recovery_dict = {'X': [], 'Y' : [], 'Index1' : [], 'Index2' : [], 'wpt1' : [], 'wpt2' : [],
                  'pathLength' : [], 'turnRadii': []   }
+
+
+useAstar = True
 
 hasPath = False
 onlyOnce = False
 wpList =None
 numbOfAstarPts = 0
 NewPath = []
-
+indexTracker = 0 # TO DO - find another way to change the index to the appropriate waypoint
+numbOfRecoveryPts = 0
 
 step = 0
-while step < 1200:
+while uav1.currentWPIndex < len(uav1.waypoints)-1: #step < 550:
     # Update Dubins pseudo wp
     xy = (uav1.x, uav1.y)
     r = 0.3
@@ -140,16 +160,16 @@ while step < 1200:
     activeWP = uav1.getActiveWaypoint()     # get the current waypoint coordinates 
 
     # TO DO: Insert Fake A* points
-    if step == 34:  
+    if step == 34 :  
         indexRecall = uav1.currentWPIndex 
-        fakeAstarPath = [[uav1.x, uav1.y],  [-82.139, 39.4025], [-82.139, 39.397], [-82.139, 39.385], [-82.1379973, 39.3812916] ]  # [-82.1379970, 39.4037904]
+        fakeAstarPath = [[uav1.x, uav1.y], [-82.139, 39.4025], [-82.139, 39.397], [-82.139, 39.385], [-82.1379973, 39.3812916] ]  # [-82.1379970, 39.4037904]
         #fakeAstarPath = [[uav1.x, uav1.y], [45.4, -120.58], [45.35, -120.66], [45.26835347140579, -120.82]]
         numbOfAstarPts= len(fakeAstarPath)
         refPath[uav1.currentWPIndex:uav1.currentWPIndex] = fakeAstarPath
         print('Insert ' + str(numbOfAstarPts) + ' Fake Astar Points at wpt index ' + str(indexRecall))
 
     checkDistance = 9999999     # used to evaluate shorted clothoid path using interpolated target waypoints
-    if step == 50:
+    if step == 100:
         # convert uav North East Down angle convention to cartesion for clothoid heading: uavHeading = uav1.heading + np.radians(90)
         # Needed an axis flip to find the angle between  UAV and active waypoint: the x's in the numerator and y's in the denom, then add 180 deg
 
@@ -311,7 +331,8 @@ while step < 1200:
                     Recovery_dict['chosenPath'] = wpList2
                     Recovery_dict['cirlces'] = circle_list
                     numbOfRecoveryPts = len(wpList2)
-                    Recovery_dict['chosenIndex'] = selectPath + numbOfRecoveryPts
+                    Recovery_dict['chosenIndex'] = index+1+numbOfRecoveryPts
+                    print('Chosen Index: ' + str(Recovery_dict['chosenIndex']))
 
                 elif checkPassed == True and clothoidLength > checkDistance:
                     print('Path Too Long')
@@ -326,6 +347,7 @@ while step < 1200:
         plt.plot(uav1.xs, uav1.ys, c='r', marker='o' )
         plt.plot([pt[0] for pt in refPath], [pt[1] for pt in refPath], c='b', marker='.')
         plt.plot( activeWP[0], activeWP[1], c='k', marker='X', markersize = 5 )
+        plt.plot([pt[0] for pt in fakeAstarPath], [pt[1] for pt in fakeAstarPath], c='magenta', marker='o',markersize=5)
         plt.axis('equal')
         plt.grid(True)
   
@@ -357,10 +379,11 @@ while step < 1200:
             for ptList in Recovery_dict['chosenPath']:
                 NewPath.append([ptList[1], ptList[0]])
 
-            plt.plot([pt[1] for pt in NewPath], [pt[0] for pt in NewPath], c='green', marker='o',markersize=5)
+            plt.plot([pt[0] for pt in NewPath], [pt[1] for pt in NewPath], c='green', marker='o',markersize=5)
 
             plt.plot(uav1.xs, uav1.ys, c='r', marker='o' )
             plt.plot([pt[0] for pt in refPath], [pt[1] for pt in refPath], c='b', marker='.')
+            plt.plot([pt[0] for pt in fakeAstarPath], [pt[1] for pt in fakeAstarPath], c='magenta', marker='o',markersize=5)
             plt.plot( activeWP[0], activeWP[1], c='k', marker='X', markersize = 5 )
             plt.axis('equal')
             plt.grid(True)
@@ -392,11 +415,28 @@ while step < 1200:
             indexTracker = 0
             lastIndex = uav1.currentWPIndex
             numbOfRecoveryPts = len(NewPath)
-            insertIndex = indexRecall + numbOfAstarPts 
+            insertIndex = indexRecall + numbOfAstarPts + 2 # To Do Find a better way to select the next Index....
             refPath[insertIndex:insertIndex] = NewPath
             uav1.currentWPIndex = insertIndex 
             print('Insert ' + str(numbOfRecoveryPts) + ' Recovery Points at wpt index ' + str(insertIndex) )
           
+
+    if uav1.currentWPIndex == (len(NewPath)-1) and hasPath == True and followRefPath == False:
+        uav1.setWaypoints(newwps=Path, newradius = wptRad )
+        uav1.currentWPIndex = index
+        hasPath = False
+        #plt.pause(30) 
+    elif indexTracker > (numbOfRecoveryPts) and hasPath == True and followRefPath == True: # TO DO - update wp in dubinsUAV class to appropriate wp after completing clothoid
+        # uav1.currentWPIndex = Recovery_dict['chosenIndex'] # note - briefly targets wrong wp b/c there is a wp update, then this line is executed. 
+        hasPath = False
+        onlyOnce = False
+        indexTracker = 0
+        #plt.pause(30)   
+
+    if  onlyOnce == True and uav1.currentWPIndex > lastIndex:
+        indexTracker+=1
+        lastIndex = uav1.currentWPIndex
+
 
     plt.plot([pt[0] for pt in refPath], [pt[1] for pt in refPath], c='b', marker='.')
     plt.plot(uav1.xs, uav1.ys, c='r', marker='o', markersize=5 )
@@ -404,17 +444,27 @@ while step < 1200:
     if wpList != None:
         plt.plot([pt[0] for pt in NewPath], [pt[1] for pt in NewPath], c='green', marker='o',markersize=5)
 
+    if step>1000000:
+        plt.plot([pt[0] for pt in fakeAstarPath], [pt[1] for pt in fakeAstarPath], c='magenta', marker='o',markersize=5)
+
     plt.plot( activeWP[0], activeWP[1], c='k', marker='X', markersize = 5 )
 
     plt.axis('equal')
     plt.grid(True)
     scale = 0.01
-    dist2WP = distance( [uav1.x, uav1.y], [activeWP[0], activeWP[1]] )
-    #print(dist2WP)
 
+    dist2WP = distance( [uav1.x, uav1.y], [uav1.waypoints[uav1.currentWPIndex][0], uav1.waypoints[uav1.currentWPIndex][1]] )
     if dist2WP < 0.005:
         plt.xlim((uav1.x - 0.002, uav1.x + 0.002))
         plt.ylim((uav1.y - 0.002, uav1.y + 0.002))
+
+    if uav1.currentWPIndex >0:
+        dist2WP2 = distance( [uav1.x, uav1.y], [uav1.waypoints[uav1.currentWPIndex-1][0], uav1.waypoints[uav1.currentWPIndex-1][1]] )
+        if dist2WP2 < 0.005:
+            plt.xlim((uav1.x - 0.002, uav1.x + 0.002))
+            plt.ylim((uav1.y - 0.002, uav1.y + 0.002))
+
+
 
 
     #plt.xlim(-82.14 - scale, -82.10 + scale) 

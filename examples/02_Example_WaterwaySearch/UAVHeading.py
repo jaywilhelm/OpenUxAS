@@ -594,16 +594,24 @@ class UAVHeading:
         newkoz = np.array([])
         firstpt = True        
         for pts in kozList:
+            #print('orriginal: ' + str(pts))
+            #print('orriginal*50: ' + '[' + str(pts[0]*scalef) + ', ' + str(pts[1]*scalef) + ']')
             pts = self.__convertToScaleInt(pts, scalef)
+            #print('pts: ' + str(pts))
             pts -= zero_pos
+            #print('zeroed pts: ' + str(pts))
 
             if(firstpt):
                 firstpt = False
-
+                #print('First pts: ' + str(pts))
             else:
+                #print('Lastpt: ' + str(lastpt))
                 newset = self.__intermediates(lastpt, pts, 1)
+                #print('Newset: ' + str(newset))
                 for i in newset:
+                    #print('Points: ' + str(i) + ' in newset')
                     fo = np.array([[i[0]], [i[1]]])
+                    # print('fo: ' + str(fo))
                     if(len(newkoz) == 0):
                         newkoz = fo
                     else:
@@ -614,14 +622,14 @@ class UAVHeading:
         return np.transpose(newkoz)
 
     def format_astar_input(self, kozList, scalef, useAstarGoal):
-        mypos = self.position
+        mypos = [self.position[0]*10, self.position[1]*10]
         if useAstarGoal:
-            mygoal = self.AstarGoal
+            mygoal = [self.AstarGoal[0]*10, self.AstarGoal[1]*10]
         else:
-            mygoal = self.waypoint
+            mygoal = [self.waypoint[0]*10, self.waypoint[1]*10]
         # print('MyGoal: ' + str(mygoal))
 
-        offset = 0.5 #in deg.
+        offset = 0.5 #in deg?
         #scalef = 50#10e7
 
         border_pts, zero_pos = self.make_border_cells(mypos, scalef, offset)
@@ -644,22 +652,25 @@ class UAVHeading:
         goal_pt = mygoal
         koz_pts = newkoz
 
-        # fig, ax = plt.subplots()
+        # fig1, ax1 = plt.subplots()
         # #ax.plot(t, s)
-        # ax.scatter(mypos[1], mypos[0])
-        # ax.scatter(mygoal[1], mygoal[0])
-        # ax.scatter([pt[1] for pt in border_pts], [pt[0] for pt in border_pts])
+        # ax1.scatter(mypos[1], mypos[0], c='r')
+        # ax1.scatter(mygoal[1], mygoal[0], c='b')
+        # ax1.scatter([pt[1] for pt in border_pts], [pt[0] for pt in border_pts])
+        # color = ['g', 'y', 'm']
+        # cc = 0
         # for koz in newkoz:
         #     for pt in koz:
         #         print(pt)
-        #     ax.scatter([pt[1] for pt in koz], [pt[0] for pt in koz])
-        
-        # ax.set(xlabel='Lon', ylabel='Lat',
+        #     ax1.scatter([pt[1] for pt in koz], [pt[0] for pt in koz], c = color[cc] )
+        #     cc +=1
+
+        # ax1.set(xlabel='Lon', ylabel='Lat',
         #        title='A* formatted map')
-        # ax.grid()
+        # ax1.grid()
         
-        # # fig.savefig("test.png")
-        # # plt.show()
+        # fig.savefig("test.png")
+        # plt.show(2)
         # plt.pause(2)
         return start_pt, goal_pt, border_pts, koz_pts, zero_pos
 
@@ -769,7 +780,6 @@ class UAVHeading:
 
         return goal
 
-    
     '''
     UAVHeading Function: avoid
         Parameters:
@@ -812,6 +822,12 @@ class UAVHeading:
         use_pseudo_target = False
         # get optimal path to destination
         # format UAVHeading data for A* input
+        # prepare koz points
+        
+        for i in range(0, len(avoid_areas)):
+            for j in range(0,len(avoid_areas[i])):
+                avoid_areas[i][j] = [avoid_areas[i][j][0]*10,avoid_areas[i][j][1]*10]
+
         scalefactor = 50
         start, goal, border, koz, offset = self.format_astar_input(avoid_areas, scalefactor, useAstarGoal)
         #start, goal, border, koz, use_pseudo_target = self.__format_astar_input(avoid_areas, False)
@@ -843,7 +859,29 @@ class UAVHeading:
             ax.grid(True)
             ax.axis("equal")
 
+        # # v== Plot Astar result ==v #
+        # fig1, ax1 = plt.subplots()
+        # # ax.plot(t, s)
+        # ax1.plot(start[1], start[0], '*', c='r', markersize=8)
+        # ax1.plot(goal[1], goal[0], 'X', c='g', markersize=8)
+        # ax1.scatter([pt[1] for pt in border], [pt[0] for pt in border])
 
+        # #ax.scatter([path_y], [path_x])
+        # for x in koz:
+        #     for pt in x:
+        #         print(pt)
+        #     ax1.scatter([pt[1] for pt in x], [pt[0] for pt in x])
+        #     #plt.show(10)
+        
+        # ax1.set(xlabel='Lon', ylabel='Lat',
+        #        title='A* formatted map')
+        # ax1.grid()
+
+        # # fig.savefig("test.png")
+
+        # # plt.show(100)
+        # # plt.pause(20)
+        # # ^== Plot Astar result ==^ #
         try:
             INTERVAL_SIZE = 1
             path_x, path_y = a_star_planning(start[0], start[1],
@@ -857,17 +895,22 @@ class UAVHeading:
         waypoints = self.convertPathToUniqueWaypoints(path_x, path_y)
         waypoints += offset
         waypoints /= scalefactor
+        waypoints /= 10
 
         full_path = np.transpose(np.array([path_x, path_y]))
         full_path += offset
         full_path /= scalefactor
+        full_path /= 10
 
+        for i in range(0, len(avoid_areas)):
+            for j in range(0,len(avoid_areas[i])):
+                avoid_areas[i][j] = [avoid_areas[i][j][0]/10,avoid_areas[i][j][1]/10]
         if SHOW_ANIMATION:  # pragma: no cover
             plt.plot(path_x, path_y, "-r", label='Shortest Path')
             plt.legend()
             plt.show()
 
-        ## v== Plot Astar result ==v #
+        # v== Plot Astar result ==v #
         # fig, ax = plt.subplots()
         # # ax.plot(t, s)
         # ax.scatter(start[1], start[0])
@@ -886,7 +929,7 @@ class UAVHeading:
         # fig.savefig("test.png")
         # plt.show()
         # plt.pause(3)
-        ## ^== Plot Astar result ==^ #
+        # ^== Plot Astar result ==^ #
 
         # format A* output for waypoint list
         # path_pts = []

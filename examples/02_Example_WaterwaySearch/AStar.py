@@ -81,6 +81,7 @@ def a_star_planning(sx, sy, gx, gy, ox, oy, reso, rr):
         # Add it to the closed set
         closedset[c_id] = current
 
+        errorCounter = 0
         # expand search grid based on motion model
         for i, _ in enumerate(motion):
             node = Node(current.x + motion[i][0],
@@ -92,7 +93,13 @@ def a_star_planning(sx, sy, gx, gy, ox, oy, reso, rr):
                 continue
 
             if not verify_node(node, obmap, minx, miny, maxx, maxy):
+                errorCounter +=1
+                if errorCounter == 7:
+                    help = 2
+
+                print('error counter: ' + str(errorCounter))
                 continue
+            
 
             if n_id not in openset:
                 openset[n_id] = node  # Discover a new node
