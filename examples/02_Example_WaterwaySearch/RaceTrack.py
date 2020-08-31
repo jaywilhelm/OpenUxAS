@@ -83,6 +83,11 @@ RaceTrack = [[39.9680674, -82.8318678],[39.9659200, -82.8531621],[39.9576365, -8
              [39.9439513, -82.8569246],[39.9407597, -82.8349099],[39.9399004, -82.8072913],[39.9453629, -82.7862372],
              [39.9576365, -82.7748696],[39.9683128, -82.7939224],[39.9681901, -82.8157770],[39.9680674, -82.8318678]]
 
+#keept Track of what waypoints belongs to the reference path
+Path = {}
+for pt in RaceTrack:
+    refPath['refPt'] = True
+    refPath['pt'] = pt
 # RaceTrack_meters = []
 # for pt in RaceTrack:
 #     x, y = pyproj.transform(wgs84, epsg3035, pt[1], pt[0])
@@ -146,6 +151,7 @@ Recovery_dict = {'X': [], 'Y' : [], 'Index1' : [], 'Index2' : [], 'wpt1' : [], '
                  'pathLength' : [], 'turnRadii': []   }
 #
 hasPath = False
+hadPlan = False
 onlyOnce = False
 wpList2 =None
 usetargetPath = False
@@ -166,7 +172,7 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
 
     activeWP = uavlist[0]['dubins'].waypoints[uavlist[0]['dubins'].currentWPIndex]
         
-    '''Generate the main path. Goal is to reconncet to this path after avoiding another UAV/obstacle'''
+    '''Generate the main path. Goal is to reconncet to this path after avoiding an intruder UAV/obstacle'''
     if TargetWPList == None:
         mainUAV['dubins'].getDist2otherUAVs(uavh_others_all)
         usetargetPath = True
@@ -204,7 +210,7 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
 
         if(replan and not hasPlan):
             hasPlan = True
-
+            hadPlan = True
             indexRecall = mainUAV['dubins'].currentWPIndex 
             wplist[0][0] = mainUAV['uavobj'].position[0]
             wplist[0][1] = mainUAV['uavobj'].position[1]
@@ -226,8 +232,10 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
     else:
         print('\tOnly one UAV')
 
+
     checkDistance = 9999999     # used to evaluate shorted clothoid path using interpolated target waypoints
-    if step == 100:
+    if hadPlan and mainUAV['dubins'].trackUAV[0]['clearedUAV']:
+        hadPlan = False
         # convert uav North East Down angle convention to cartesion for clothoid heading: uavHeading = manUAV['dubins'].heading + np.radians(90)
         # Needed an axis flip to find the angle between  UAV and active waypoint: the x's in the numerator and y's in the denom, then add 180 deg
 
@@ -494,6 +502,8 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
     for uav in uavlist:     
         pts = uav['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
         if uav['ID'] == 1:
+            dist2ncUAVs = uav['dubins'].getOtherUAVStates(uavh_others_all, uavID)
+
             plotCASpos, = plt.plot(uav['dubins'].ys, uav['dubins'].xs, 'o', c='r')
             color = '-g'
             if(replan):
@@ -569,12 +579,19 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
         plt.plot([pt[1] for pt in NewPath], [pt[0] for pt in NewPath], c='green', marker='o',markersize=5)
 
 
-    dist2WP = distance( [mainUAV['dubins'].x, mainUAV['dubins'].y], [mainUAV['dubins'].waypoints[mainUAV['dubins'].currentWPIndex][0], mainUAV['dubins'].waypoints[mainUAV['dubins'].currentWPIndex][1]] )
-    # if dist2WP < 0.005:
+    checkIfClear = []
+    for i in range(0, len(uavh_others_all)):
+        checkIfClear.append(mainUAV['dubins'].trackUAV[i]['clearedUAV'])
+    
+    if all(checkIfClear): # if all false then still tracking other UAVs
+        #usetargetPath = False
+        clearedOtherUAV = True
+    else:
+        #usetargetPath = True
+        clearedOtherUAV = False
+    print('\t\t' + str(checkIfClear))
 
-    # if dist2WP2 < 0.005:
-    #     plt.xlim((mainUAV['dubins'].x - 0.002, mainUAV['dubins'].x + 0.002))
-    #     plt.ylim((mainUAV['dubins'].y - 0.002, mainUAV['dubins'].y + 0.002))
+    dist2WP = distance( [mainUAV['dubins'].x, mainUAV['dubins'].y], [mainUAV['dubins'].waypoints[mainUAV['dubins'].currentWPIndex][0], mainUAV['dubins'].waypoints[mainUAV['dubins'].currentWPIndex][1]] )
 
     plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 8 )
 
@@ -600,7 +617,7 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
     plt.clf()
     step+=1
 
-print('Change directory to Movies: ')
+print('Change directory to Movies... ')
 wd = os.getcwd()
 path = ('Movies')
 newDir = os.path.join(wd,path)

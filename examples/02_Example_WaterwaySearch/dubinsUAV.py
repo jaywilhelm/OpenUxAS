@@ -90,9 +90,9 @@ class dubinsUAV():
                 print('UAV ' + str(self.trackUAV[i]['ID']) + ' is approaching')
             else:
                 print('UAV ' + str(self.trackUAV[i]['ID']) + ' is moving away')
-                self.trackUAV[i]['clear*clothoid0.SampleXY(500)edUAV'] = True
+                self.trackUAV[i]['clearedUAV'] = True
 
-            # Id A* avoiding a UAV?
+            # Is A* avoiding a UAV?
             if len(uavID) > 0: # IDs in both lists will not always line up
                 for ID in uavID: # which UAV is being avoided
                     if self.trackUAV[i]['ID'] == ID:

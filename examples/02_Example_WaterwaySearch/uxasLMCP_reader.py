@@ -389,9 +389,9 @@ while step<320:
                 # plotCASpos, = plt.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o')
                 if step>=70:
                     text = 22
-                dist2nxUAVs = uav['dubins'].getOtherUAVStates(uavh_others_all, uavID)
+                dist2ncUAVs = uav['dubins'].getOtherUAVStates(uavh_others_all, uavID)
                 # what UAVs are currenlty causing a pot. Collision
-
+                
                 plotCASpos, = plt.plot(uav['dubins'].ys, uav['dubins'].xs, 'o')
 
                 color = '-g'
