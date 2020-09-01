@@ -79,15 +79,21 @@ def syncAVSfromDubins(uav):
                                tPossible=math.radians(45), IsAvoidanceUAV=IsAvoidanceUAV)
     return uav
 
-RaceTrack = [[39.9680674, -82.8318678],[39.9659200, -82.8531621],[39.9576365, -82.8601268],
+RefRaceTrack = [[39.9680674, -82.8318678],[39.9659200, -82.8531621],[39.9576365, -82.8601268],
              [39.9439513, -82.8569246],[39.9407597, -82.8349099],[39.9399004, -82.8072913],[39.9453629, -82.7862372],
              [39.9576365, -82.7748696],[39.9683128, -82.7939224],[39.9681901, -82.8157770],[39.9680674, -82.8318678]]
 
+RaceTrack = [[39.9680674, -82.8318678],[39.9659200, -82.8531621],[39.9576365, -82.8601268],
+             [39.9439513, -82.8569246],[39.9407597, -82.8349099],[39.9399004, -82.8072913],[39.9453629, -82.7862372],
+             [39.9576365, -82.7748696],[39.9683128, -82.7939224],[39.9681901, -82.8157770],[39.9680674, -82.8318678]]
 #keept Track of what waypoints belongs to the reference path
-Path = {}
-for pt in RaceTrack:
-    refPath['refPt'] = True
-    refPath['pt'] = pt
+refPath = []
+for i in range(0, len(RaceTrack)):
+    refWPT = {}
+    refPath.append(refWPT)
+    refPath[i]['refPt'] = True
+    refPath[i]['pt'] = RaceTrack[i]
+
 # RaceTrack_meters = []
 # for pt in RaceTrack:
 #     x, y = pyproj.transform(wgs84, epsg3035, pt[1], pt[0])
@@ -165,7 +171,7 @@ indexTracker = 0 # TO DO - find another way to change the index to the appropria
 numbOfRecoveryPts = 0
 
 step = 0
-while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins'].waypoints)-1: 
+while step < 300: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins'].waypoints)-1: 
     ''' Identify UAVs using collision avoidence '''
     mainUAV = finduavbyID(uavlist, 1) # IDtoWatch
     uavh_others_all, uavh_others = findotheruavs(uavlist, 1) # ID not to watch for
@@ -216,7 +222,8 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
             wplist[0][1] = mainUAV['uavobj'].position[1]
             numbOfAstarPts= len(wplist)
             # Insert A* points (wplist) into RaceTrack path
-            RaceTrack[mainUAV['dubins'].currentWPIndex:mainUAV['dubins'].currentWPIndex] = wplist.tolist()
+
+            TargetWPList[mainUAV['dubins'].currentWPIndex:mainUAV['dubins'].currentWPIndex] = wplist.tolist()
             print('Insert ' + str(numbOfAstarPts) + ' Fake Astar Points at wpt index ' + str(indexRecall))
 
             closingDist = mainUAV['dubins'].distance(mainUAV['uavobj'].position, uavh_others[0].position)
@@ -263,14 +270,22 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
         Chosen point must not violate turn radius
         '''
 
-        for index in range(indexRecall+numbOfAstarPts, 7+numbOfAstarPts ): # TO DO change 7 to some wp index within a detected range of the UAV
+        for index in range(indexRecall-1, 7 ): # TO DO change 7 to some wp index within a detected range of the UAV
             numbOfPts = 5                       # number of interpolate points betwee index and index+1
-            x1 = mainUAV['dubins'].waypoints[index][0]
-            x2 = mainUAV['dubins'].waypoints[index+1][0]
+            # x1 = mainUAV['dubins'].waypoints[index][0]
+            # x2 = mainUAV['dubins'].waypoints[index+1][0]
+            # linX = np.linspace(x1, x2, numbOfPts,endpoint=False )
+
+            # y1 = mainUAV['dubins'].waypoints[index][1]
+            # y2 = mainUAV['dubins'].waypoints[index+1][1]
+            # linY = np.linspace(y1, y2, numbOfPts, endpoint=False )
+
+            x1 = RefRaceTrack[index][0]
+            x2 = RefRaceTrack[index+1][0]
             linX = np.linspace(x1, x2, numbOfPts,endpoint=False )
 
-            y1 = mainUAV['dubins'].waypoints[index][1]
-            y2 = mainUAV['dubins'].waypoints[index+1][1]
+            y1 = RefRaceTrack[index][1]
+            y2 = RefRaceTrack[index+1][1]
             linY = np.linspace(y1, y2, numbOfPts, endpoint=False )
 
             print('Interpolating ' + str(numbOfPts) + ' points between index ' + str(index) + ' and ' + str(index+1))
@@ -432,7 +447,10 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
                 # plt.scatter(clothoid[5][3][0],clothoid[5][3][1])
 
         plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
-        plt.plot([pt[1] for pt in RaceTrack], [pt[0] for pt in RaceTrack], c='b', marker='.')
+        plt.plot(uavh_others_all[0]['dubins'].ys, uavh_others_all[0]['dubins'].xs, c='y', marker='o' )
+        plt.plot([pt[1] for pt in RaceTrack], [pt[0] for pt in RaceTrack], c='g', marker='.')
+        plt.plot([pt[1] for pt in RefRaceTrack], [pt[0] for pt in RefRaceTrack], c='b', marker='.')
+
         plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 5 )
         plt.axis('equal')
         plt.grid(True)
@@ -470,7 +488,9 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
             plt.plot([pt[1] for pt in NewPath], [pt[0] for pt in NewPath], c='green', marker='o',markersize=5)
 
             plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
-            plt.plot([pt[1] for pt in RaceTrack], [pt[0] for pt in RaceTrack], c='b', marker='.')
+            plt.plot(uavh_others_all[0]['dubins'].ys, uavh_others_all[0]['dubins'].xs, c='y', marker='o' )
+            plt.plot([pt[1] for pt in RaceTrack], [pt[0] for pt in RaceTrack], c='g', marker='.')
+            plt.plot([pt[1] for pt in RefRaceTrack], [pt[0] for pt in RefRaceTrack], c='b', marker='.')
             plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 5 )
             plt.axis('equal')
             plt.grid(True)
@@ -598,8 +618,12 @@ while step < 600: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
     plt.axis('equal')
     plt.grid(True)
 
+
     plt.ylim((mainUAV['dubins'].x - 0.01, mainUAV['dubins'].x + 0.01))
     plt.xlim((mainUAV['dubins'].y - 0.01, mainUAV['dubins'].y + 0.01))
+    text = ("Current wpt: " + str(uavlist[0]['dubins'].currentWPIndex)) 
+    plt.text(0.1, 0.05, text, transform=ax.transAxes)
+
     plt.pause(0.05) 
 
     # if step > 68:
