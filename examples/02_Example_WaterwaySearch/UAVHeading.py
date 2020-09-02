@@ -669,9 +669,9 @@ class UAVHeading:
         #        title='A* formatted map')
         # ax1.grid()
         
-        # fig.savefig("test.png")
+        # #fig.savefig("test.png")
         # plt.show(2)
-        # plt.pause(2)
+        #plt.pause(2)
         return start_pt, goal_pt, border_pts, koz_pts, zero_pos
 
     def reverseKOZ(self, area_length):
@@ -682,7 +682,7 @@ class UAVHeading:
         # so the "offset" would offset the koz off of the UAV current position
         offsetPos = [0,0]
         offsetPos[0] = self.position[0] + 0.0
-        offsetPos[1] = self.position[1] + 0.013
+        offsetPos[1] = self.position[1] + 0.006
 
         # print('offset: ' + str(offsetPos))
         points = [list(offsetPos)] 
@@ -890,6 +890,9 @@ class UAVHeading:
                                              INTERVAL_SIZE, (2 * INTERVAL_SIZE))
         except ValueError:
             print(TC.FAIL + '\t\t**No valid path found.**' + TC.ENDC)
+            for i in range(0, len(avoid_areas)):
+                for j in range(0,len(avoid_areas[i])):
+                    avoid_areas[i][j] = [avoid_areas[i][j][0]/10,avoid_areas[i][j][1]/10]
             return False, [], avoid_areas, [], CollisionUavIDs
 
         waypoints = self.convertPathToUniqueWaypoints(path_x, path_y)
