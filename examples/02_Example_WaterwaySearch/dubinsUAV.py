@@ -30,6 +30,7 @@ class dubinsUAV():
         
         self.heading = heading
         self.currentWPIndex = 0
+        self.lapCounter =0 # how many track laps have been completed
         self.withinThreshold = False
         
         self.lastWP = False # Lets system knonw that last waypoint has been reached
@@ -401,10 +402,11 @@ class dubinsUAV():
             UAVdist = self.distance(activeWP, (self.x, self.y))
 
             if (UAVdist <= wpRadius and UAVdist >= self.lastDist):
-                if not self.currentWPIndex == len(self.waypoints)-1:
+                if not self.currentWPIndex == len(self.waypoints):
                     self.currentWPIndex += 1
-                    if self.currentWPIndex >= len(self.waypoints): # note for RaceTrack - 1st and last wpt are identical - mainly for plotting reasons
+                    if self.currentWPIndex >= len(self.waypoints)-1: # note for RaceTrack - 1st and last wpt are identical - mainly for plotting reasons
                         self.currentWPIndex = 0
+                        self.lapCounter +=1 
                     #print("WP Increment")
                     #update distance...
                     UAVdist = self.distance(self.getActiveWaypoint(), activeWP)

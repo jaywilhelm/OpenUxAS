@@ -11,7 +11,7 @@
 # For Dubins Vehicle
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
-import sys, math, os, subprocess, time
+import sys, math, os, subprocess, time, shutil
 import numpy as np
 from dubinsUAV import dubinsUAV
 from TerminalColors import TerminalColors as TC
@@ -30,6 +30,18 @@ from UAVHeading import UAVHeading
 import pyproj 
 import pickle
 
+
+def del_folder_contents(folderPath):
+    folder = folderPath
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 def distance(a, b):
     return np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
@@ -72,6 +84,7 @@ def findotheruavs(uavlist, uavNOT):
 def crossTrackError(Path, uavPos):
     lastDist = 9999999
     for i in range(0, len(Path)-1):
+
         y1 = Path[i][0]
         y2 = Path[i+1][0]
         x1 = Path[i][1]
@@ -81,14 +94,19 @@ def crossTrackError(Path, uavPos):
 
         m = (y2-y1) / (x2-x1) # slope
         b = y2 - m*x2                      # y intercept
-        if uavX > x2 and uavX < x1:
-            y = m*uavX + b
-            dist = distance([uavX, y], [uavX, uavY])
-            if dist < lastDist:                                 # find the closest point for cross track error
-                crossError = dist
-                slope = m
-                yint = b
-                lastDist = dist  
+        if abs(uavX) < abs(x2) and abs(uavX) > abs(x1):
+                y = m*uavX + b
+                dist = distance([uavX, y], [uavX, uavY])
+                if dist < lastDist:                                 # find the closest point for cross track error
+                    crossError = dist
+                    slope = m
+                    yint = b
+                    lastDist = dist 
+        else:
+            crossError = 0
+            slope = 0
+            yint = 0
+
     return crossError, slope, yint
 
 def syncAVSfromDubins(uav):
@@ -101,6 +119,20 @@ def syncAVSfromDubins(uav):
                                waypt=[], speed=vel, heading=heading,
                                tPossible=math.radians(45), IsAvoidanceUAV=IsAvoidanceUAV)
     return uav
+
+wd = os.getcwd()
+
+folderPath=(wd + '/RaceTrack_AstarFormatedInput')
+del_folder_contents(folderPath)
+
+folderPath=(wd + '/RaceTrack_AstarResults')
+del_folder_contents(folderPath)
+
+folderPath=(wd + '/RaceTrack_RecoveryPaths')
+del_folder_contents(folderPath)
+
+folderPath=(wd + '/RaceTrack_AstarFormatedInput')
+del_folder_contents(folderPath)
 
 RefRaceTrack = [[39.9680674, -82.8318678],[39.9659200, -82.8531621],[39.9576365, -82.8601268],
              [39.9439513, -82.8569246],[39.9407597, -82.8349099],[39.9399004, -82.8072913],[39.9453629, -82.7862372],
@@ -149,7 +181,7 @@ for i in range(0, len(RaceTrack)-1):
 # Create Dubins Vehicle
 dt = 0.25 # 0.1
 v = 0.00025
-wptRad = 0.0005 # distance threshold to satisfy each waypoint
+wptRad = 0.001 # distance threshold to satisfy each waypoint
 #
 uavlist = []    # holds dictionary items for specific UAVs
 uav1 = {}
@@ -167,7 +199,7 @@ uavlist[0]['dubins'].setWaypoints(newwps=RaceTrack, newradius = wptRad )
 uavlist[0]['dubins'].currentWPIndex = 0
 
 #
-v1 = 1.5*0.00025
+v1 = 2*0.00025
 thetaRef = np.deg2rad(0)
 uavlist[1]['dubins'] = dubinsUAV(position=[39.9576365, -82.8601268], velocity=v1,         
                                     heading=thetaRef, dt=dt)
@@ -182,7 +214,7 @@ uavlist[1]['dubins'].currentWPIndex = 9
 # from Ch 5 in the Pilot's Handbook of Aernautical Knowledge 
 # Using 50% of maximum turn radius - conservative value - given by np.degrees(uavlist[0]['dubins'].turnrate)/2
 uavTurnRadius = ((uavlist[0]['dubins'].v * 360/(np.degrees(uavlist[0]['dubins'].turnrate)))/np.pi)/2
-halfTurnRadius = uavTurnRadius*2
+halfTurnRadius = uavTurnRadius*4
 #
 print('UAV turn radius with full turn rate: ' + str(uavTurnRadius) + ' and half turn rate: ' + str(halfTurnRadius))
 Recovery_dict = {'X': [], 'Y' : [], 'Index1' : [], 'Index2' : [], 'wpt1' : [], 'wpt2' : [],
@@ -205,7 +237,7 @@ indexTracker = 0 # TO DO - find another way to change the index to the appropria
 numbOfRecoveryPts = 0
 
 step = 0
-while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins'].waypoints)-1: 
+while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins'].waypoints)-1: 
     ''' Identify UAVs using collision avoidence '''
     mainUAV = finduavbyID(uavlist, 1) # IDtoWatch
     uavh_others_all, uavh_others = findotheruavs(uavlist, 1) # ID not to watch for
@@ -219,7 +251,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
     if TargetWPList == None:
         mainUAV['dubins'].getDist2otherUAVs(uavh_others_all)
         usetargetPath = True
-        TargetWPList = RaceTrack
+        TargetWPList = RefRaceTrack[:]
         uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
         uavlist[0]['dubins'].currentWPIndex = 0
 
@@ -263,7 +295,17 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
         if not hasPlan:
             astarGoalPt = activeWP
             hasAstarPlan = False
-            replan, wplist, avoid, full_path, uavID = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True, simStep=step)
+            replan, wplist, avoid, full_path, uavID, AstarFail = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True, simStep=step)
+            
+            if AstarFail:
+                if uavlist[0]['dubins'].currentWPIndex < len(RefRaceTrack):
+                    Next_activeWP = RefRaceTrack[uavlist[0]['dubins'].currentWPIndex+1]
+                else:
+                    Next_activeWP = RefRaceTrack[0]
+
+                astarGoalPt = Next_activeWP
+                replan, wplist, avoid, full_path, uavID, AstarFail = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True, simStep=step)
+                      
             ''' Use uavID to determine with NC UAV is being Avoided '''
             if len(uavID) > 0:
                 for i in range(0, len(uavID)):    
@@ -271,7 +313,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
                     print('Potential Collision with UAV ' + str(uavID[i]))
         if step >39:
             debug = 1
-        if len(avoid)>1:
+        if replan or AstarFail==True:
             plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
             plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
            
@@ -281,6 +323,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
             hasAstarPlan = True
             hadPlan = True
             indexRecall = mainUAV['dubins'].currentWPIndex # Used to reset the currentWPIndex after A* and/or Recovery path is complete
+            saveCurrentPOS = [mainUAV['dubins'].x, mainUAV['dubins'].y ]
             # insert current vehicle plostion into A* wplist
             wplist[0][0] = mainUAV['uavobj'].position[0]
             wplist[0][1] = mainUAV['uavobj'].position[1]
@@ -290,7 +333,6 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
             # Insert A* points (wplist) into Reference path
             TargetWPList[mainUAV['dubins'].currentWPIndex:mainUAV['dubins'].currentWPIndex] = wplist.tolist()
             print(TC.OKBLUE + 'Insert ' + str(numbOfAstarPts) + ' Astar Points at wpt index ' + str(indexRecall) + TC.ENDC)
-
             closingDist = mainUAV['dubins'].distance(mainUAV['uavobj'].position, uavh_others[0].position)
             # print('Distance to other UAV: ' + str(closingDist))
             # print('POS: ' + str(mainUAV['uavobj'].position))
@@ -337,11 +379,15 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
         for index in range(indexRecall-1, 7 ):  # TO DO change 7 to some wp index within a detected range of the UAV
             numbOfPts = 5                       # Number of interpolate points between each Reference Path index and index+1
 
-            # Note that RefRaceTrack is the unchange original refernce path
-            x1 = RefRaceTrack[index][0]
-            x2 = RefRaceTrack[index+1][0]
+            # Note that RefRaceTrack is the unchanged original refernce path
+            if index == indexRecall-1:
+                x1 = saveCurrentPOS[0]
+                y1 = saveCurrentPOS[1]
+            else:
+                x1 = RefRaceTrack[index][0]
+                y1 = RefRaceTrack[index][1]
 
-            y1 = RefRaceTrack[index][1]
+            x2 = RefRaceTrack[index+1][0]
             y2 = RefRaceTrack[index+1][1]
 
             '''
@@ -481,6 +527,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
                     selectPath = index+1
                     checkDistance = clothoidLength
                     hasRecoveryPlan = True
+                    hasPlan = False
                     Recovery_dict['chosenPathFull'] = completeClothoidPts
                     Recovery_dict['chosenPath'] = wpList2
                     Recovery_dict['cirlces'] = circle_list
@@ -518,7 +565,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
 
         plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 5 )
         # plot keep out zones from UAVHeading.avoid() function
-        if len(avoid)>1:
+        if replan:
             plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
             plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
         plt.axis('equal')
@@ -557,6 +604,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
             plt.gca().add_artist(circle4)
             plt.scatter(Recovery_dict['cirlces'][3][0],Recovery_dict['cirlces'][3][1])
 
+            NewPath = []
             for ptList in Recovery_dict['chosenPath']:
                 NewPath.append([ptList[1], ptList[0]])
 
@@ -596,7 +644,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
     if hasAstarPlan == True and hasRecoveryPlan == False:
         if mainUAV['dubins'].currentWPIndex >= indexRecall + numbOfAstarPts:
             mainUAV['dubins'].setWaypoints(RefRaceTrack, newradius=wptRad)
-            mainUAV['dubins'].currentWPIndex = indexRecal + 1 # Need to test
+            mainUAV['dubins'].currentWPIndex = indexRecall + 1 # Need to test
             hasAstarPlan = False
 
     elif hasAstarPlan == True or hasRecoveryPlan == True:
@@ -605,13 +653,16 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
             lastIndex = mainUAV['dubins'].currentWPIndex
             numbOfRecoveryPts = len(NewPath)
             insertIndex = indexRecall + numbOfAstarPts 
-            RaceTrack[insertIndex:insertIndex] = NewPath
+            TargetWPList[insertIndex:insertIndex] = NewPath
             mainUAV['dubins'].currentWPIndex = insertIndex 
             hasAstarPlan = False
             print(TC.OKBLUE + 'Insert ' + str(numbOfRecoveryPts) + ' Recovery Points at wpt index ' + str(insertIndex) + TC.ENDC)
         elif mainUAV['dubins'].currentWPIndex >= Recovery_dict['chosenIndex']:
             hasRecoveryPlan = False
-            mainUAV['dubins'].setWaypoints(RefRaceTrack, newradius=wptRad)
+            onlyOnce = False
+            TargetWPList = RefRaceTrack[:]
+            mainUAV['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
+
             mainUAV['dubins'].currentWPIndex = Recovery_dict['returnIndex']  # Need to test
 
     '''===Update vehicle positions==='''
@@ -645,6 +696,9 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
                 CASuavPos = uav['dubins'].position
 
         if uav['IsAvoidanceUAV'] == False:
+            if step == 343:
+                debud=1
+
             plotNCpos, = plt.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o', c='orange')
             # plotNCpos, = plt.plot(uav['dubins'].ys, uav['dubins'].xs, 'o', c='orange')
             NCactiveWPt = uav['dubins'].getActiveWaypoint()
@@ -665,7 +719,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
     plotRefPath = plt.plot([pt[1] for pt in RefRaceTrack], [pt[0] for pt in RefRaceTrack], c='b', marker = '.', markersize = 8)
     
     # plot keep out zones from UAVHeading.avoid() function
-    if len(avoid)>1:
+    if replan:
         plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
         plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
     
@@ -707,19 +761,23 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
     plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 8 )
 
     fig.set_size_inches((8, 6)) 
-    fakeCenter = [39.9549, -82.8188]
     zoom = 0.045
     plt.axis('equal')
     plt.grid(True)
     # plt.ylim(39.92, 39.99)
-    # plt.xlim(-82.78, -82.85
+    # plt.xlim(-82.85, -82.78)
 
-    plt.ylim((fakeCenter[0] - zoom, fakeCenter[0] + zoom))
-    plt.xlim((fakeCenter[1] - zoom, fakeCenter[1] + zoom+0.0005))
+    # plt.ylim((fakeCenter[0] - zoom, fakeCenter[0] + zoom))
+    # plt.xlim((fakeCenter[1] - zoom, fakeCenter[1] + zoom+0.0005))
 
-    # plt.ylim((mainUAV['dubins'].x - 0.01, mainUAV['dubins'].x + 0.01))
-    # plt.xlim((mainUAV['dubins'].y - 0.01, mainUAV['dubins'].y + 0.01))
-    text = ("Sim Step" + str(step) + "\nCAS UAV Current wpt: " + str(uavlist[0]['dubins'].currentWPIndex) + '\nCross Track Error: ' + str(crossError)) 
+    plt.ylim((mainUAV['dubins'].x - 0.01, mainUAV['dubins'].x + 0.01))
+    plt.xlim((mainUAV['dubins'].y - 0.01, mainUAV['dubins'].y + 0.01))
+
+
+    # plt.ylim((uavlist[1]['dubins'].x - 0.01, uavlist[1]['dubins'].x + 0.01))
+    # plt.xlim((uavlist[1]['dubins'].y - 0.01, uavlist[1]['dubins'].y + 0.01))
+    text = ("Sim Step: " + str(step) + ' Lap: ' + str(uavlist[0]['dubins'].lapCounter) + "\nCAS/NC Current wpt: " + str(uavlist[0]['dubins'].currentWPIndex) + '/' + str(uavlist[1]['dubins'].currentWPIndex) +
+            '\nCross Track Error: ' + str(np.round(crossError,3))            ) 
     plt.text(0.1, 0.05, text, transform=ax.transAxes)
 
     plt.pause(0.05) 

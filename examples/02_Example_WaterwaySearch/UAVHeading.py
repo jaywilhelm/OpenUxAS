@@ -666,25 +666,25 @@ class UAVHeading:
 
         showFormatImage = True
         if showFormatImage:
-            fig1, ax1 = plt.subplots()
+            fig, ax = plt.subplots()
             #ax.plot(t, s)
-            ax1.scatter(mypos[1], mypos[0], c='r')
-            ax1.scatter(mygoal[1], mygoal[0], c='b')
-            ax1.scatter([pt[1] for pt in border_pts], [pt[0] for pt in border_pts], c='b')
-            ax1.scatter([pt[1] for pt in border_cells], [pt[0] for pt in border_cells], c='k', marker='.')
+            ax.scatter(mypos[1], mypos[0], c='r')
+            ax.scatter(mygoal[1], mygoal[0], c='b')
+            ax.scatter([pt[1] for pt in border_pts], [pt[0] for pt in border_pts], c='b')
+            ax.scatter([pt[1] for pt in border_cells], [pt[0] for pt in border_cells], c='k', marker='.')
             color = ['g', 'y', 'm']
             cc = 0
             for koz in newkoz:
                 for pt in koz:
                     print(pt)
-                ax1.scatter([pt[1] for pt in koz], [pt[0] for pt in koz], c = color[cc] )
+                ax.scatter([pt[1] for pt in koz], [pt[0] for pt in koz], c = color[cc] )
                 cc +=1
 
             plt.axis('equal')
-            fig1.set_size_inches((12, 10)) 
-            ax1.set(xlabel='Lon', ylabel='Lat',
+            fig.set_size_inches((12, 10)) 
+            ax.set(xlabel='Lon', ylabel='Lat',
                 title='A* formatted map')
-            ax1.grid()
+            ax.grid()
             
             wd = os.getcwd()
             path=(wd + '/RaceTrack_AstarFormatedInput')
@@ -704,8 +704,8 @@ class UAVHeading:
         # Thought that including the UAVs position in the reverse koz would cause problems
         # so the "offset" would offset the koz off of the UAV current position
         offsetPos = [0,0]
-        offsetPos[0] = self.position[0] + 0.0
-        offsetPos[1] = self.position[1] + 0.0055
+        offsetPos[0] = self.position[0] - 0.0055*math.cos(self.thetaRef)
+        offsetPos[1] = self.position[1] - 0.0055*math.sin(self.thetaRef)
 
         # print('offset: ' + str(offsetPos))
         points = [list(offsetPos)] 
@@ -820,7 +820,9 @@ class UAVHeading:
             py = xy[1] + r * np.sin(self.thetaRef)
             self.waypoint = [px, py]
             #print('Set Dubs WP: ' + str(self.waypoint))
-        
+
+        AstarFail = False
+
         if len(TargetPathWP) > 0:
             self.AstarGoal = TargetPathWP
 
@@ -836,7 +838,7 @@ class UAVHeading:
             if not self.lastClear:
                 print(TC.OKGREEN + 'PATH CLEAR.' + TC.ENDC)
             self.lastClear = True
-            return False, [self.waypoint], avoid_areas, [], CollisionUavIDs
+            return False, [self.waypoint], avoid_areas, [], CollisionUavIDs, AstarFail
 
         #do it again with larger KOZ
         intersects, avoid_areas, CollisionUavIDs = self.findPotentialIntersects(uavh_others, area_length*1.33, static_koz)
@@ -919,13 +921,15 @@ class UAVHeading:
                         "INTERVAL_SIZE": INTERVAL_SIZE,
                         "path_x": path_x,
                         "path_y": path_y}, open('astar_result.p', 'wb'))
-
+            AstarFail = False
         except ValueError:
             print(TC.FAIL + '\t\t**No valid path found.**' + TC.ENDC)
             for i in range(0, len(avoid_areas)):
                 for j in range(0,len(avoid_areas[i])):
                     avoid_areas[i][j] = [avoid_areas[i][j][0]/10,avoid_areas[i][j][1]/10]
-            return False, [], avoid_areas, [], CollisionUavIDs
+            plt.close('all')
+            AstarFail = True
+            return False, [], avoid_areas, [], CollisionUavIDs, AstarFail
 
         waypoints = self.convertPathToUniqueWaypoints(path_x, path_y)
         waypoints += offset
@@ -945,30 +949,30 @@ class UAVHeading:
             plt.legend()
             plt.show()
 
-        showAstarPath = False
+        showAstarPath = True
         ### v== Plot Astar result ==v ###
         if showAstarPath:
-            fig1, ax1 = plt.subplots()
+            fig, ax = plt.subplots()
             #ax.plot(t, s)
-            ax1.scatter(start[1], start[0], c='r')
-            ax1.scatter([path_y], [path_x], c='m')
-            ax1.scatter(goal[1], goal[0], c='b')
+            ax.scatter(start[1], start[0], c='r')
+            ax.scatter([path_y], [path_x], c='m')
+            ax.scatter(goal[1], goal[0], c='b')
 
-            ax1.scatter([pt[1] for pt in border], [pt[0] for pt in border], c='b')
-            ax1.scatter([pt[1] for pt in border_cells], [pt[0] for pt in border_cells], c='k', marker='.')
+            ax.scatter([pt[1] for pt in border], [pt[0] for pt in border], c='b')
+            ax.scatter([pt[1] for pt in border_cells], [pt[0] for pt in border_cells], c='k', marker='.')
             color = ['g', 'y', 'm']
             cc = 0
             for x in koz:
                 for pt in x:
                     print(pt)
-                ax1.scatter([pt[1] for pt in x], [pt[0] for pt in x], c = color[cc] )
+                ax.scatter([pt[1] for pt in x], [pt[0] for pt in x], c = color[cc] )
                 cc +=1
 
             plt.axis('equal')
-            fig1.set_size_inches((12, 10)) 
-            ax1.set(xlabel='Lon', ylabel='Lat',
+            fig.set_size_inches((12, 10)) 
+            ax.set(xlabel='Lon', ylabel='Lat',
                 title='A* Result')
-            ax1.grid()
+            ax.grid()
             
             #fig.savefig("test.png")
             # plt.show()
@@ -977,7 +981,7 @@ class UAVHeading:
             wd = os.getcwd()
             path=(wd + '/RaceTrack_AstarResults')
             AstarResult = 'AstarResult%03d.png' % simStep
-            AstarResult = os.path.join(path,AstarResult)
+            AstarResult = os.path.join(path, AstarResult)
             plt.savefig(AstarResult)
 
         plotObmap = False
@@ -1031,4 +1035,6 @@ class UAVHeading:
             # else:
             #     path_pts.append(pt)
 
-        return True, waypoints, avoid_areas, full_path, CollisionUavIDs
+
+        plt.close('all')
+        return True, waypoints, avoid_areas, full_path, CollisionUavIDs, AstarFail
