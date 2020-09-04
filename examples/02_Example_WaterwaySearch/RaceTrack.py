@@ -28,6 +28,7 @@ from UAVHeading import UAVHeading
 
 # For converting WGS84 degrees to meters
 import pyproj 
+import pickle
 
 
 def distance(a, b):
@@ -105,6 +106,12 @@ RefRaceTrack = [[39.9680674, -82.8318678],[39.9659200, -82.8531621],[39.9576365,
              [39.9439513, -82.8569246],[39.9407597, -82.8349099],[39.9399004, -82.8072913],[39.9453629, -82.7862372],
              [39.9576365, -82.7748696],[39.9683128, -82.7939224],[39.9681901, -82.8157770],[39.9680674, -82.8318678]]
 
+
+Reverse_RefRaceTrack =[[39.9680674, -82.8318678], [39.9681901, -82.815777], [39.9683128, -82.7939224], [39.9576365, -82.7748696], 
+                        [39.9453629, -82.7862372], [39.9399004, -82.8072913], [39.9407597, -82.8349099], [39.9439513, -82.8569246], 
+                        [39.9576365, -82.8601268], [39.96592, -82.8531621], [39.9680674, -82.8318678]]
+
+
 RaceTrack = [[39.9680674, -82.8318678],[39.9659200, -82.8531621],[39.9576365, -82.8601268],
              [39.9439513, -82.8569246],[39.9407597, -82.8349099],[39.9399004, -82.8072913],[39.9453629, -82.7862372],
              [39.9576365, -82.7748696],[39.9683128, -82.7939224],[39.9681901, -82.8157770],[39.9680674, -82.8318678]]
@@ -160,14 +167,17 @@ uavlist[0]['dubins'].setWaypoints(newwps=RaceTrack, newradius = wptRad )
 uavlist[0]['dubins'].currentWPIndex = 0
 
 #
-thetaRef = np.deg2rad(45)
-uavlist[1]['dubins'] = dubinsUAV(position=[39.9600674, -82.8418678], velocity=v,         
+v1 = 1.5*0.00025
+thetaRef = np.deg2rad(0)
+uavlist[1]['dubins'] = dubinsUAV(position=[39.9576365, -82.8601268], velocity=v1,         
                                     heading=thetaRef, dt=dt)
 uavlist[1]['ID'] = 4
 uavlist[1]['IsAvoidanceUAV'] = False
 #
 uavlist[0] = syncAVSfromDubins(uavlist[0])
 uavlist[1] = syncAVSfromDubins(uavlist[1])
+uavlist[1]['dubins'].setWaypoints(newwps=Reverse_RefRaceTrack, newradius = wptRad )
+uavlist[1]['dubins'].currentWPIndex = 9
 
 # from Ch 5 in the Pilot's Handbook of Aernautical Knowledge 
 # Using 50% of maximum turn radius - conservative value - given by np.degrees(uavlist[0]['dubins'].turnrate)/2
@@ -253,7 +263,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
         if not hasPlan:
             astarGoalPt = activeWP
             hasAstarPlan = False
-            replan, wplist, avoid, full_path, uavID = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True)
+            replan, wplist, avoid, full_path, uavID = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True, simStep=step)
             ''' Use uavID to determine with NC UAV is being Avoided '''
             if len(uavID) > 0:
                 for i in range(0, len(uavID)):    
@@ -515,7 +525,16 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
         plt.grid(True)
         # plt.ylim(45.3, 45.45) #(45.0, 45.5)
         # plt.xlim(-121.0, -120.5)   
-        plt.show(100)
+        # plt.show(100)
+        fig.set_size_inches((12, 10)) 
+        plt.pause(1)
+        
+        wd = os.getcwd()
+        path=(wd + '/RaceTrack_RecoveryPaths')
+        RecoveryPaths = 'RecoveryPaths%03d.png' % step
+        RecoveryPaths = os.path.join(path,RecoveryPaths)
+        plt.savefig(RecoveryPaths)
+        plt.clf()
 
         if hasRecoveryPlan == False:
             print('No valid recovery path available')
@@ -556,8 +575,18 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
             plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 5 )
             plt.axis('equal')
             plt.grid(True)
-            plt.show(100)
+            plt.ylim((mainUAV['dubins'].x - 0.01, mainUAV['dubins'].x + 0.01))
+            plt.xlim((mainUAV['dubins'].y - 0.01, mainUAV['dubins'].y + 0.01))
+            # plt.show(100)
+            fig.set_size_inches((12, 10)) 
+            plt.pause(1)
 
+            wd = os.getcwd()
+            path=(wd + '/RaceTrack_SelectedPaths')
+            SelectedPath = 'SelectedPath%03d.png' % step
+            SelectedPath = os.path.join(path,SelectedPath)
+            plt.savefig(SelectedPath)
+            plt.clf()
 
     '''
     Update waypoint list or reload original reference path 
@@ -595,6 +624,7 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
             color = '-g'
             if(replan):
                 color = '-y'
+                replan = False
             plotCAScone, = plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts], color)
             plotCurrentWypt = plt.plot(mainUAV['dubins'].waypoints[mainUAV['dubins'].currentWPIndex][1], mainUAV['dubins'].waypoints[mainUAV['dubins'].currentWPIndex][0], c='black', marker='X')
             
@@ -617,13 +647,19 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
         if uav['IsAvoidanceUAV'] == False:
             plotNCpos, = plt.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o', c='orange')
             # plotNCpos, = plt.plot(uav['dubins'].ys, uav['dubins'].xs, 'o', c='orange')
+            NCactiveWPt = uav['dubins'].getActiveWaypoint()
+            plt.plot( NCactiveWPt[1], NCactiveWPt[0], c='k', marker='v', markersize = 8 )
 
             plotNCcone, = plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts], "-r")
-            uav['dubins'].update_pos_simple()
+            uav['dubins'].simulateWPDubins(UseCarrotChase=False, delta=0.01)
             NCuavPos = uav['dubins'].position
 
         uav = syncAVSfromDubins(uav)
 
+        print('\nStep: ' + str(step) + '\tUAV ID: ' + str(uav['ID']) + '\tCurrent wpt: ' + str(uav['dubins'].currentWPIndex) + 
+              '\tUAV Heading (deg): ' + str(round(uav['dubins'].heading,2)) + 
+              ' (' + str(round(np.degrees(uav['dubins'].heading),2)) + ')'   )
+        
 
     ''' Plotting '''
     plotRefPath = plt.plot([pt[1] for pt in RefRaceTrack], [pt[0] for pt in RefRaceTrack], c='b', marker = '.', markersize = 8)
@@ -670,20 +706,28 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
 
     plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 8 )
 
-
+    fig.set_size_inches((8, 6)) 
+    fakeCenter = [39.9549, -82.8188]
+    zoom = 0.045
     plt.axis('equal')
     plt.grid(True)
-    plt.ylim((mainUAV['dubins'].x - 0.01, mainUAV['dubins'].x + 0.01))
-    plt.xlim((mainUAV['dubins'].y - 0.01, mainUAV['dubins'].y + 0.01))
-    text = ("Current wpt: " + str(uavlist[0]['dubins'].currentWPIndex) + '\nCross Track Error: ' + str(crossError)) 
+    # plt.ylim(39.92, 39.99)
+    # plt.xlim(-82.78, -82.85
+
+    plt.ylim((fakeCenter[0] - zoom, fakeCenter[0] + zoom))
+    plt.xlim((fakeCenter[1] - zoom, fakeCenter[1] + zoom+0.0005))
+
+    # plt.ylim((mainUAV['dubins'].x - 0.01, mainUAV['dubins'].x + 0.01))
+    # plt.xlim((mainUAV['dubins'].y - 0.01, mainUAV['dubins'].y + 0.01))
+    text = ("Sim Step" + str(step) + "\nCAS UAV Current wpt: " + str(uavlist[0]['dubins'].currentWPIndex) + '\nCross Track Error: ' + str(crossError)) 
     plt.text(0.1, 0.05, text, transform=ax.transAxes)
 
     plt.pause(0.05) 
 
 
-    print('Step: ' + str(step) + '\tCurrent wpt: ' + str(uavlist[0]['dubins'].currentWPIndex) + '\tUAV POS: ' + str(mainUAV['dubins'].x) + ', ' + str(mainUAV['dubins'].y) + 
-            '\tUAV Heading (deg): ' + str(round(uavlist[0]['dubins'].heading,2)) + ' (' + str(round(np.degrees(uavlist[0]['dubins'].heading),2)) + ')' + '\tCross Track Error: ' 
-            + str(crossError) + ' m: ' + str(m) + ' b: ' + str(b)) 
+    # print('Step: ' + str(step) + '\tCurrent wpt: ' + str(uavlist[0]['dubins'].currentWPIndex) + '\tUAV POS: ' + str(mainUAV['dubins'].x) + ', ' + str(mainUAV['dubins'].y) + 
+    #         '\tUAV Heading (deg): ' + str(round(uavlist[0]['dubins'].heading,2)) + ' (' + str(round(np.degrees(uavlist[0]['dubins'].heading),2)) + ')' + '\tCross Track Error: ' 
+    #         + str(crossError) + ' m: ' + str(m) + ' b: ' + str(b)) 
 
     ''' 
     Save frames for a movie 
@@ -697,6 +741,10 @@ while step < 500: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins
 
     plt.clf()
     step+=1
+
+
+
+pickle.dump({"uavlist": uavlist}, open('astar_result.p', 'wb'))
 
 '''
 Make a Movie

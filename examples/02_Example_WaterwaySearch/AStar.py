@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import math
 
 from UAVHcfg import SHOW_ANIMATION
+import pickle
 
 class Node:
 
@@ -42,7 +43,7 @@ def calc_final_path(ngoal, closedset, reso):
 def a_star_planning(sx, sy, gx, gy, ox, oy, reso, rr):
     """
     gx: goal x position [m]
-    gx: goal x position [m]
+    gy: goal y position [m]
     ox: x position list of Obstacles [m]
     oy: y position list of Obstacles [m]
     reso: grid resolution [m]
@@ -94,10 +95,10 @@ def a_star_planning(sx, sy, gx, gy, ox, oy, reso, rr):
 
             if not verify_node(node, obmap, minx, miny, maxx, maxy):
                 errorCounter +=1
-                if errorCounter == 7:
-                    help = 2
+                # if errorCounter == 7:
+                #     help = 2
 
-                print('error counter: ' + str(errorCounter))
+                # print('error counter: ' + str(errorCounter))
                 continue
             
 
@@ -110,7 +111,24 @@ def a_star_planning(sx, sy, gx, gy, ox, oy, reso, rr):
 
     rx, ry = calc_final_path(ngoal, closedset, reso)
 
-    return rx, ry
+    pickle.dump({"nstart": nstart,
+                "ngoal":ngoal,
+                "motion": motion,
+                "obmap": obmap,
+                "rx": rx,
+                "ry": ry,
+                "rr":rr,
+                "ngoal": ngoal,
+                "closedset": reso,
+                "minx": minx,
+                "miny":miny,
+                "maxx":maxx,
+                "maxy":maxy,
+                "xw":xw,
+                "yw":yw             }, open('astar_internals_result.p', 'wb'))
+
+
+    return rx, ry, obmap, nstart, ngoal
 
 
 def calc_heuristic(n1, n2):

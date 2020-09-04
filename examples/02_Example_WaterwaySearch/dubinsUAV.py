@@ -87,10 +87,10 @@ class dubinsUAV():
             # is the distance to other UAV increaseing or decreasing?
             if dist < self.trackUAV[i]['lastDist']:
                 self.trackUAV[i]['clearedUAV'] = False
-                print('UAV ' + str(self.trackUAV[i]['ID']) + ' is approaching')
+                #print('UAV ' + str(self.trackUAV[i]['ID']) + ' is approaching')
             else:
-                print('UAV ' + str(self.trackUAV[i]['ID']) + ' is moving away')
                 self.trackUAV[i]['clearedUAV'] = True
+                #print('UAV ' + str(self.trackUAV[i]['ID']) + ' is moving away')
 
             # Is A* avoiding a UAV?
             if len(uavID) > 0: # IDs in both lists will not always line up
@@ -107,8 +107,8 @@ class dubinsUAV():
             # want to keep tracking until far enough away / moving away or clearedUAV = True
             if self.trackUAV[i]['tracking'] == True and self.trackUAV[i]['clearedUAV'] == False:
                 print('Tracking UAV ' + str(self.trackUAV[i]['ID']))
-            else:
-                print('NOT Tracking UAV ' + str(self.trackUAV[i]['ID']))
+            # else:
+            #     print('NOT Tracking UAV ' + str(self.trackUAV[i]['ID']))
 
             self.trackUAV[i]['lastDist'] = dist
 
@@ -403,6 +403,8 @@ class dubinsUAV():
             if (UAVdist <= wpRadius and UAVdist >= self.lastDist):
                 if not self.currentWPIndex == len(self.waypoints)-1:
                     self.currentWPIndex += 1
+                    if self.currentWPIndex >= len(self.waypoints): # note for RaceTrack - 1st and last wpt are identical - mainly for plotting reasons
+                        self.currentWPIndex = 0
                     #print("WP Increment")
                     #update distance...
                     UAVdist = self.distance(self.getActiveWaypoint(), activeWP)
