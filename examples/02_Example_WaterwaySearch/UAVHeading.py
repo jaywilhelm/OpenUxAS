@@ -691,10 +691,11 @@ class UAVHeading:
             FormatedInput = 'FormatedInput%03d.png' % simStep
             FormatedInput = os.path.join(path,FormatedInput)
             plt.savefig(FormatedInput)
+            plt.close('A* formatted map')
 
             #fig.savefig("test.png")
             #plt.show(2)
-            plt.pause(1)
+            # plt.pause(1)
         return start_pt, goal_pt, border_pts, koz_pts, zero_pos, border_cells
 
     def reverseKOZ(self, area_length):
@@ -703,9 +704,10 @@ class UAVHeading:
 
         # Thought that including the UAVs position in the reverse koz would cause problems
         # so the "offset" would offset the koz off of the UAV current position
+        d=0.0025
         offsetPos = [0,0]
-        offsetPos[0] = self.position[0] - 0.0055*math.cos(self.thetaRef)
-        offsetPos[1] = self.position[1] - 0.0055*math.sin(self.thetaRef)
+        offsetPos[0] = self.position[0] - d*math.cos(self.thetaRef)
+        offsetPos[1] = self.position[1] - d*math.sin(self.thetaRef)
 
         # print('offset: ' + str(offsetPos))
         points = [list(offsetPos)] 
@@ -927,7 +929,8 @@ class UAVHeading:
             for i in range(0, len(avoid_areas)):
                 for j in range(0,len(avoid_areas[i])):
                     avoid_areas[i][j] = [avoid_areas[i][j][0]/10,avoid_areas[i][j][1]/10]
-            plt.close('all')
+            #plt.close('all')
+            plt.clf()
             AstarFail = True
             return False, [], avoid_areas, [], CollisionUavIDs, AstarFail
 
@@ -976,13 +979,14 @@ class UAVHeading:
             
             #fig.savefig("test.png")
             # plt.show()
-            plt.pause(1)
+            # plt.pause(1)
                         
             wd = os.getcwd()
             path=(wd + '/RaceTrack_AstarResults')
             AstarResult = 'AstarResult%03d.png' % simStep
             AstarResult = os.path.join(path, AstarResult)
             plt.savefig(AstarResult)
+            plt.close('A* Result')
 
         plotObmap = False
         if plotObmap:
@@ -1035,6 +1039,6 @@ class UAVHeading:
             # else:
             #     path_pts.append(pt)
 
-
-        plt.close('all')
+        plt.clf()
+        #plt.close('all')
         return True, waypoints, avoid_areas, full_path, CollisionUavIDs, AstarFail

@@ -131,7 +131,7 @@ del_folder_contents(folderPath)
 folderPath=(wd + '/RaceTrack_RecoveryPaths')
 del_folder_contents(folderPath)
 
-folderPath=(wd + '/RaceTrack_AstarFormatedInput')
+folderPath=(wd + '/RaceTrack_SelectedPaths')
 del_folder_contents(folderPath)
 
 RefRaceTrack = [[39.9680674, -82.8318678],[39.9659200, -82.8531621],[39.9576365, -82.8601268],
@@ -162,6 +162,20 @@ for i in range(0, len(RaceTrack)):
 
 fig, ax = plt.subplots()
 savePlots = []  # stores figure frames used to make a movie
+savePlots1 = []
+savePlots2 = []
+savePlots3 = []
+savePlots4 = []
+savePlots5 = []
+savePlots6 = []
+savePlots7 = []
+savePlots8 = []
+savePlots9 = []
+savePlots10 = []
+savePlots11 = []
+savePlots12 = []
+savePlots13 = []
+savePlots14 = []
 # Calcuate heading angle between each waypoint -> used for clothoid path generation
 pathHeadings = []
 i = 0
@@ -195,7 +209,7 @@ uavlist[0]['dubins'] = dubinsUAV(position=[39.9680674, -82.8308678], velocity=v,
 deadpoint = [39.40, -82.1380578]
 uavlist[0]['ID'] = 1
 uavlist[0]['IsAvoidanceUAV'] = True
-uavlist[0]['dubins'].setWaypoints(newwps=RaceTrack, newradius = wptRad )
+uavlist[0]['dubins'].setWaypoints(newwps=RefRaceTrack, newradius = wptRad )
 uavlist[0]['dubins'].currentWPIndex = 0
 
 #
@@ -224,7 +238,7 @@ hasPath = False
 hadPlan = False
 hasPlan = False
 onlyOnce = False
-wpList2 =None
+wpList2 = None
 usetargetPath = False
 TargetWPList = None
 hasAstarPlan = False
@@ -236,8 +250,18 @@ NewPath = []
 indexTracker = 0 # TO DO - find another way to change the index to the appropriate waypoint
 numbOfRecoveryPts = 0
 
+Log_list=[[],[],[]]
+AstarList_dict = {}
+RecoveryList_dict= {}
+TargetWPList_dict = {}
+
+# Log_list[0].append(AstarList_dict)
+# Log_list[1].append(RecoveryList_dict)
+# Log_list[2].append(Log_dict)
+
+
 step = 0
-while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins'].waypoints)-1: 
+while step < 7500: #uavlist[0]['dubins'].lapCounter < 2: # uavlist[0]['dubins'].currentWPIndex < len(uavlist[0]['dubins'].waypoints)-1: 
     ''' Identify UAVs using collision avoidence '''
     mainUAV = finduavbyID(uavlist, 1) # IDtoWatch
     uavh_others_all, uavh_others = findotheruavs(uavlist, 1) # ID not to watch for
@@ -254,6 +278,13 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
         TargetWPList = RefRaceTrack[:]
         uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
         uavlist[0]['dubins'].currentWPIndex = 0
+        TargetWPList_dict['SimStep']= step
+        TargetWPList_dict['CurrentWPIndex']= mainUAV['dubins'].currentWPIndex
+        TargetWPList_dict['TargetWPList'] = TargetWPList
+        TargetWPList_dict['With A*'] = False
+        TargetWPList_dict['With Recovery'] = False
+        TargetWPList_dict['Original Path'] = True
+        Log_list[2].append(TargetWPList_dict.copy())
 
     ''' 
     Locate closest and furthest waypoints laying on reference path
@@ -296,13 +327,18 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
             astarGoalPt = activeWP
             hasAstarPlan = False
             replan, wplist, avoid, full_path, uavID, AstarFail = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True, simStep=step)
-            
+            AstarTargetIndex = mainUAV['dubins'].currentWPIndex
+
+            # Deals with cases where the NC UAV may be on top of the A* target/active waypoint
             if AstarFail:
+                print(TC.WARNING +'A* failed to find path' + TC.ENDC)
                 if uavlist[0]['dubins'].currentWPIndex < len(RefRaceTrack):
                     Next_activeWP = RefRaceTrack[uavlist[0]['dubins'].currentWPIndex+1]
+                    AstarTargetIndex = mainUAV['dubins'].currentWPIndex+1
                 else:
                     Next_activeWP = RefRaceTrack[0]
-
+                    AstarTargetIndex = 0
+                print('Checking if next wpt on ref path is valid')
                 astarGoalPt = Next_activeWP
                 replan, wplist, avoid, full_path, uavID, AstarFail = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True, simStep=step)
                       
@@ -311,12 +347,10 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
                 for i in range(0, len(uavID)):    
                     uavID[i] = uavh_others_all[uavID[i]]['ID']
                     print('Potential Collision with UAV ' + str(uavID[i]))
-        if step >39:
-            debug = 1
+
         if replan or AstarFail==True:
             plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
             plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
-           
 
         if(replan and not hasPlan):
             hasPlan = True
@@ -328,10 +362,19 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
             wplist[0][0] = mainUAV['uavobj'].position[0]
             wplist[0][1] = mainUAV['uavobj'].position[1]
             wplist = np.append(wplist, np.array([[astarGoalPt[0], astarGoalPt[1]]]), axis=0)
-            numbOfAstarPts= len(wplist)-1
+            numbOfAstarPts= len(wplist)-1  # -1 accounts for the added astarGoalPt which is already on the reference path
+            AstarList_dict['SimStep']= step
+            AstarList_dict['CurrentWPIndex']= mainUAV['dubins'].currentWPIndex
+            AstarList_dict['WPlist'] = wplist.tolist()
+            AstarList_dict['A*TargetIndex'] = AstarTargetIndex
+            AstarList_dict['A*Goal'] = astarGoalPt
+            AstarList_dict['AstarFail'] = AstarFail
+            Log_list[0].append(AstarList_dict.copy())
 
             # Insert A* points (wplist) into Reference path
             TargetWPList[mainUAV['dubins'].currentWPIndex:mainUAV['dubins'].currentWPIndex] = wplist.tolist()
+            activeWP = uavlist[0]['dubins'].waypoints[uavlist[0]['dubins'].currentWPIndex]
+
             print(TC.OKBLUE + 'Insert ' + str(numbOfAstarPts) + ' Astar Points at wpt index ' + str(indexRecall) + TC.ENDC)
             closingDist = mainUAV['dubins'].distance(mainUAV['uavobj'].position, uavh_others[0].position)
             # print('Distance to other UAV: ' + str(closingDist))
@@ -341,6 +384,45 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
             # useWPfollower = True
             # usetargetPath = False
             # clearedOtherUAV = False
+            TargetWPList_dict['SimStep']= step
+            TargetWPList_dict['CurrentWPIndex']= mainUAV['dubins'].currentWPIndex
+            TargetWPList_dict['TargetWPList'] = TargetWPList
+            TargetWPList_dict['A*Goal'] = astarGoalPt
+            TargetWPList_dict['With A*'] = True
+            TargetWPList_dict['With Recovery'] = False
+            TargetWPList_dict['Original Path'] = False
+
+            Log_list[2].append(TargetWPList_dict.copy())
+
+            # Plot snapshot 
+            plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
+            plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
+            plot_AstarPlan = plt.plot([pt[1] for pt in wplist.tolist()], [pt[0] for pt in wplist.tolist()], c = 'k', marker='*', markersize=8)
+            plt.plot([pt[1] for pt in RefRaceTrack], [pt[0] for pt in RefRaceTrack], c='b', marker='.', markersize=8)
+
+            plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 5 )
+            plt.plot( astarGoalPt[1], astarGoalPt[0], c='k', marker='^', markersize = 6 )
+
+            # plot keep out zones from UAVHeading.avoid() function
+            plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
+            plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
+            plt.axis('equal')
+            plt.grid(True)
+            plt.ylim((mainUAV['dubins'].x - 0.01, mainUAV['dubins'].x + 0.01))
+            plt.xlim((mainUAV['dubins'].y - 0.01, mainUAV['dubins'].y + 0.01))
+            #plt.show()
+            fig.set_size_inches((12, 10)) 
+
+            wd = os.getcwd()
+            path=(wd + '/RaceTrack_AstarPath')
+            AstarPath = 'AstarPath%03d.png' % step
+            AstarPaths = os.path.join(path, AstarPath)
+            plt.savefig(AstarPaths)
+            plt.clf()
+
+            # plt.pause(1)
+
+
         else:
             print("Not re-planning" )
     else:
@@ -376,7 +458,7 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
         Chosen point is interpolated between original waypoint index sets
         Chosen point provdes the shortes path that does not violate turn radius
         '''
-        for index in range(indexRecall-1, 7 ):  # TO DO change 7 to some wp index within a detected range of the UAV
+        for index in range(0, len(RefRaceTrack)-1):  # TO DO change 7 to some wp index within a detected range of the UAV
             numbOfPts = 5                       # Number of interpolate points between each Reference Path index and index+1
 
             # Note that RefRaceTrack is the unchanged original refernce path
@@ -532,9 +614,11 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
                     Recovery_dict['chosenPath'] = wpList2
                     Recovery_dict['cirlces'] = circle_list
                     numbOfRecoveryPts = len(wpList2)
-                    Recovery_dict['chosenIndex'] = selectPath + numbOfRecoveryPts + numbOfAstarPts
+                    #Recovery_dict['chosenIndex'] = selectPath + numbOfRecoveryPts # + numbOfAstarPts
+                    Recovery_dict['chosenIndex'] = mainUAV['dubins'].currentWPIndex + numbOfRecoveryPts # + numbOfAstarPts
                     Recovery_dict['returnIndex'] = selectPath
                     print(TC.OKGREEN + '\t\t\tSelected index pt: ' + str(selectPath) + ' which is now at index ' + str(Recovery_dict['chosenIndex']) + TC.ENDC)
+
                 elif checkPassed == True and clothoidLength > checkDistance:
                     print(TC.WARNING + '\t\t\tPath Too Long' + TC.ENDC)
                     
@@ -559,7 +643,10 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
                 # plt.scatter(clothoid[5][3][0],clothoid[5][3][1])
 
         plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
-        plt.plot(uavh_others_all[0]['dubins'].ys, uavh_others_all[0]['dubins'].xs, c='y', marker='o' )
+        plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
+        NCcone = uavh_others_all[0]['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
+        plotNCcone, = plt.plot([pt[1] for pt in NCcone], [pt[0] for pt in NCcone], "-r")
+
         plot_AstarPlan = plt.plot([pt[1] for pt in wplist.tolist()], [pt[0] for pt in wplist.tolist()], c = 'k', marker='*', markersize=8)
         plt.plot([pt[1] for pt in RefRaceTrack], [pt[0] for pt in RefRaceTrack], c='b', marker='.', markersize=8)
 
@@ -570,11 +657,11 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
             plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
         plt.axis('equal')
         plt.grid(True)
-        # plt.ylim(45.3, 45.45) #(45.0, 45.5)
-        # plt.xlim(-121.0, -120.5)   
+        plt.ylim((mainUAV['dubins'].x - 0.01, mainUAV['dubins'].x + 0.01))
+        plt.xlim((mainUAV['dubins'].y - 0.01, mainUAV['dubins'].y + 0.01))
         # plt.show(100)
-        fig.set_size_inches((12, 10)) 
-        plt.pause(1)
+        #fig.set_size_inches((12, 10)) 
+        # plt.pause(1)
         
         wd = os.getcwd()
         path=(wd + '/RaceTrack_RecoveryPaths')
@@ -582,6 +669,8 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
         RecoveryPaths = os.path.join(path,RecoveryPaths)
         plt.savefig(RecoveryPaths)
         plt.clf()
+        # plt.close('all')
+
 
         if hasRecoveryPlan == False:
             print('No valid recovery path available')
@@ -604,6 +693,10 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
             plt.gca().add_artist(circle4)
             plt.scatter(Recovery_dict['cirlces'][3][0],Recovery_dict['cirlces'][3][1])
 
+
+            # Re-upload original path - Recovery points will later be inserted into waypoint list
+            TargetWPList = RefRaceTrack[:]
+            mainUAV['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
             NewPath = []
             for ptList in Recovery_dict['chosenPath']:
                 NewPath.append([ptList[1], ptList[0]])
@@ -615,8 +708,14 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
                 plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
                 plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
 
+            #fig.set_size_inches((12, 10)) 
+
             plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
-            plt.plot(uavh_others_all[0]['dubins'].ys, uavh_others_all[0]['dubins'].xs, c='y', marker='o' )
+            plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
+
+            NCcone = uavh_others_all[0]['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
+            plotNCcone, = plt.plot([pt[1] for pt in NCcone], [pt[0] for pt in NCcone], "-r")
+
             plot_RecoveryPlan = plt.plot([pt[1] for pt in NewPath], [pt[0] for pt in NewPath], c = 'g', marker='o', markersize=8)
             plot_AstarPlan = plt.plot([pt[1] for pt in wplist.tolist()], [pt[0] for pt in wplist.tolist()], c = 'k', marker='*', markersize=8)
             plt.plot([pt[1] for pt in RefRaceTrack], [pt[0] for pt in RefRaceTrack], c='b', marker='.', markersize=8)
@@ -626,37 +725,74 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
             plt.ylim((mainUAV['dubins'].x - 0.01, mainUAV['dubins'].x + 0.01))
             plt.xlim((mainUAV['dubins'].y - 0.01, mainUAV['dubins'].y + 0.01))
             # plt.show(100)
-            fig.set_size_inches((12, 10)) 
-            plt.pause(1)
+            # plt.pause(1)
 
             wd = os.getcwd()
             path=(wd + '/RaceTrack_SelectedPaths')
             SelectedPath = 'SelectedPath%03d.png' % step
             SelectedPath = os.path.join(path,SelectedPath)
             plt.savefig(SelectedPath)
+            #plt.close('all')
             plt.clf()
 
     '''
-    Update waypoint list or reload original reference path 
+    Update waypoint list with Recovery path or reload original reference path 
     if A* and/or Recovery path has been completed
     '''
 
     if hasAstarPlan == True and hasRecoveryPlan == False:
-        if mainUAV['dubins'].currentWPIndex >= indexRecall + numbOfAstarPts:
-            mainUAV['dubins'].setWaypoints(RefRaceTrack, newradius=wptRad)
-            mainUAV['dubins'].currentWPIndex = indexRecall + 1 # Need to test
+        if mainUAV['dubins'].currentWPIndex >= AstarTargetIndex + numbOfAstarPts:
+            TargetWPList = RefRaceTrack[:]
+            mainUAV['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
+            mainUAV['dubins'].currentWPIndex = AstarTargetIndex  # Need to test
+            activeWP = uavlist[0]['dubins'].waypoints[uavlist[0]['dubins'].currentWPIndex]
+
+            TargetWPList_dict['SimStep']= step
+            TargetWPList_dict['CurrentWPIndex']= mainUAV['dubins'].currentWPIndex
+            TargetWPList_dict['TargetWPList'] = TargetWPList
+            TargetWPList_dict['With A*'] = False
+            TargetWPList_dict['With Recovery'] = False
+            TargetWPList_dict['Original Path'] = True
+
+            Log_list[2].append(TargetWPList_dict.copy())
+            print('Completed A* path without needing recover path')
+
             hasAstarPlan = False
+            hadPlan = False
+            hasPlan = False 
 
     elif hasAstarPlan == True or hasRecoveryPlan == True:
         if not onlyOnce:
             onlyOnce = True
             lastIndex = mainUAV['dubins'].currentWPIndex
             numbOfRecoveryPts = len(NewPath)
-            insertIndex = indexRecall + numbOfAstarPts 
+            # insertIndex = indexRecall + numbOfAstarPts 
+            insertIndex = mainUAV['dubins'].currentWPIndex
+
             TargetWPList[insertIndex:insertIndex] = NewPath
-            mainUAV['dubins'].currentWPIndex = insertIndex 
+          #  mainUAV['dubins'].currentWPIndex = insertIndex 
+            activeWP = uavlist[0]['dubins'].waypoints[uavlist[0]['dubins'].currentWPIndex]
+
             hasAstarPlan = False
             print(TC.OKBLUE + 'Insert ' + str(numbOfRecoveryPts) + ' Recovery Points at wpt index ' + str(insertIndex) + TC.ENDC)
+
+            RecoveryList_dict['SimStep'] = step
+            RecoveryList_dict['CurrentWPIndex'] = mainUAV['dubins'].currentWPIndex
+            RecoveryList_dict['WPlist'] = NewPath
+            RecoveryList_dict['Recovery Index'] = Recovery_dict['chosenIndex']
+            RecoveryList_dict['RefPath return Index'] = Recovery_dict['returnIndex']
+            Log_list[1].append(RecoveryList_dict.copy())
+
+            TargetWPList_dict['SimStep']= step
+            TargetWPList_dict['CurrentWPIndex']= mainUAV['dubins'].currentWPIndex
+            TargetWPList_dict['TargetWPList'] = TargetWPList
+            TargetWPList_dict['Recovery Goal'] = NewPath[numbOfRecoveryPts-1]
+            TargetWPList_dict['With A*'] = False
+            TargetWPList_dict['With Recovery'] = True
+            TargetWPList_dict['Original Path'] = False
+
+            Log_list[2].append(TargetWPList_dict.copy())
+
         elif mainUAV['dubins'].currentWPIndex >= Recovery_dict['chosenIndex']:
             hasRecoveryPlan = False
             onlyOnce = False
@@ -664,6 +800,20 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
             mainUAV['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
 
             mainUAV['dubins'].currentWPIndex = Recovery_dict['returnIndex']  # Need to test
+            activeWP = uavlist[0]['dubins'].waypoints[uavlist[0]['dubins'].currentWPIndex]
+
+
+            TargetWPList_dict['SimStep']= step
+            TargetWPList_dict['CurrentWPIndex']= mainUAV['dubins'].currentWPIndex
+            TargetWPList_dict['TargetWPList'] = TargetWPList
+            TargetWPList_dict['With A*'] = False
+            TargetWPList_dict['With Recovery'] = False
+            TargetWPList_dict['Original Path'] = True
+
+            Log_list[2].append(TargetWPList_dict.copy())
+            print('Completed Recovery path')
+
+
 
     '''===Update vehicle positions==='''
     for uav in uavlist:     
@@ -672,6 +822,8 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
             dist2ncUAVs = uav['dubins'].getOtherUAVStates(uavh_others_all, uavID)
 
             plotCASpos, = plt.plot(uav['dubins'].ys, uav['dubins'].xs, 'o', c='r')
+            plotMainUAV =  plt.plot(uav['dubins'].y, uav['dubins'].x, 'o', c='k')
+
             color = '-g'
             if(replan):
                 color = '-y'
@@ -717,7 +869,6 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
 
     ''' Plotting '''
     plotRefPath = plt.plot([pt[1] for pt in RefRaceTrack], [pt[0] for pt in RefRaceTrack], c='b', marker = '.', markersize = 8)
-    
     # plot keep out zones from UAVHeading.avoid() function
     if replan:
         plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
@@ -760,8 +911,7 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
 
     plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 8 )
 
-    fig.set_size_inches((8, 6)) 
-    zoom = 0.045
+    fig.set_size_inches((12, 10))  
     plt.axis('equal')
     plt.grid(True)
     # plt.ylim(39.92, 39.99)
@@ -778,10 +928,24 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
     # plt.xlim((uavlist[1]['dubins'].y - 0.01, uavlist[1]['dubins'].y + 0.01))
     text = ("Sim Step: " + str(step) + ' Lap: ' + str(uavlist[0]['dubins'].lapCounter) + "\nCAS/NC Current wpt: " + str(uavlist[0]['dubins'].currentWPIndex) + '/' + str(uavlist[1]['dubins'].currentWPIndex) +
             '\nCross Track Error: ' + str(np.round(crossError,3))            ) 
+    
+    if step > 3361:
+        mydebug =1
+    if step > 1282:
+        mydebug =1
+
+    if hasAstarPlan == False and hasRecoveryPlan == False:
+        text1 = ("Currently Following: Ref Path")
+    elif hasAstarPlan == True and hasRecoveryPlan == False:
+        text1 = ("Currently Following: A* path")    
+    elif hasAstarPlan == False and hasRecoveryPlan == True:
+        text1 = ("Currently Following: Recovery Path")
+
     plt.text(0.1, 0.05, text, transform=ax.transAxes)
+    plt.text(0.1, 0.9, text1, transform=ax.transAxes)
 
-    plt.pause(0.05) 
-
+    # plt.pause(0.005) 
+    #time.sleep(0.001)
 
     # print('Step: ' + str(step) + '\tCurrent wpt: ' + str(uavlist[0]['dubins'].currentWPIndex) + '\tUAV POS: ' + str(mainUAV['dubins'].x) + ', ' + str(mainUAV['dubins'].y) + 
     #         '\tUAV Heading (deg): ' + str(round(uavlist[0]['dubins'].heading,2)) + ' (' + str(round(np.degrees(uavlist[0]['dubins'].heading),2)) + ')' + '\tCross Track Error: ' 
@@ -792,17 +956,108 @@ while uavlist[0]['dubins'].lapCounter < 4: # uavlist[0]['dubins'].currentWPIndex
     '''
     wd = os.getcwd()
     path=(wd + '/Movies')
-    fname = '_tmp%03d.png' % step
-    fname = os.path.join(path,fname)
-    plt.savefig(fname)
-    savePlots.append(fname)
+    # fname = '_tmp%03d.png' % step
+    # fname = os.path.join(path,fname)
+    # plt.savefig(fname)
+
+    if step < 500:
+        fname = '_tmpz%03d.png' % step
+        fname = os.path.join(path,fname)
+        plt.savefig(fname)
+        savePlots.append(fname)
+
+    elif step >= 500 and step < 1000:
+        fname1 = '_tmpa%03d.png' % step
+        fname1 = os.path.join(path,fname1)
+        plt.savefig(fname1)        
+        savePlots1.append(fname1)
+
+    elif step >= 1000 and step < 1500:
+        fname2 = '_tmpb%03d.png' % step
+        fname2 = os.path.join(path,fname2)
+        plt.savefig(fname2)
+        savePlots2.append(fname2)  
+
+    elif step >= 1500 and step < 2000:
+        fname3 = '_tmpc%03d.png' % step
+        fname3 = os.path.join(path,fname3)
+        plt.savefig(fname3)
+        savePlots3.append(fname3)  
+
+    elif step >= 2000 and step < 2500:
+        fname4 = '_tmpd%03d.png' % step
+        fname4 = os.path.join(path,fname4)
+        plt.savefig(fname4)
+        savePlots4.append(fname4)  
+
+    elif step >= 2500 and step < 3000:
+        fname5 = '_tmpe%03d.png' % step
+        fname5 = os.path.join(path,fname5)
+        plt.savefig(fname5)
+        savePlots5.append(fname5)  
+
+    elif step >= 3000 and step < 3500:
+        fname6 = '_tmpf%03d.png' % step
+        fname6 = os.path.join(path,fname6)
+        plt.savefig(fname6)
+        savePlots6.append(fname6)  
+
+    elif step >= 3500 and step < 4000:
+        fname7 = '_tmpg%03d.png' % step
+        fname7 = os.path.join(path,fname7)
+        plt.savefig(fname7)
+        savePlots7.append(fname7)
+
+    elif step >= 4000 and step < 4500:
+        fname8 = '_tmph%03d.png' % step
+        fname8 = os.path.join(path,fname8)
+        plt.savefig(fname8)
+        savePlots8.append(fname8)  
+
+    elif step >= 4500 and step < 5000:
+        fname9 = '_tmpi%03d.png' % step
+        fname9 = os.path.join(path,fname9)
+        plt.savefig(fname9)
+        savePlots9.append(fname9)  
+
+    elif step >= 5000 and step < 5500:
+        fname10 = '_tmpj%03d.png' % step
+        fname10 = os.path.join(path,fname10)
+        plt.savefig(fname10)
+        savePlots10.append(fname10)  
+
+    elif step >= 5500 and step < 6000:
+        fname11 = '_tmpk%03d.png' % step
+        fname11 = os.path.join(path,fname11)
+        plt.savefig(fname11)
+        savePlots11.append(fname11)
+
+    elif step >= 6000 and step < 6500:
+        fname12 = '_tmpl%03d.png' % step
+        fname12= os.path.join(path,fname12)
+        plt.savefig(fname12)
+        savePlots12.append(fname12)  
+
+    elif step >= 6500 and step <7000:
+        fname13 = '_tmpm%03d.png' % step
+        fname13 = os.path.join(path,fname13)
+        plt.savefig(fname13)
+        savePlots13.append(fname13)  
+
+    elif step >= 7000 and step < 7500:
+        fname14 = '_tmpn%03d.png' % step
+        fname14 = os.path.join(path,fname14)
+        plt.savefig(fname14)
+        savePlots14.append(fname14)
 
     plt.clf()
     step+=1
 
 
 
-pickle.dump({"uavlist": uavlist}, open('astar_result.p', 'wb'))
+pickle.dump({"uavlist": uavlist}, open('RaceTrack_result.p', 'wb'))
+pickle.dump({"LogList": Log_list}, open('RaceTrack_Log.p', 'wb'))
+# pickle.dump({"uavlist": uavlist}, open('recovery_result.p', 'wb'))
 
 '''
 Make a Movie
@@ -815,12 +1070,89 @@ os.chdir(str(newDir))
 print('Making sim movie...')
 # source: https://matplotlib.org/gallery/animation/movie_demo_sgskip.html
 # additional resource: https://linux.die.net/man/1/mencoder
-subprocess.call("mencoder 'mf://_tmp*.png' -mf type=png:fps=10 -ovc lavc "
-            "-lavcopts vcodec=mpeg4 -oac copy -o animation.mp4", shell=True)
+subprocess.call("mencoder 'mf://_tmpz*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation.mp4", shell=True)
 
+subprocess.call("mencoder 'mf://_tmpa*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation1.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpb*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation2.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpc*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation3.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpd*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation4.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpe*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation5.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpf*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation6.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpg*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+
+#####
+subprocess.call("mencoder 'mf://_tmph*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+subprocess.call("mencoder 'mf://_tmpi*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+subprocess.call("mencoder 'mf://_tmpj*.png' -mf type=png:fps=10 -ovc lavc "
+                    "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+subprocess.call("mencoder 'mf://_tmpk*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+subprocess.call("mencoder 'mf://_tmpl*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+subprocess.call("mencoder 'mf://_tmpm*.png' -mf type=png:fps=10 -ovc lavc "
+                    "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+subprocess.call("mencoder 'mf://_tmpn*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
 print('Clean up...')
 for fname in savePlots:
     os.remove(fname)   
+print('Clean up...')
+for fname in savePlots1:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots2:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots3:
+    os.remove(fname)   
+print('Clean up...')
+for fname in savePlots4:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots5:
+    os.remove(fname) 
+    print('Clean up...')
+for fname in savePlots6:
+    os.remove(fname)   
+print('Clean up...')
+for fname in savePlots7:
+    os.remove(fname) 
+for fname in savePlots8:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots9:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots10:
+    os.remove(fname)   
+print('Clean up...')
+for fname in savePlots11:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots12:
+    os.remove(fname) 
+    print('Clean up...')
+for fname in savePlots13:
+    os.remove(fname)   
+print('Clean up...')
+for fname in savePlots14:
+    os.remove(fname) 
 
 print('Reverting to previous Directory')
 os.chdir(wd)
