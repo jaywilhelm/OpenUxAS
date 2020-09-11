@@ -1096,19 +1096,19 @@ subprocess.call("mencoder 'mf://_tmpg*.png' -mf type=png:fps=10 -ovc lavc "
 
 #####
 subprocess.call("mencoder 'mf://_tmph*.png' -mf type=png:fps=10 -ovc lavc "
-                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation8.mp4", shell=True)
 subprocess.call("mencoder 'mf://_tmpi*.png' -mf type=png:fps=10 -ovc lavc "
-                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation9.mp4", shell=True)
 subprocess.call("mencoder 'mf://_tmpj*.png' -mf type=png:fps=10 -ovc lavc "
-                    "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation10.mp4", shell=True)
 subprocess.call("mencoder 'mf://_tmpk*.png' -mf type=png:fps=10 -ovc lavc "
-                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation11.mp4", shell=True)
 subprocess.call("mencoder 'mf://_tmpl*.png' -mf type=png:fps=10 -ovc lavc "
-                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation12.mp4", shell=True)
 subprocess.call("mencoder 'mf://_tmpm*.png' -mf type=png:fps=10 -ovc lavc "
-                    "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation13.mp4", shell=True)
 subprocess.call("mencoder 'mf://_tmpn*.png' -mf type=png:fps=10 -ovc lavc "
-                "-lavcopts vcodec=mpeg4 -oac copy -o animation7.mp4", shell=True)
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation14.mp4", shell=True)
 print('Clean up...')
 for fname in savePlots:
     os.remove(fname)   
