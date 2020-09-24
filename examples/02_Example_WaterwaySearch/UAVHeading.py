@@ -634,14 +634,14 @@ class UAVHeading:
         return np.transpose(newkoz)
 
     def format_astar_input(self, kozList, scalef, useAstarGoal, simStep):
-        mypos = [self.position[0]*10, self.position[1]*10]
+        mypos = [self.position[0]*100, self.position[1]*100]
         if useAstarGoal:
-            mygoal = [self.AstarGoal[0]*10, self.AstarGoal[1]*10]
+            mygoal = [self.AstarGoal[0]*100, self.AstarGoal[1]*100]
         else:
-            mygoal = [self.waypoint[0]*10, self.waypoint[1]*10]
+            mygoal = [self.waypoint[0]*100, self.waypoint[1]*100]
         # print('MyGoal: ' + str(mygoal))
 
-        offset = 0.5 #in deg?
+        offset = 0.25 #in deg?
         #scalef = 50#10e7
 
         border_pts, zero_pos, border_cells = self.make_border_cells(mypos, scalef, offset)
@@ -694,17 +694,17 @@ class UAVHeading:
             plt.close('A* formatted map')
 
             #fig.savefig("test.png")
-            #plt.show(2)
+            # plt.show()
             # plt.pause(1)
         return start_pt, goal_pt, border_pts, koz_pts, zero_pos, border_cells
 
     def reverseKOZ(self, area_length):
-        ''' Keep out zone places behind the CAS UAV
+        ''' Keep out zone placed behind the CAS UAV
             Prevents A* from generating a path going backwards '''
 
         # Thought that including the UAVs position in the reverse koz would cause problems
         # so the "offset" would offset the koz off of the UAV current position
-        d=0.0025
+        d=0.000075 # Changes the distance the reverse koz is placed behind the UAV
         offsetPos = [0,0]
         offsetPos[0] = self.position[0] - d*math.cos(self.thetaRef)
         offsetPos[1] = self.position[1] - d*math.sin(self.thetaRef)
@@ -843,7 +843,8 @@ class UAVHeading:
             return False, [self.waypoint], avoid_areas, [], CollisionUavIDs, AstarFail
 
         #do it again with larger KOZ
-        intersects, avoid_areas, CollisionUavIDs = self.findPotentialIntersects(uavh_others, area_length*1.33, static_koz)
+        # area_length*1.33
+        intersects, avoid_areas, CollisionUavIDs = self.findPotentialIntersects(uavh_others, area_length*1.11, static_koz)
         print(TC.WARNING + 'AVOID.' + TC.ENDC)
         self.lastClear = False
         use_pseudo_target = False
@@ -853,9 +854,9 @@ class UAVHeading:
         
         for i in range(0, len(avoid_areas)):
             for j in range(0,len(avoid_areas[i])):
-                avoid_areas[i][j] = [avoid_areas[i][j][0]*10,avoid_areas[i][j][1]*10]
+                avoid_areas[i][j] = [avoid_areas[i][j][0]*100,avoid_areas[i][j][1]*100]
 
-        scalefactor = 75
+        scalefactor = 200 # 75? lager value = more dense A* problem space
         start, goal, border, koz, offset, border_cells = self.format_astar_input(avoid_areas, scalefactor, useAstarGoal, simStep)
         #start, goal, border, koz, use_pseudo_target = self.__format_astar_input(avoid_areas, False)
 
@@ -928,7 +929,7 @@ class UAVHeading:
             print(TC.FAIL + '\t\t**No valid path found.**' + TC.ENDC)
             for i in range(0, len(avoid_areas)):
                 for j in range(0,len(avoid_areas[i])):
-                    avoid_areas[i][j] = [avoid_areas[i][j][0]/10,avoid_areas[i][j][1]/10]
+                    avoid_areas[i][j] = [avoid_areas[i][j][0]/100,avoid_areas[i][j][1]/100]
             #plt.close('all')
             plt.clf()
             AstarFail = True
@@ -937,16 +938,16 @@ class UAVHeading:
         waypoints = self.convertPathToUniqueWaypoints(path_x, path_y)
         waypoints += offset
         waypoints /= scalefactor
-        waypoints /= 10
+        waypoints /= 100
 
         full_path = np.transpose(np.array([path_x, path_y]))
         full_path += offset
         full_path /= scalefactor
-        full_path /= 10
+        full_path /= 100
 
         for i in range(0, len(avoid_areas)):
             for j in range(0,len(avoid_areas[i])):
-                avoid_areas[i][j] = [avoid_areas[i][j][0]/10,avoid_areas[i][j][1]/10]
+                avoid_areas[i][j] = [avoid_areas[i][j][0]/100,avoid_areas[i][j][1]/100]
         if SHOW_ANIMATION:  # pragma: no cover
             plt.plot(path_x, path_y, "-r", label='Shortest Path')
             plt.legend()
