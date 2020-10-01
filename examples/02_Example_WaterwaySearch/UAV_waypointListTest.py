@@ -144,8 +144,6 @@ folderPath=(wd + '/RaceTrack_SelectedPaths')
 del_folder_contents(folderPath)
 
 # RaceTack points taken from Pruitt Field using Goolgle maps
-
-
 PruitTrack =[
 [39.3264051914717, -82.1101289994580], 
 [39.3263499334731, -82.1103352244684], 
@@ -303,7 +301,6 @@ savePlots3 = []
 savePlots4 = []
 savePlots5 = []
 
-
 TargetWPList = None
 TargetWPList_dict = {}
 Recovery_dict = {'X': [], 'Y' : [], 'Index1' : [], 'Index2' : [], 'wpt1' : [], 'wpt2' : [],
@@ -357,7 +354,7 @@ while step < 1499:
             Astar goal point selection
             '''
             ''' 
-            Make a list of dictionary entries that containts onf the reference path waypoints
+            Make a list of dictionary entries that containts the reference path waypoints
             and the corresponding index in the Active waypoint list
             '''
             astarGoalPoint_list = []
@@ -453,7 +450,7 @@ while step < 1499:
         #     plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
         #     plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
 
-        if(replan and not hasPlan):
+        if (replan and not hasPlan):
             hasPlan = True
             hasAstarPlan = True
             hadPlan = True
