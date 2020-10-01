@@ -144,14 +144,53 @@ folderPath=(wd + '/RaceTrack_SelectedPaths')
 del_folder_contents(folderPath)
 
 # RaceTack points taken from Pruitt Field using Goolgle maps
+
+
+PruitTrack =[
+[39.3264051914717, -82.1101289994580], 
+[39.3263499334731, -82.1103352244684], 
+[39.3261989661035, -82.1104861915330],
+
+[39.3259927415369, -82.1105414491151], 
+[39.3249489949075, -82.1105414491151],
+[39.3247433390045, -82.1104865192473],
+[39.3245921315912, -82.1103357926091],
+[39.3245365454954, -82.1101296557923],
+[39.3245914749791, -82.1099233430367],
+[39.3247422017190, -82.1097721357249],
+
+[39.3249489949075, -82.1097165492456], 
+[39.3259927415369, -82.1097165492456],
+ 
+[39.3261989665845, -82.1097718071053], 
+[39.3263499337508, -82.1099227743733],
+]
+
+PruitTrack_reverse = [
+    [39.3261989661035, -82.1104861915330], 
+[39.3263499334731, -82.1103352244684], 
+[39.3264051914717, -82.1101289994580], 
+[39.3263499337508, -82.1099227743733], 
+[39.3261989665845, -82.1097718071053], 
+[39.3259927415369, -82.1097165492456], 
+[39.3249489949075, -82.1097165492456], 
+[39.3247422017190, -82.1097721357249], 
+[39.3245914749791, -82.1099233430367], 
+[39.3245365454954, -82.1101296557923], 
+[39.3245921315912, -82.1103357926091], 
+[39.3247433390045, -82.1104865192473], 
+[39.3249489949075, -82.1105414491151], 
+[39.3259927415369, -82.1105414491151]
+]
+
 # PruitTrack = [[39.32628292131059, -82.11015604454057], [39.32626145051805, -82.11026814786695], [39.32622134219231, -82.11036301599236],
-# [39.32615604526910, -82.11045259331949], [39.32606878323577, -82.11051085088990], [39.32599274153694, -82.11054144911510],
-# [39.32496507981838, -82.11035891577949], [39.32487946196044, -82.11031124013499], [39.32482219330970, -82.11023990355510],
-# [39.32477723258300, -82.11015140625042], [39.32474662137297, -82.11002965875700], [39.32475050696790, -82.10991519781285],
-# [39.32477817497424, -82.10979249702034], [39.32482490415428, -82.10970003394840], [39.32488214561512, -82.10962612568042],
-# [39.32495478705711, -82.10957178856511], [39.32504987702541, -82.10954174636318], [39.32607266604762, -82.10972043031671], 
-# [39.32613754430359, -82.10978019543180], [39.32620606612441, -82.10985404007286], [39.32625375907247, -82.10995031576066],
-# [39.32628781654859, -82.11007381400570]]
+#               [39.32615604526910, -82.11045259331949], [39.32606878323577, -82.11051085088990], [39.32599274153694, -82.11054144911510],
+#               [39.32496507981838, -82.11035891577949], [39.32487946196044, -82.11031124013499], [39.32482219330970, -82.11023990355510],
+#               [39.32477723258300, -82.11015140625042], [39.32474662137297, -82.11002965875700], [39.32475050696790, -82.10991519781285],
+#               [39.32477817497424, -82.10979249702034], [39.32482490415428, -82.10970003394840], [39.32488214561512, -82.10962612568042],
+#               [39.32495478705711, -82.10957178856511], [39.32504987702541, -82.10954174636318], [39.32607266604762, -82.10972043031671], 
+#               [39.32613754430359, -82.10978019543180], [39.32620606612441, -82.10985404007286], [39.32625375907247, -82.10995031576066],
+#               [39.32628781654859, -82.11007381400570]]
 
 # PruitTrack_reverse = [[39.32628781654859, -82.11007381400570], [39.32625375907247, -82.10995031576066], [39.32620606612441, -82.10985404007286], 
 #                       [39.32613754430359, -82.10978019543180], [39.32607266604762, -82.10972043031671], [39.32504987702541, -82.10954174636318], 
@@ -162,24 +201,33 @@ del_folder_contents(folderPath)
 #                       [39.32615604526910, -82.11045259331950], [39.32622134219231, -82.11036301599236], [39.32626145051805, -82.11026814786695], 
 #                       [39.32628292131059, -82.11015604454057]]
 
-PruitTrack = [[39.32628292131059, -82.11015604454057], [39.32626145051805, -82.11026814786695], [39.32622134219231, -82.11036301599236],
-[39.32615604526910, -82.11045259331949], [39.32606878323577, -82.11051085088990], [39.32599748514458, -82.11055043769464],
-[39.32547276161426, -82.11060085940424], [39.32496507981838, -82.11035891577949], [39.32487946196044, -82.11031124013499], 
-[39.32482219330970, -82.11023990355510], [39.32477723258300, -82.11015140625042], [39.32474662137297, -82.11002965875700],
-[39.32475050696790, -82.10991519781285], [39.32477817497424, -82.10979249702034], [39.32482490415428, -82.10970003394840],
-[39.32488214561512, -82.10962612568042], [39.32495478705711, -82.10957178856511], [39.32504170830252, -82.10953169097074],
-[39.32557045383421, -82.10949902984331], [39.32607266604762, -82.10972043031671], [39.32613754430359, -82.10978019543180],
-[39.32620606612441, -82.10985404007286], [39.32625375907247, -82.10995031576066], [39.32628528279560, -82.11005357934607]]
+# PruitTrack = [[39.32628292131059, -82.11015604454057], [39.32626145051805, -82.11026814786695], [39.32622134219231, -82.11036301599236],
+# [39.32615604526910, -82.11045259331949], [39.32606878323577, -82.11051085088990], [39.32599748514458, -82.11055043769464],
+# [39.32547276161426, -82.11060085940424], [39.32496507981838, -82.11035891577949], [39.32487946196044, -82.11031124013499], 
+# [39.32482219330970, -82.11023990355510], [39.32477723258300, -82.11015140625042], [39.32474662137297, -82.11002965875700],
+# [39.32475050696790, -82.10991519781285], [39.32477817497424, -82.10979249702034], [39.32482490415428, -82.10970003394840],
+# [39.32488214561512, -82.10962612568042], [39.32495478705711, -82.10957178856511], [39.32504170830252, -82.10953169097074],
+# [39.32557045383421, -82.10949902984331], [39.32607266604762, -82.10972043031671], [39.32613754430359, -82.10978019543180],
+# [39.32620606612441, -82.10985404007286], [39.32625375907247, -82.10995031576066], [39.32628528279560, -82.11005357934607]]
 
-PruitTrack_reverse = [
-    [39.32628528279560, -82.11005357934607], [39.32625375907247, -82.10995031576066], [39.32620606612441, -82.10985404007286], 
-    [39.32613754430359, -82.10978019543180], [39.32607266604762, -82.10972043031671], [39.32557045383421, -82.10949902984330], 
-    [39.32504170830252, -82.10953169097074], [39.32495478705711, -82.10957178856510], [39.32488214561512, -82.10962612568042], 
-    [39.32482490415428, -82.10970003394840], [39.32477817497424, -82.10979249702034], [39.32475050696790, -82.10991519781285], 
-    [39.32474662137297, -82.11002965875700], [39.32477723258300, -82.11015140625042], [39.32482219330970, -82.11023990355510], 
-    [39.32487946196044, -82.11031124013499], [39.32496507981838, -82.11035891577949], [39.32547276161426, -82.11060085940424], 
-    [39.32599748514458, -82.11055043769464], [39.32606878323577, -82.11051085088990], [39.32615604526910, -82.11045259331950], 
-    [39.32622134219231, -82.11036301599236], [39.32626145051805, -82.11026814786695], [39.32628292131059, -82.11015604454057]]
+# PruitTrack_reverse = [
+#     [39.32628528279560, -82.11005357934607], [39.32625375907247, -82.10995031576066], [39.32620606612441, -82.10985404007286], 
+#     [39.32613754430359, -82.10978019543180], [39.32607266604762, -82.10972043031671], [39.32557045383421, -82.10949902984330], 
+#     [39.32504170830252, -82.10953169097074], [39.32495478705711, -82.10957178856510], [39.32488214561512, -82.10962612568042], 
+#     [39.32482490415428, -82.10970003394840], [39.32477817497424, -82.10979249702034], [39.32475050696790, -82.10991519781285], 
+#     [39.32474662137297, -82.11002965875700], [39.32477723258300, -82.11015140625042], [39.32482219330970, -82.11023990355510], 
+#     [39.32487946196044, -82.11031124013499], [39.32496507981838, -82.11035891577949], [39.32547276161426, -82.11060085940424], 
+#     [39.32599748514458, -82.11055043769464], [39.32606878323577, -82.11051085088990], [39.32615604526910, -82.11045259331950], 
+#     [39.32622134219231, -82.11036301599236], [39.32626145051805, -82.11026814786695], [39.32628292131059, -82.11015604454057]]
+
+
+# IndianaSpeedWay = [
+#     [39.80188151410402, -86.23492138262816],[39.80184132168075, -86.23632269247335],[39.80148703904483, -86.23758538753252],
+#     [39.80064475627571, -86.23859431116239],[39.79951048065981, -86.23896838699319],[39.79047393450715, -86.23879828484318],
+#     [39.78938933243088, -86.23847634938477],[39.78852787277844, -86.23744837003628],[39.78814010357731, -86.23613800097900],
+#     [39.78812189134263, -86.23471949300118],[39.78815809591920, -86.23327790344395],[39.78849732406272, -86.23172499235579],
+#     [39.78950037132575, -86.23061488381596],[39.79051611204371, -86.23036523085713],[39.79960822266639, -86.23049483271154],
+#     [39.80060161259791, -86.23080886759983],[39.80156614442307, -86.23193581703875],[39.80188309112465, -86.23336029077471]]
 
 
 Waypoint_dict = {}
@@ -209,7 +257,7 @@ uav2 = {}
 uavlist.append(uav2)
 #
 thetaRef = np.deg2rad(270)
-uavlist[0]['dubins'] = dubinsUAV(position=[39.32628292131059, -82.11015604454057], velocity=v,          
+uavlist[0]['dubins'] = dubinsUAV(position=[39.3264051914717, -82.1101289994580], velocity=v,          
                                     heading=thetaRef, dt=dt)
 deadpoint = [39.40, -82.1380578]
 uavlist[0]['ID'] = 1
@@ -218,8 +266,8 @@ uavlist[0]['dubins'].setWaypoints(newwps=PruitTrack, newradius = wptRad )
 uavlist[0]['dubins'].currentWPIndex = 0
 #
 v1 = 0.00005/2 # 2*0.00025
-thetaRef = np.deg2rad(90)
-uavlist[1]['dubins'] = dubinsUAV(position=[39.32628781654859, -82.11007381400570], velocity=v1,         
+thetaRef = np.deg2rad(135)
+uavlist[1]['dubins'] = dubinsUAV(position=[39.3261989665845, -82.1097718071053], velocity=v1,         
                                     heading=thetaRef, dt=dt)
 uavlist[1]['ID'] = 4
 uavlist[1]['IsAvoidanceUAV'] = False
@@ -227,7 +275,7 @@ uavlist[1]['IsAvoidanceUAV'] = False
 uavlist[0] = syncAVSfromDubins(uavlist[0])
 uavlist[1] = syncAVSfromDubins(uavlist[1])
 uavlist[1]['dubins'].setWaypoints(newwps=PruitTrack_reverse, newradius = wptRad )
-uavlist[1]['dubins'].currentWPIndex = 0
+uavlist[1]['dubins'].currentWPIndex = 4
 
 # from Ch 5 in the Pilot's Handbook of Aernautical Knowledge 
 # Using 50% of maximum turn radius - conservative value - given by np.degrees(uavlist[0]['dubins'].turnrate)/2
@@ -263,7 +311,7 @@ Recovery_dict = {'X': [], 'Y' : [], 'Index1' : [], 'Index2' : [], 'wpt1' : [], '
 
 fig, ax = plt.subplots()
 step = 0
-while step < 3000:
+while step < 1499:
     ''' Identify UAVs using collision avoidence '''
     mainUAV = finduavbyID(uavlist, 1) # IDtoWatch
     uavh_others_all, uavh_others = findotheruavs(uavlist, 1) # ID not to watch for
@@ -315,50 +363,61 @@ while step < 3000:
             astarGoalPoint_list = []
             astarGoalPoint_dict = {}
             for i in range(0, len(ActivePath_List)):
-                if ActivePath_List[i]['Belongs to'] == 'Reference Path':
+                if ActivePath_List[i]['Belongs to'] == 'Reference Path' or ActivePath_List[i]['Belongs to'] == 'Recovery' :
                     astarGoalPoint_dict['Index'] = i
                     astarGoalPoint_dict['pt'] = ActivePath_List[i]['pt']
                     astarGoalPoint_list.append(astarGoalPoint_dict.copy())
 
+            for i in range(0, len(astarGoalPoint_list)):
+                if mainUAV['dubins'].currentWPIndex == astarGoalPoint_list[i]['Index']:
+                    currentIndex = i
+
             distTotal = 0
             pointList=[]
-            for index in range(0, len(astarGoalPoint_list)-1):
-                if index == 0:
+            for index in range(currentIndex, len(astarGoalPoint_list)):
+                if index == currentIndex:
                     x1 = mainUAV['dubins'].x
                     y1 = mainUAV['dubins'].y 
-                else:
-                    x1 = astarGoalPoint_list[index]['pt'][0]
-                    y1 = astarGoalPoint_list[index]['pt'][1]
 
-                x2 = astarGoalPoint_list[index+1]['pt'][0]
-                y2 = astarGoalPoint_list[index+1]['pt'][1]
+                    x2 = astarGoalPoint_list[index]['pt'][0]
+                    y2 = astarGoalPoint_list[index]['pt'][1]
+                else:
+                    x1 = astarGoalPoint_list[index-1]['pt'][0]
+                    y1 = astarGoalPoint_list[index-1]['pt'][1]
+
+                    x2 = astarGoalPoint_list[index]['pt'][0]
+                    y2 = astarGoalPoint_list[index]['pt'][1]
 
                 '''
                 Use a linear space to interpolate points between each reference path waypoint
                 Also, does not include the endpoint ( ie. [x2,y2]) - it is included in the next index set
                 '''
-                numbOfPts = 5
+                numbOfPts = 50
                 linX = np.linspace(x1, x2, numbOfPts, endpoint=False )
                 linY = np.linspace(y1, y2, numbOfPts, endpoint=False )
 
                 ''' 
                 Look for an interpolated point some distance forward along the reference path as the astarGoal point
                 '''
+                lookAheadDist = 3
                 for pt in range(0, numbOfPts-1):
-                    print('\tChecking pt ' + str(pt+1))
+                    #print('\tChecking pt ' + str(pt+1))
+                    # if pt == 0:
+                    #     d = distance([posX, posY], [linX[pt+1], linY[pt+1]]) # Calculate distance between interpolated points
+                    # else:
                     d = distance([linX[pt], linY[pt]], [linX[pt+1], linY[pt+1]]) # Calculate distance between interpolated points
                     distTotal += d  
                     pointList.append([linX[pt], linY[pt]])
-                    if distTotal >= area_length*4:
+                    if distTotal >= area_length*lookAheadDist:
                         astarGoalPt = [linX[pt], linY[pt]]
-                        targetIndex = astarGoalPoint_list[index+1]['Index']
-                        print(TC.WARNING + 'Found Astar Goal Point' + TC.ENDC)
+                        targetIndex = astarGoalPoint_list[index]['Index']
+                        # print(TC.WARNING + 'Found Astar Goal Point' + TC.ENDC)
                         break
-                if distTotal >= area_length*4:
+                if distTotal >= area_length*lookAheadDist:
                     break
 
             plt.plot([pt[1] for pt in pointList], [pt[0] for pt in pointList], c='k', marker='.', markersize = 8)
-            plt.plot(astarGoalPt[1], astarGoalPt[0], c='r', marker='*', markersize = 8)
+            plt.plot(astarGoalPt[1], astarGoalPt[0], c='r', marker='*', markersize = 12)
 
             # lookAhead = 5       
             # if mainUAV['dubins'].currentWPIndex+lookAhead < len(ActivePath_List):
@@ -390,9 +449,9 @@ while step < 3000:
                     uavID[i] = uavh_others_all[uavID[i]]['ID']
                     print('Potential Collision with UAV ' + str(uavID[i]))
 
-        if replan or AstarFail==True:
-            plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
-            plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
+        # if replan or AstarFail==True:
+        #     plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
+        #     plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
 
         if(replan and not hasPlan):
             hasPlan = True
@@ -458,9 +517,9 @@ while step < 3000:
             AstarPath = 'AstarPath%03d.png' % step
             AstarPaths = os.path.join(path, AstarPath)
             plt.savefig(AstarPaths)
-            # plt.clf()
+            plt.clf()
 
-            # plt.pause(1)
+            #plt.pause(1)
 
 
         else:
@@ -561,7 +620,7 @@ while step < 3000:
                 completeClothoidPts = []    # stores a the full path of each clothoid generated - mainly used for plotting purposes
 
                 for i in clothoid_list:
-                    plt.plot(*i.SampleXY(500))
+                    # plt.plot(*i.SampleXY(500))
                     pltpts = i.SampleXY(500)
                     for ii in range(0, len(pltpts[0])):
                         temp.append([pltpts[1][ii], pltpts[0][ii]])
@@ -674,10 +733,11 @@ while step < 3000:
                     print(TC.WARNING + '\t\t\tPath Too Long' + TC.ENDC)
                     
 
-            for clothoid in clothoid_paths:
-                plt.plot([pt[1] for pt in clothoid[4][0]], [pt[0] for pt in clothoid[4][0]])
+            # for clothoid in clothoid_paths:
+            #     plt.plot([pt[1] for pt in clothoid[4][0]], [pt[0] for pt in clothoid[4][0]])
 
 
+        # ==== Plot Snapshot ====
         plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
         plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
         NCcone = uavh_others_all[0]['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
@@ -696,8 +756,8 @@ while step < 3000:
         plt.ylim((mainUAV['dubins'].x - 0.001, mainUAV['dubins'].x + 0.001))
         plt.xlim((mainUAV['dubins'].y - 0.001, mainUAV['dubins'].y + 0.001))
         # plt.show(100)
-        #fig.set_size_inches((12, 10)) 
-        # plt.pause(1)
+        fig.set_size_inches((12, 10)) 
+        plt.pause(1)
         
         wd = os.getcwd()
         path=(wd + '/RaceTrack_RecoveryPaths')
@@ -705,7 +765,6 @@ while step < 3000:
         RecoveryPaths = os.path.join(path,RecoveryPaths)
         plt.savefig(RecoveryPaths)
         plt.clf()
-
 
 
         if hasRecoveryPlan == False:
@@ -737,6 +796,7 @@ while step < 3000:
             for ptList in Recovery_dict['chosenPath']:
                 NewPath.append([ptList[1], ptList[0]])
 
+            # ==== Plot Snapshot ====
             plt.plot([pt[1] for pt in NewPath], [pt[0] for pt in NewPath], c='green', marker='o',markersize=5)
 
             # plot keep out zones from UAVHeading.avoid() function
@@ -744,7 +804,7 @@ while step < 3000:
                 plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
                 plotNCkoz, = plt.plot([pt[1] for pt in avoid[1]], [pt[0] for pt in avoid[1]], '--m')
 
-            #fig.set_size_inches((12, 10)) 
+            fig.set_size_inches((12, 10)) 
 
             plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
             plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
@@ -886,13 +946,16 @@ while step < 3000:
                 replan = False
             plotCAScone, = plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts], color)
             plotCurrentWypt = plt.plot(uav['dubins'].waypoints[uav['dubins'].currentWPIndex][1], uav['dubins'].waypoints[uav['dubins'].currentWPIndex][0], c='black', marker='X')
-            plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
+            # plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
 
             # crossError, m, b = crossTrackError(PruitTrack, [uav['dubins'].x, uav['dubins'].y])
 
             if usetargetPath: 
+                if step >= 1198:
+                    mycheck = 1
+
                 #print(TC.OKBLUE+ '\tUsing Target Path' + TC.ENDC)
-                if uav['dubins'].currentWPIndex >= len(ActivePath_List)-1:
+                if uav['dubins'].currentWPIndex >= len(ActivePath_List):
                     for i in range(0, len(ActivePath_List)):
                         if ActivePath_List[i]['Is Go-To'] == True:
                             uav['dubins'].currentWPIndex = i
@@ -920,7 +983,7 @@ while step < 3000:
 
             plotNCcone, = plt.plot([pt[1] for pt in pts], [pt[0] for pt in pts], "-r")
             uav['dubins'].simulateWPDubins(UseCarrotChase=False, delta=0.01)
-            # uav['dubins'].update_pos_simple()
+            uav['dubins'].update_pos_simple()
             NCuavPos = uav['dubins'].position
 
         uav = syncAVSfromDubins(uav)
@@ -930,44 +993,43 @@ while step < 3000:
               ' (' + str(round(np.degrees(uav['dubins'].heading),2)) + ')'   )
 
 
-
-
-
     '''======================
        ===== Plotting =======
        ====================== '''
     if hasAstarPlan:
         plot_AstarPlan = plt.plot([pt[1] for pt in wplist.tolist()], [pt[0] for pt in wplist.tolist()], c = 'k', marker='*', markersize=8)
-        for pts in wplist.tolist():
-                wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
-                plt.gca().add_artist(wptCircle)
-                plt.scatter(pts[1],pts[0])
+        # for pts in wplist.tolist():
+        #         wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
+        #         plt.gca().add_artist(wptCircle)
+        #         plt.scatter(pts[1],pts[0])
 
     if hasRecoveryPlan :
         plot_RecoveryPlan = plt.plot([pt[1] for pt in NewPath], [pt[0] for pt in NewPath], c = 'g', marker='o', markersize=8)
-        for pts in NewPath:
-                wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
-                plt.gca().add_artist(wptCircle)
-                plt.scatter(pts[1],pts[0])
+        # for pts in NewPath:
+        #         wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
+        #         plt.gca().add_artist(wptCircle)
+        #         plt.scatter(pts[1],pts[0])
 
     plt.plot([pt[1] for pt in PruitTrack], [pt[0] for pt in PruitTrack], c='b', marker='.', markersize=8)
     # plt.plot([pt[1] for pt in TargetWPList], [pt[0] for pt in TargetWPList], c='b', marker='+', markersize=8)
-
-    for pts in PruitTrack:
-            # plot circles around each waypoint - viusal aid for waypoint updating
-            wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
-            plt.gca().add_artist(wptCircle)
-            plt.scatter(pts[1],pts[0])
+    plt.plot([pt[1] for pt in PruitTrack], [pt[0] for pt in PruitTrack], c='b', marker='.', markersize=8)
 
 
+    # for pts in PruitTrack:
+    #         # plot circles around each waypoint - viusal aid for waypoint updating
+    #         wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
+    #         plt.gca().add_artist(wptCircle)
+    #         plt.scatter(pts[1],pts[0])
 
-    text = ("Sim Step: " + str(step) + "\nCAS/NC Current wpt: " + str(uavlist[0]['dubins'].currentWPIndex) + '/' + str(uavlist[1]['dubins'].currentWPIndex) ) 
+    # for pts in PruitTrack:
+    #         # plot circles around each waypoint - viusal aid for waypoint updating
+    #         wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
+    #         plt.gca().add_artist(wptCircle)
+    #         plt.scatter(pts[1],pts[0])
+
+
+    text = ("Simulation Step: " + str(step) + "\nCAS Current wypt (Total): " + str(uavlist[0]['dubins'].currentWPIndex) + '(' + str(len(ActivePath_List)) + ')') 
     
-    if step > 3361:
-        mydebug =1
-    if step > 1282:
-        mydebug =1
-
     if hasAstarPlan == False and hasRecoveryPlan == False:
         text1 = ("Currently Following: Ref Path")
     elif hasAstarPlan == True and hasRecoveryPlan == False:
@@ -975,13 +1037,23 @@ while step < 3000:
     elif hasAstarPlan == False and hasRecoveryPlan == True:
         text1 = ("Currently Following: Recovery Path")
 
-    plt.text(0.1, 0.05, text, transform=ax.transAxes)
-    plt.text(0.1, 0.9, text1, transform=ax.transAxes)
+    # plt.text(0.1, 0.05, text, transform=ax.transAxes)
+    # plt.text(0.1, 0.9, text1, transform=ax.transAxes)
+
+    ax.axis('equal')
+    # plt.ylim((39.32450, 39.32657))
+    plt.xlim((-82.11100, -82.1090))
+
+    plt.ylim((39.32435, 39.32657))
+    # plt.xlim((-82.1117, -82.1095))
+
+
+    # plt.ylim((39.788, 39.802))
+    # plt.xlim((-86.241, -86.227))
 
     fig.set_size_inches((12, 10))  
-    plt.axis('equal')
     plt.grid(True)
-    plt.pause(0.01)
+    # plt.pause(0.01)
 
     ''' 
     Save frames for a movie 
@@ -1028,7 +1100,6 @@ while step < 3000:
         plt.savefig(fname5)
         savePlots5.append(fname5)  
 
-    plt.show()
     plt.clf()
 
     step+=1
@@ -1053,19 +1124,38 @@ subprocess.call("mencoder 'mf://_tmpa*.png' -mf type=png:fps=10 -ovc lavc "
 subprocess.call("mencoder 'mf://_tmpb*.png' -mf type=png:fps=10 -ovc lavc "
                 "-lavcopts vcodec=mpeg4 -oac copy -o animation2.mp4", shell=True)
 
-subprocess.call("mencoder 'mf://_tmpc*.png' -mf type=png:fps=10 -ovc lavc "
-                "-lavcopts vcodec=mpeg4 -oac copy -o animation3.mp4", shell=True)
+# subprocess.call("mencoder 'mf://_tmpc*.png' -mf type=png:fps=10 -ovc lavc "
+#                 "-lavcopts vcodec=mpeg4 -oac copy -o animation3.mp4", shell=True)
 
-subprocess.call("mencoder 'mf://_tmpd*.png' -mf type=png:fps=10 -ovc lavc "
-                "-lavcopts vcodec=mpeg4 -oac copy -o animation4.mp4", shell=True)
+# subprocess.call("mencoder 'mf://_tmpd*.png' -mf type=png:fps=10 -ovc lavc "
+#                 "-lavcopts vcodec=mpeg4 -oac copy -o animation4.mp4", shell=True)
 
-subprocess.call("mencoder 'mf://_tmpe*.png' -mf type=png:fps=10 -ovc lavc "
-                "-lavcopts vcodec=mpeg4 -oac copy -o animation5.mp4", shell=True)
+# subprocess.call("mencoder 'mf://_tmpe*.png' -mf type=png:fps=10 -ovc lavc "
+#                 "-lavcopts vcodec=mpeg4 -oac copy -o animation5.mp4", shell=True)
+
+print('Clean up...')
+for fname in savePlots:
+    os.remove(fname)   
+print('Clean up...')
+for fname in savePlots1:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots2:
+    os.remove(fname) 
+print('Clean up...')
+# for fname in savePlots3:
+#     os.remove(fname)   
+# print('Clean up...')
+# for fname in savePlots4:
+#     os.remove(fname) 
+# print('Clean up...')
+# for fname in savePlots5:
+#     os.remove(fname) 
+#     print('Clean up...')
 
 
-
-
-
+print('Reverting to previous Directory')
+os.chdir(wd)
 
 
 

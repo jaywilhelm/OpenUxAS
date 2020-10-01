@@ -844,7 +844,7 @@ class UAVHeading:
 
         #do it again with larger KOZ
         # area_length*1.33
-        intersects, avoid_areas, CollisionUavIDs = self.findPotentialIntersects(uavh_others, area_length*1.11, static_koz)
+        intersects, avoid_areas, CollisionUavIDs = self.findPotentialIntersects(uavh_others, area_length*1.22, static_koz)
         print(TC.WARNING + 'AVOID.' + TC.ENDC)
         self.lastClear = False
         use_pseudo_target = False
@@ -1010,7 +1010,7 @@ class UAVHeading:
             
 
             #fig.savefig("test.png")
-            plt.show()
+            # plt.show()
 
 
         ### ^== Plot Astar result ==^ ###
