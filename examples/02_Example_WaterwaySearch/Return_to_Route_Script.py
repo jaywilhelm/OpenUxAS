@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 import sys, math, os, subprocess, time, shutil
 import numpy as np
-from dubinsUAV import dubinsUAV
+from dubins_Return2Route import dubinsUAV
 from TerminalColors import TerminalColors as TC
 
 # For clothoid path generation
@@ -223,6 +223,8 @@ hasAstarPlan = False
 hasRecoveryPlan = False
 onlyOnce = False
 last_targetIndex = 0   # temp variable
+TrackUAV = False
+ClearedCollision = False
 
 usetargetPath = True
 
@@ -264,7 +266,7 @@ while step < 3500:
         Easier to use a list of waypoints
     '''
     if TargetWPList == None:
-        mainUAV['dubins'].getDist2otherUAVs(uavh_others_all)
+        # mainUAV['dubins'].getDist2otherUAVs(uavh_others_all)
         
         TargetWPList = []
         for i in range(0, len(ReferencePath_List)):
@@ -362,7 +364,6 @@ while step < 3500:
             ==== Avoid Function is here ====
             ================================
             '''
-            # hasAstarPlan = False
             astarReplan, astarwpts, KOZpoints, full_path, uavID, AstarFailure = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True, simStep=step)
 
             ''' Use uavID to determine with NC UAV is being Avoided '''
@@ -371,6 +372,11 @@ while step < 3500:
                     uavID[i] = uavh_others_all[uavID[i]]['ID']
                     print('Potential Collision with UAV ' + str(uavID[i]))
 
+            '''
+            ===========================================
+            ==== Update Active Path With A* replan ====
+            ===========================================
+            '''
             if (astarReplan and not hasAstarPlan):
                 hasAstarPlan = True
                 Show_AstarPlan = True
@@ -404,17 +410,6 @@ while step < 3500:
                 ''' Insert A* points (astarwpts) into Active path '''
                 ActivePath_List[mainUAV['dubins'].currentWPIndex : mainUAV['dubins'].currentWPIndex] = temp
 
-                # # If the astar goal point is looking into the next lap
-                # # add additional reference waypoints to the active list
-                # if targetIndex < mainUAV['dubins'].currentWPIndex:
-                #     Waypoint_dict = {}
-                #     for j in range(0, len(ReferencePath_List)):
-                #         Waypoint_dict['pt'] = ReferencePath_List[j]['pt']
-                #         Waypoint_dict['Belongs to'] = 'Reference Path'
-
-                #         ActivePath_List.append(Waypoint_dict.copy())
-
-
                 ''' Update the List of Waypoints '''
                 TargetWPList = []
                 for i in range(0, len(ActivePath_List)):
@@ -424,6 +419,10 @@ while step < 3500:
                 activeWP = uavlist[0]['dubins'].waypoints[uavlist[0]['dubins'].currentWPIndex]
 
                 print(TC.OKBLUE + 'Insert ' + str(numbOfAstarPts) + ' Astar Points at wpt index ' + str(indexRecall) + TC.ENDC)
+
+                # Turn on Distance Tracking between CAS and NC UAVs
+                TrackUAV = True
+                last_dist2UAV = distance([uavlist[0]['dubins'].x, uavlist[0]['dubins'].y] , [uavlist[1]['dubins'].x, uavlist[1]['dubins'].y])
 
                 if Show_AstarSnapShot == True:
                     # ===== Plot snapshot of Astar Path and save frame ==============
@@ -456,14 +455,23 @@ while step < 3500:
     else:
         print('\tOnly one UAV')
 
+    # Start Distance Tracking between CAS and NC UAVs
+    # Currently only useful for scenarios with only 1 NC UAV
+    if TrackUAV == True:
+        dist2UAV = distance([uavlist[0]['dubins'].x, uavlist[0]['dubins'].y] , [uavlist[1]['dubins'].x, uavlist[1]['dubins'].y])
+        if dist2UAV > last_dist2UAV:
+            TrackncUAV = False
+            ClearedCollision = True
+        else:
+            last_dist2UAV = dist2UAV
 
     '''
     =========================================
     ==== Generate Clothoid Recovery Path ====
     =========================================
     '''
-    checkDistance = 9999999     # used to evaluate shortest clothoid path using interpolated target waypoints
-    if hasAstarPlan and mainUAV['dubins'].trackUAV[0]['clearedUAV']:
+    checkDistance = 9999999     # used to evaluate shortest clothoid path using interpolated waypoint targets
+    if hasAstarPlan and ClearedCollision==True:
         hasAstarPlan = False
         '''
         List of dictionary entries
@@ -479,12 +487,11 @@ while step < 3500:
                 InsetionPoint_dict['Index'] = i
                 InsetionPoint_dict['pt'] = ActivePath_List[i]['pt']
                 InsertionPoint_list.append(InsetionPoint_dict.copy())
-
         '''
         Convert uav North East Down angle convention to cartesion for clothoid heading:
         Needed an axis flip to find the angle between UAV and active waypoint- x's in the numerator and y's in the denominator, then add 180 deg
         '''
-        # Use dummy waypoint projected in front of CAS UAC to determine start heading for clothoid calcs
+        # Use dummy waypoint projected in front of CAS UAV to determine start heading for clothoid calcs
         xy = (mainUAV['dubins'].x, mainUAV['dubins'].y)
         r = 0.3
         px = xy[0] + r * np.cos(mainUAV['dubins'].heading)
@@ -646,8 +653,8 @@ while step < 3500:
                 # plt.show(100) # uncomment if you want to see every clothoid generated by itself
                 completeClothoidPts.append(temp)        # store points of entire clothoid path
                 clothoid_paths.append([index, clothoidLength, ClothoidPath, recoveryPath, completeClothoidPts, circle_list])   # store info for each clothoid
-                Recovery_dict['pathLength'].append(clothoidLength)
-                Recovery_dict['turnRadii'].append(circle_list)
+                # Recovery_dict['pathLength'].append(clothoidLength)
+                # Recovery_dict['turnRadii'].append(circle_list)
 
                 'Determine if path violates UAV Turn Radius'
                 print('\tPath Distance: ' + str(round(clothoidLength,3)) + '\tClothoid Radii: ' + str(round(circle_list[0][2],3)) + 
@@ -667,15 +674,15 @@ while step < 3500:
                     checkDistance = clothoidLength
                     hasRecoveryPlan = True
                     hasPlan = False
-                    Recovery_dict['chosenPathFull'] = completeClothoidPts
-                    Recovery_dict['chosenPath'] = recoveryPath
-                    Recovery_dict['cirlces'] = circle_list
+                    # Recovery_dict['chosenPathFull'] = completeClothoidPts
+                    # Recovery_dict['chosenPath'] = recoveryPath
+                    # Recovery_dict['cirlces'] = circle_list
                     numbOfRecoveryPts = len(recoveryPath)
                     Return2Ref_Index = InsertionPoint_list[index+1]['Index'] + numbOfRecoveryPts
 
                     #Recovery_dict['chosenIndex'] = selectPath + numbOfRecoveryPts # + numbOfAstarPts
-                    Recovery_dict['chosenIndex'] =  Astar_Return_Index
-                    Recovery_dict['returnIndex'] = Astar_Return_Index + numbOfRecoveryPts
+                    # Recovery_dict['chosenIndex'] =  Astar_Return_Index
+                    # Recovery_dict['returnIndex'] = Astar_Return_Index + numbOfRecoveryPts
                     print(TC.OKGREEN + '\t\t\tSelected index pt: ' + str(selectPath) + ' which is now at index ' + str(Recovery_dict['chosenIndex']) + TC.ENDC)
 
                 elif checkPassed == True and clothoidLength > checkDistance:
@@ -718,7 +725,8 @@ while step < 3500:
         if hasRecoveryPlan == False:
             print('No valid recovery path available')
         else:
-            print(TC.OKGREEN + '\nSelected point between wp index ' + str(selectPath-1) + ' and ' + str(selectPath) + ' as the recovery insertion point' + TC.ENDC)
+            ClearedCollision = True
+            print(TC.OKGREEN + '\nSelected point between wp index ' + str(selectPath-1) + ' and ' + str(selectPath) + ' as the recovery insertion point' + TC.ENDC)          
             NewPath = []
             for ptList in Recovery_dict['chosenPath']:
                 NewPath.append([ptList[1], ptList[0]])
@@ -963,55 +971,57 @@ while step < 3500:
 
     fig.set_size_inches((12, 10))  
     plt.grid(True)
-    # plt.pause(0.01)
+    plt.pause(0.01)
 
-    wd = os.getcwd()
-    path=(wd + '/Movies')
-    fname = '_tmp%03d.png' % step
-    fname = os.path.join(path,fname)
-    plt.savefig(fname)
-
-    if step < 500:
-        fname = '_tmpz%03d.png' % step
+    makeAmovie = False
+    if makeAmovie == True:
+        wd = os.getcwd()
+        path=(wd + '/Movies')
+        fname = '_tmp%03d.png' % step
         fname = os.path.join(path,fname)
         plt.savefig(fname)
-        savePlots.append(fname)
 
-    elif step >= 500 and step < 1000:
-        fname1 = '_tmpa%03d.png' % step
-        fname1 = os.path.join(path,fname1)
-        plt.savefig(fname1)        
-        savePlots1.append(fname1)
+        if step < 500:
+            fname = '_tmpz%03d.png' % step
+            fname = os.path.join(path,fname)
+            plt.savefig(fname)
+            savePlots.append(fname)
 
-    elif step >= 1000 and step < 1500:
-        fname2 = '_tmpb%03d.png' % step
-        fname2 = os.path.join(path,fname2)
-        plt.savefig(fname2)
-        savePlots2.append(fname2)  
+        elif step >= 500 and step < 1000:
+            fname1 = '_tmpa%03d.png' % step
+            fname1 = os.path.join(path,fname1)
+            plt.savefig(fname1)        
+            savePlots1.append(fname1)
 
-    elif step >= 1500 and step < 2000:
-        fname3 = '_tmpc%03d.png' % step
-        fname3 = os.path.join(path,fname3)
-        plt.savefig(fname3)
-        savePlots3.append(fname3)  
+        elif step >= 1000 and step < 1500:
+            fname2 = '_tmpb%03d.png' % step
+            fname2 = os.path.join(path,fname2)
+            plt.savefig(fname2)
+            savePlots2.append(fname2)  
 
-    elif step >= 2000 and step < 2500:
-        fname4 = '_tmpd%03d.png' % step
-        fname4 = os.path.join(path,fname4)
-        plt.savefig(fname4)
-        savePlots4.append(fname4)  
+        elif step >= 1500 and step < 2000:
+            fname3 = '_tmpc%03d.png' % step
+            fname3 = os.path.join(path,fname3)
+            plt.savefig(fname3)
+            savePlots3.append(fname3)  
 
-    elif step >= 2500 and step < 3000:
-        fname5 = '_tmpe%03d.png' % step
-        fname5 = os.path.join(path,fname5)
-        plt.savefig(fname5)
-        savePlots5.append(fname5) 
+        elif step >= 2000 and step < 2500:
+            fname4 = '_tmpd%03d.png' % step
+            fname4 = os.path.join(path,fname4)
+            plt.savefig(fname4)
+            savePlots4.append(fname4)  
 
-    elif step >= 3000 and step < 3500:
-        fname6 = '_tmpf%03d.png' % step
-        fname6 = os.path.join(path,fname5)
-        plt.savefig(fname6)
-        savePlots6.append(fname6) 
+        elif step >= 2500 and step < 3000:
+            fname5 = '_tmpe%03d.png' % step
+            fname5 = os.path.join(path,fname5)
+            plt.savefig(fname5)
+            savePlots5.append(fname5) 
+
+        elif step >= 3000 and step < 3500:
+            fname6 = '_tmpf%03d.png' % step
+            fname6 = os.path.join(path,fname5)
+            plt.savefig(fname6)
+            savePlots6.append(fname6) 
 
     plt.clf()
     step +=1
