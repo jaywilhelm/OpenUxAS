@@ -226,20 +226,14 @@ last_targetIndex = 0   # temp variable
 TrackUAV = False
 ClearedCollision = False
 
-usetargetPath = True
-
-hadPlan = False
-hasPlan = False
-
-
 '''
 Ploting variables
 '''
 Show_AstarPlan = False
 Show_RecoveryPlan = False
 
-Show_AstarSnapShot = True
-Show_RecoverySnapShot = False
+Show_AstarSnapShot = False
+Show_RecoverySnapShot = True
 Show_SelectedRecoveryPathSnapShot = False
 '''
 Pickle and save for later Variables
@@ -252,6 +246,7 @@ savePlots3 = []
 savePlots4 = []
 savePlots5 = []
 savePlots6 = []
+visitedWypts = []
 
 fig, ax = plt.subplots()
 step = 0
@@ -265,9 +260,7 @@ while step < 3500:
     ''' Extract the waypoint infrmation from the ReferencePath_list  
         Easier to use a list of waypoints
     '''
-    if TargetWPList == None:
-        # mainUAV['dubins'].getDist2otherUAVs(uavh_others_all)
-        
+    if TargetWPList == None:       
         TargetWPList = []
         for i in range(0, len(ReferencePath_List)):
             TargetWPList.append(ActivePath_List[i]['pt'])
@@ -380,8 +373,8 @@ while step < 3500:
             if (astarReplan and not hasAstarPlan):
                 hasAstarPlan = True
                 Show_AstarPlan = True
-                # indexRecall - used to reset the currentWPIndex after A* and/or Recovery path is complete
-                indexRecall = mainUAV['dubins'].currentWPIndex 
+                # indexRecall - used to inform Revocery path logic where the UAV left the reference path
+                indexRecall = mainUAV['dubins'].currentWPIndex-1
 
                 # Current positions is saved to be used later as a possible recovery insetions point
                 saveCurrentPOS = [mainUAV['dubins'].x, mainUAV['dubins'].y ]
@@ -422,7 +415,7 @@ while step < 3500:
 
                 # Turn on Distance Tracking between CAS and NC UAVs
                 TrackUAV = True
-                last_dist2UAV = distance([uavlist[0]['dubins'].x, uavlist[0]['dubins'].y] , [uavlist[1]['dubins'].x, uavlist[1]['dubins'].y])
+                last_dist2UAV = 999999
 
                 if Show_AstarSnapShot == True:
                     # ===== Plot snapshot of Astar Path and save frame ==============
@@ -457,10 +450,11 @@ while step < 3500:
 
     # Start Distance Tracking between CAS and NC UAVs
     # Currently only useful for scenarios with only 1 NC UAV
+    distThreshold = area_length*1.22
     if TrackUAV == True:
         dist2UAV = distance([uavlist[0]['dubins'].x, uavlist[0]['dubins'].y] , [uavlist[1]['dubins'].x, uavlist[1]['dubins'].y])
-        if dist2UAV > last_dist2UAV:
-            TrackncUAV = False
+        if dist2UAV > last_dist2UAV and dist2UAV > distThreshold:
+            TrackUAV = False
             ClearedCollision = True
         else:
             last_dist2UAV = dist2UAV
@@ -472,21 +466,6 @@ while step < 3500:
     '''
     checkDistance = 9999999     # used to evaluate shortest clothoid path using interpolated waypoint targets
     if hasAstarPlan and ClearedCollision==True:
-        hasAstarPlan = False
-        '''
-        List of dictionary entries
-        Each entry contains the extracted reference waypoints from the active path list
-        and the corresponding index in the active waypoint list
-        The corresponding index defines the waypoint to follow when the CAS UAV switches
-        from the recovery path back to the reference path
-        '''
-        InsertionPoint_list = []
-        InsetionPoint_dict = {}
-        for i in range(0, len(ActivePath_List)):
-            if ActivePath_List[i]['Belongs to'] == 'Reference Path':
-                InsetionPoint_dict['Index'] = i
-                InsetionPoint_dict['pt'] = ActivePath_List[i]['pt']
-                InsertionPoint_list.append(InsetionPoint_dict.copy())
         '''
         Convert uav North East Down angle convention to cartesion for clothoid heading:
         Needed an axis flip to find the angle between UAV and active waypoint- x's in the numerator and y's in the denominator, then add 180 deg
@@ -506,21 +485,73 @@ while step < 3500:
 
         numbOfwpts = 10     # how many waypoints per clothoid will be used for circle fitting (3 clothoids needed for a solution)
         clothoid_paths = [] # List of information on each clothoid path generated between UAV and waypoint on reference path
-    
+        
+        '''
+        List of dictionary entries
+        Each entry contains the extracted reference waypoints from the active path list
+        and the corresponding index in the active waypoint list
+        The corresponding index defines the waypoint to follow when the CAS UAV switches
+        from the recovery path back to the reference path
+        '''
+        InsertionPoint_list = []
+        InsetionPoint_dict = {}
+        for i in range(0, len(ActivePath_List)):
+            if ActivePath_List[i]['Belongs to'] == 'Reference Path':
+                InsetionPoint_dict['Index'] = i
+                InsetionPoint_dict['pt'] = ActivePath_List[i]['pt']
+                InsertionPoint_list.append(InsetionPoint_dict.copy())
+
+        ''' ============================================= ''' 
+        'Determine which waypoint in InsertionPoint_list the CAS UAV is heading towards'
+        for i in range(0, len(InsertionPoint_list)):
+            if InsertionPoint_list[i]['Index'] == indexRecall:
+                currentIndex = i
+                break
+
+
+        # Add in additional Reference path points in case the UAV is about to make a lap
+        # This step is performed after the 'currentIndex' step above 
+        # because there will be douplicate 'Index' entries
+        for j in range(0, int(len(ReferencePath_List)/2)):
+            InsetionPoint_dict['Index'] = j
+            InsetionPoint_dict['pt'] = ReferencePath_List[j]['pt']
+            InsertionPoint_list.append(InsetionPoint_dict.copy()) 
+
+        # lookAheadDist = 4
+        # for pt in range(0, numbOfPts-1):
+        #     d = distance([linX[pt], linY[pt]], [linX[pt+1], linY[pt+1]]) # Calculate distance between interpolated points
+        #     distTotal += d  
+        #     pointList.append([linX[pt], linY[pt]])
+        #     if distTotal >= area_length*lookAheadDist:
+        #         astarGoalPt = [linX[pt], linY[pt]]
+        #         targetIndex = astarGoalPoint_list[index]['Index']
+        #         if targetIndex < last_targetIndex:
+        #             lap = True
+        #         else:
+        #             lap = False
+        #             last_targetIndex = targetIndex
+        #         break
+        # if distTotal >= area_length*lookAheadDist:
+        #     break
+
+        ''' ================================= '''
+
         '''
         Find shortest Clothoid path from the CAS UAV's current position back to the reference path
         Choose the closest interpolated point on the reference path as injection point
         Chosen point is interpolated between original waypoint index sets
         Chosen point provdes the shortes path that does not violate turn radius
         '''
-        for index in range(0, len(InsertionPoint_list)-1):  
+        
+
+        for index in range(currentIndex, len(InsertionPoint_list)-1):  
             ' Find potential insetion points along the reference path ' 
-            if index == indexRecall-1:
-                # This is the point that the CAS UAV left the reference path to follow A* replan
+            if index == currentIndex:
+                # This is where the CAS UAV left the reference path to follow A* replan
                 x1 = saveCurrentPOS[0]
                 y1 = saveCurrentPOS[1]
             else:
-                # A point in the reference path
+                # Point in the reference path
                 x1 = InsertionPoint_list[index]['pt'][0]
                 y1 = InsertionPoint_list[index]['pt'][1]
 
@@ -566,7 +597,7 @@ while step < 3500:
                 'List and counter variables for clothoid path selection'
                 circle_list = []            # Stores circle fit info for each clothoid segment in a single path: [cx,cy,r]
                 ClothoidPath = []           # Stores a specified number of waypoints for each clothoid segment
-                recoveryPath = []           # Stored the 1st, middle, and last wpt from the 1st, 2nd, and 3rd clothoid respectively
+                recoveryPoints = []           # Stored the 1st, middle, and last wpt from the 1st, 2nd, and 3rd clothoid respectively
                 j = 0                       # Keeps track of which clothoid segment is being evaluated
                 clothoidLength = 0          # keeps track of clothoid path length
 
@@ -574,7 +605,7 @@ while step < 3500:
                 completeClothoidPts = []    # stores a the full path of each clothoid generated -  used for plotting purposes
 
                 for i in clothoid_list:
-                    # plt.plot(*i.SampleXY(500))
+                    plt.plot(*i.SampleXY(500))
                     pltpts = i.SampleXY(500)
                     for ii in range(0, len(pltpts[0])):
                         temp.append([pltpts[1][ii], pltpts[0][ii]])
@@ -596,29 +627,29 @@ while step < 3500:
                     midPt = int(len(points[0])/2)
                     endPt = len(points[0])-1
                     if j == 0:
-                        recoveryPath.append([points[0][1],points[1][1]])     # 1st point on first clothoid and for then entire path 
+                        recoveryPoints.append([points[0][1],points[1][1]])     # 1st point on first clothoid and for then entire path 
                         mid_x = i.X(s/2)
                         mid_y = i.Y(s/2)
                         mid_x2 = i.X(0.75*s)
                         mid_y2 = i.Y(0.75*s)
-                        recoveryPath.append([mid_x,mid_y])                   # 2nd point
-                        recoveryPath.append([mid_x2,mid_y2])                 # 3rd point
+                        recoveryPoints.append([mid_x,mid_y])                   # 2nd point
+                        recoveryPoints.append([mid_x2,mid_y2])                 # 3rd point
 
                     elif j == 1:
-                        recoveryPath.append([points[0][1],points[1][1]])     # 4th point - 1st point on the middle clothoid
+                        recoveryPoints.append([points[0][1],points[1][1]])     # 4th point - 1st point on the middle clothoid
                         mid_x = i.X(s/2)
                         mid_y = i.Y(s/2)
                         mid_x2 = i.X(0.75*s)
                         mid_y2 = i.Y(0.75*s)
-                        recoveryPath.append([mid_x,mid_y])                   # 5th point 
-                        recoveryPath.append([mid_x2,mid_y2])                 # 6th point
+                        recoveryPoints.append([mid_x,mid_y])                   # 5th point 
+                        recoveryPoints.append([mid_x2,mid_y2])                 # 6th point
 
                     elif j == 2:
-                        recoveryPath.append([points[0][1],points[1][1]])     # 7th point - 1st point on the last clothoid
+                        recoveryPoints.append([points[0][1],points[1][1]])     # 7th point - 1st point on the last clothoid
                         mid_x = i.X(s/2)        
                         mid_y = i.Y(s/2)
-                        recoveryPath.append([mid_x,mid_y])                       # 8th point
-                        recoveryPath.append([points[0][endPt],points[1][endPt]]) # 9th point - last point of the last clothoid - should be original interploated point
+                        recoveryPoints.append([mid_x,mid_y])                       # 8th point
+                        recoveryPoints.append([points[0][endPt],points[1][endPt]]) # 9th point - last point of the last clothoid - should be original interploated point
                     
                     '''
                     Fit a circle to clothoid segment  
@@ -652,7 +683,7 @@ while step < 3500:
 
                 # plt.show(100) # uncomment if you want to see every clothoid generated by itself
                 completeClothoidPts.append(temp)        # store points of entire clothoid path
-                clothoid_paths.append([index, clothoidLength, ClothoidPath, recoveryPath, completeClothoidPts, circle_list])   # store info for each clothoid
+                clothoid_paths.append([index, clothoidLength, ClothoidPath, recoveryPoints, completeClothoidPts, circle_list])   # store info for each clothoid
                 # Recovery_dict['pathLength'].append(clothoidLength)
                 # Recovery_dict['turnRadii'].append(circle_list)
 
@@ -674,6 +705,8 @@ while step < 3500:
                     checkDistance = clothoidLength
                     hasRecoveryPlan = True
                     hasPlan = False
+
+                    recoveryPath = recoveryPoints[:]
                     # Recovery_dict['chosenPathFull'] = completeClothoidPts
                     # Recovery_dict['chosenPath'] = recoveryPath
                     # Recovery_dict['cirlces'] = circle_list
@@ -683,17 +716,18 @@ while step < 3500:
                     #Recovery_dict['chosenIndex'] = selectPath + numbOfRecoveryPts # + numbOfAstarPts
                     # Recovery_dict['chosenIndex'] =  Astar_Return_Index
                     # Recovery_dict['returnIndex'] = Astar_Return_Index + numbOfRecoveryPts
-                    print(TC.OKGREEN + '\t\t\tSelected index pt: ' + str(selectPath) + ' which is now at index ' + str(Recovery_dict['chosenIndex']) + TC.ENDC)
+                    # print(TC.OKGREEN + '\t\t\tSelected index pt: ' + str(selectPath) + ' which is now at index ' + str(Recovery_dict['chosenIndex']) + TC.ENDC)
 
                 elif checkPassed == True and clothoidLength > checkDistance:
                     print(TC.WARNING + '\t\t\tPath Too Long' + TC.ENDC)
 
-            # for clothoid in clothoid_paths:
-            #     plt.plot([pt[1] for pt in clothoid[4][0]], [pt[0] for pt in clothoid[4][0]])
+            for clothoid in clothoid_paths:
+                plt.plot([pt[1] for pt in clothoid[4][0]], [pt[0] for pt in clothoid[4][0]])
 
 
         if Show_RecoverySnapShot == True:
             # ==== Plot Snapshot of all possible Clothoid paths ====
+
             plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
             plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
             NCcone = uavh_others_all[0]['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
@@ -709,8 +743,11 @@ while step < 3500:
                 plotNCkoz, = plt.plot([pt[1] for pt in KOZpoints[1]], [pt[0] for pt in KOZpoints[1]], '--m')
             plt.axis('equal')
             plt.grid(True)
-            plt.ylim((mainUAV['dubins'].x - 0.001, mainUAV['dubins'].x + 0.001))
-            plt.xlim((mainUAV['dubins'].y - 0.001, mainUAV['dubins'].y + 0.001))
+            # plt.ylim((mainUAV['dubins'].x - 0.001, mainUAV['dubins'].x + 0.001))
+            # plt.xlim((mainUAV['dubins'].y - 0.001, mainUAV['dubins'].y + 0.001))
+            plt.xlim((-82.11100, -82.1090))
+            plt.ylim((39.32435, 39.32657))
+
             # plt.show(100)
             fig.set_size_inches((12, 10)) 
             # plt.pause(1)
@@ -726,10 +763,13 @@ while step < 3500:
             print('No valid recovery path available')
         else:
             ClearedCollision = True
+            Show_AstarPlan = False
+            Show_RecoveryPlan = True
+
             print(TC.OKGREEN + '\nSelected point between wp index ' + str(selectPath-1) + ' and ' + str(selectPath) + ' as the recovery insertion point' + TC.ENDC)          
-            NewPath = []
-            for ptList in Recovery_dict['chosenPath']:
-                NewPath.append([ptList[1], ptList[0]])
+            RecoveryPath_List = []
+            for ptList in recoveryPath:
+                RecoveryPath_List.append([ptList[1], ptList[0]])
 
             if Show_SelectedRecoveryPathSnapShot == True:
                 # plt.plot([pt[1] for pt in Recovery_dict['chosenPathFull'][0]], [pt[0] for pt in Recovery_dict['chosenPathFull'][0]])
@@ -809,20 +849,18 @@ while step < 3500:
             hasAstarPlan = False
             Show_AstarPlan = False
 
-
-
     elif hasAstarPlan == True or hasRecoveryPlan == True:
         if not onlyOnce:
             onlyOnce = True
             lastIndex = mainUAV['dubins'].currentWPIndex
-            numbOfRecoveryPts = len(NewPath)
+            numbOfRecoveryPts = len(RecoveryPath_List)
             # insertIndex = indexRecall + numbOfAstarPts 
             insertIndex = mainUAV['dubins'].currentWPIndex
 
             # Update Active path with Recovery plan
             temp = []
-            for i in range(0, len(NewPath)):
-                Waypoint_dict['pt'] = NewPath[i]    
+            for i in range(0, len(RecoveryPath_List)):
+                Waypoint_dict['pt'] = RecoveryPath_List[i]    
                 Waypoint_dict['Belongs to'] = 'Recovery'
                 Waypoint_dict['A* Return Index'] = None
                 Waypoint_dict['A* Return Pt'] = None
@@ -848,7 +886,8 @@ while step < 3500:
         elif mainUAV['dubins'].currentWPIndex >= Recover_Return_Index :
             hasRecoveryPlan = False
             onlyOnce = False
-            
+            Show_RecoveryPlan = False
+            ClearedCollision = False
             mainUAV['dubins'].currentWPIndex = Return2Ref_Index  # Need to test
             activeWP = uavlist[0]['dubins'].waypoints[uavlist[0]['dubins'].currentWPIndex]
             print('Completed Recovery path')
@@ -922,8 +961,8 @@ while step < 3500:
         #         plt.scatter(pts[1],pts[0])
 
     if Show_RecoveryPlan :
-        plot_RecoveryPlan = plt.plot([pt[1] for pt in NewPath], [pt[0] for pt in NewPath], c = 'g', marker='o', markersize=8)
-        # for pts in NewPath:
+        plot_RecoveryPlan = plt.plot([pt[1] for pt in RecoveryPath_List], [pt[0] for pt in RecoveryPath_List], c = 'g', marker='o', markersize=8)
+        # for pts in RecoveryPath_List:
         #         wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
         #         plt.gca().add_artist(wptCircle)
         #         plt.scatter(pts[1],pts[0])
@@ -946,6 +985,7 @@ while step < 3500:
     #         plt.scatter(pts[1],pts[0])
 
 
+    visitedWypts.append(uavlist[0]['dubins'].currentWPIndex)
     text = ("Simulation Step: " + str(step) + "\nCAS Current wypt (Total): " + str(uavlist[0]['dubins'].currentWPIndex) + '(' + str(len(ActivePath_List)) + ')') 
     
     if hasAstarPlan == False and hasRecoveryPlan == False:
