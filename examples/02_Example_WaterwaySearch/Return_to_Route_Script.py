@@ -501,12 +501,15 @@ while step < 3500:
                 InsetionPoint_dict['pt'] = ActivePath_List[i]['pt']
                 InsertionPoint_list.append(InsetionPoint_dict.copy())
 
+        closestIndex = 9999
         ''' ============================================= ''' 
-        'Determine which waypoint in InsertionPoint_list the CAS UAV is heading towards'
         for i in range(0, len(InsertionPoint_list)):
-            if InsertionPoint_list[i]['Index'] == indexRecall:
+            checkIndex = InsertionPoint_list[i]['Index']
+            diff = np.abs(checkIndex - indexRecall)
+            if diff < closestIndex:
                 currentIndex = i
-                break
+                closestIndex = diff
+            
 
 
         # Add in additional Reference path points in case the UAV is about to make a lap
