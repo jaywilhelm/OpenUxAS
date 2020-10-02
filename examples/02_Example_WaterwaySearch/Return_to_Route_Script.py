@@ -222,6 +222,7 @@ TargetWPList = None
 hasAstarPlan = False
 hasRecoveryPlan = False
 onlyOnce = False
+last_targetIndex = 0   # temp variable
 
 usetargetPath = True
 
@@ -248,10 +249,11 @@ savePlots2 = []
 savePlots3 = []
 savePlots4 = []
 savePlots5 = []
+savePlots6 = []
 
 fig, ax = plt.subplots()
 step = 0
-while step < 2000:    
+while step < 3500:    
     ''' Identify UAVs using collision avoidence '''
     mainUAV = finduavbyID(uavlist, 1)                           # ID to Watch for
     uavh_others_all, uavh_others = findotheruavs(uavlist, 1)    # ID not to watch for
@@ -334,7 +336,7 @@ while step < 2000:
                 ''' 
                 Look for an interpolated point some distance forward along the reference path as the astarGoal point
                 '''
-                lookAheadDist = 3
+                lookAheadDist = 4
                 for pt in range(0, numbOfPts-1):
                     d = distance([linX[pt], linY[pt]], [linX[pt+1], linY[pt+1]]) # Calculate distance between interpolated points
                     distTotal += d  
@@ -342,6 +344,11 @@ while step < 2000:
                     if distTotal >= area_length*lookAheadDist:
                         astarGoalPt = [linX[pt], linY[pt]]
                         targetIndex = astarGoalPoint_list[index]['Index']
+                        if targetIndex < last_targetIndex:
+                            lap = True
+                        else:
+                            lap = False
+                            last_targetIndex = targetIndex
                         break
                 if distTotal >= area_length*lookAheadDist:
                     break
@@ -699,7 +706,7 @@ while step < 2000:
             plt.xlim((mainUAV['dubins'].y - 0.001, mainUAV['dubins'].y + 0.001))
             # plt.show(100)
             fig.set_size_inches((12, 10)) 
-            plt.pause(1)
+            # plt.pause(1)
             
             wd = os.getcwd()
             path=(wd + '/RaceTrack_RecoveryPaths')
@@ -771,7 +778,7 @@ while step < 2000:
     if hasAstarPlan == True and hasRecoveryPlan == False:
         if mainUAV['dubins'].currentWPIndex > Astar_Return_Index-1:
 
-            if targetIndex < mainUAV['dubins'].currentWPIndex:
+            if lap == True:
 
                 ActivePath_List = ReferencePath_List[:]
                 TargetWPList = []
@@ -783,9 +790,10 @@ while step < 2000:
                 activeWP = ActivePath_List[mainUAV['dubins'].currentWPIndex]['pt']
 
                 print('Completed A* path and a lap - no recovery path required')  
+                last_targetIndex = targetIndex
 
             else: 
-                mainUAV['dubins'].currentWPIndex = Astar_Return_Index  # Need to test
+                mainUAV['dubins'].currentWPIndex = targetIndex + numbOfAstarPts  # Need to test
                 activeWP = ActivePath_List[mainUAV['dubins'].currentWPIndex]['pt']
 
             print('Completed A* path - no recovery path required')  
@@ -955,6 +963,109 @@ while step < 2000:
 
     fig.set_size_inches((12, 10))  
     plt.grid(True)
-    plt.pause(0.01)
+    # plt.pause(0.01)
+
+    wd = os.getcwd()
+    path=(wd + '/Movies')
+    fname = '_tmp%03d.png' % step
+    fname = os.path.join(path,fname)
+    plt.savefig(fname)
+
+    if step < 500:
+        fname = '_tmpz%03d.png' % step
+        fname = os.path.join(path,fname)
+        plt.savefig(fname)
+        savePlots.append(fname)
+
+    elif step >= 500 and step < 1000:
+        fname1 = '_tmpa%03d.png' % step
+        fname1 = os.path.join(path,fname1)
+        plt.savefig(fname1)        
+        savePlots1.append(fname1)
+
+    elif step >= 1000 and step < 1500:
+        fname2 = '_tmpb%03d.png' % step
+        fname2 = os.path.join(path,fname2)
+        plt.savefig(fname2)
+        savePlots2.append(fname2)  
+
+    elif step >= 1500 and step < 2000:
+        fname3 = '_tmpc%03d.png' % step
+        fname3 = os.path.join(path,fname3)
+        plt.savefig(fname3)
+        savePlots3.append(fname3)  
+
+    elif step >= 2000 and step < 2500:
+        fname4 = '_tmpd%03d.png' % step
+        fname4 = os.path.join(path,fname4)
+        plt.savefig(fname4)
+        savePlots4.append(fname4)  
+
+    elif step >= 2500 and step < 3000:
+        fname5 = '_tmpe%03d.png' % step
+        fname5 = os.path.join(path,fname5)
+        plt.savefig(fname5)
+        savePlots5.append(fname5) 
+
+    elif step >= 3000 and step < 3500:
+        fname6 = '_tmpf%03d.png' % step
+        fname6 = os.path.join(path,fname5)
+        plt.savefig(fname6)
+        savePlots6.append(fname6) 
+
     plt.clf()
     step +=1
+
+'''
+Make a Movie
+'''
+print('Change directory to Movies... ')
+wd = os.getcwd()
+path = ('Movies')
+newDir = os.path.join(wd,path)
+os.chdir(str(newDir))
+print('Making sim movie...')
+# source: https://matplotlib.org/gallery/animation/movie_demo_sgskip.html
+# additional resource: https://linux.die.net/man/1/mencoder
+subprocess.call("mencoder 'mf://_tmpz*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpa*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation1.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpb*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation2.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpc*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation3.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpd*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation4.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpe*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation5.mp4", shell=True)
+
+subprocess.call("mencoder 'mf://_tmpf*.png' -mf type=png:fps=10 -ovc lavc "
+                "-lavcopts vcodec=mpeg4 -oac copy -o animation6.mp4", shell=True)
+print('Clean up...')
+for fname in savePlots:
+    os.remove(fname)   
+print('Clean up...')
+for fname in savePlots1:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots2:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots3:
+    os.remove(fname)   
+print('Clean up...')
+for fname in savePlots4:
+    os.remove(fname) 
+print('Clean up...')
+for fname in savePlots5:
+    os.remove(fname) 
+    print('Clean up...')
+for fname in savePlots6:
+    os.remove(fname) 
+    print('Clean up...')

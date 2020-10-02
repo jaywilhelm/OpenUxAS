@@ -664,7 +664,7 @@ class UAVHeading:
         goal_pt = mygoal
         koz_pts = newkoz
 
-        showFormatImage = True
+        showFormatImage = False
         if showFormatImage:
             fig, ax = plt.subplots()
             #ax.plot(t, s)
@@ -953,7 +953,7 @@ class UAVHeading:
             plt.legend()
             plt.show()
 
-        showAstarPath = True
+        showAstarPath = False
         ### v== Plot Astar result ==v ###
         if showAstarPath:
             fig, ax = plt.subplots()
