@@ -397,6 +397,7 @@ class dubinsUAV():
                 RHeading -= np.pi*2 
             self.update_pos(RHeading)
             self.lastDist = CarrotDist
+ 
 
         else:
             UAVdist = self.distance(activeWP, (self.x, self.y))

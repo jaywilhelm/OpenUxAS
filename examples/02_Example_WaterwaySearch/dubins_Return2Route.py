@@ -148,9 +148,9 @@ class dubinsUAV():
                     if self.currentWPIndex >= len(self.waypoints): # note for RaceTrack - 1st and last wpt are identical - mainly for plotting reasons
                         self.currentWPIndex = 0
                         self.lapCounter +=1 
-                    #print("WP Increment")
-                    #update distance...
-                    UAVdist = self.distance(self.getActiveWaypoint(), activeWP)
+                    # print("WP Increment")
+                    # update distance...
+                    # UAVdist = self.distance(self.getActiveWaypoint(), activeWP)
                 else:
                     #print("Last Waypoint")
                     # Used to tell system to switch from A* path back to original path

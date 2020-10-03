@@ -225,6 +225,7 @@ onlyOnce = False
 last_targetIndex = 0   # temp variable
 TrackUAV = False
 ClearedCollision = False
+last_lapCounter = uavlist[0]['dubins'].lapCounter 
 
 '''
 Ploting variables
@@ -250,7 +251,7 @@ visitedWypts = []
 
 fig, ax = plt.subplots()
 step = 0
-while step < 3500:    
+while step < 1750:    
     ''' Identify UAVs using collision avoidence '''
     mainUAV = finduavbyID(uavlist, 1)                           # ID to Watch for
     uavh_others_all, uavh_others = findotheruavs(uavlist, 1)    # ID not to watch for
@@ -515,7 +516,7 @@ while step < 3500:
         # Add in additional Reference path points in case the UAV is about to make a lap
         # This step is performed after the 'currentIndex' step above 
         # because there will be douplicate 'Index' entries
-        for j in range(0, int(len(ReferencePath_List)/2)):
+        for j in range(0, 2):
             InsetionPoint_dict['Index'] = j
             InsetionPoint_dict['pt'] = ReferencePath_List[j]['pt']
             InsertionPoint_list.append(InsetionPoint_dict.copy()) 
@@ -916,25 +917,34 @@ while step < 3500:
             plotCurrentWypt = plt.plot(uav['dubins'].waypoints[uav['dubins'].currentWPIndex][1], uav['dubins'].waypoints[uav['dubins'].currentWPIndex][0], c='black', marker='X')
             # plotCASkoz, = plt.plot([pt[1] for pt in avoid[0]], [pt[0] for pt in avoid[0]], '--m')
 
-            # crossError, m, b = crossTrackError(PruitTrack, [uav['dubins'].x, uav['dubins'].y])
-
-            if uav['dubins'].currentWPIndex >= len(ActivePath_List):
-                for i in range(0, len(ActivePath_List)):
-                    if ActivePath_List[i]['Is Go-To'] == True:
-                        uav['dubins'].currentWPIndex = i
-                        break
-
-                ActivePath_List = ReferencePath_List[:]
-                TargetWPList = []
-                for i in range(0, len(ReferencePath_List)):
-                    TargetWPList.append(ActivePath_List[i]['pt'])
-                uav['dubins'].setwaypoints(TargetWPList, newradius=wptRad)
+            # cross track error measurement currently broken...   
+            # crossError, m, b = crossTrackError(PruitTrack, [uav['dubins'].x, uav['dubins'].y]) 
 
             uav['dubins'].simulateWPDubins(UseCarrotChase=False, delta=0.01)
             carrot = uav['dubins'].CarrotChaseWP(delta=0.01)
             CASuavPos = uav['dubins'].position
 
+            if uav['dubins'].lapCounter > last_lapCounter:
+                # for i in range(0, len(ActivePath_List)):
+                #     if ActivePath_List[i]['Is Go-To'] == True:
+                #         uav['dubins'].currentWPIndex = i
+                #         break
+
+                ActivePath_List = ReferencePath_List[:]
+                TargetWPList = []
+                for i in range(0, len(ReferencePath_List)):
+                    TargetWPList.append(ActivePath_List[i]['pt'])
+
+                uav['dubins'].currentWPIndex = 0
+                uav['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
+
+            last_lapCounter= uav['dubins'].lapCounter 
+
         if uav['IsAvoidanceUAV'] == False:
+
+ 
+            if step == 361:
+                checker = 1
 
             plotNCpos, = plt.plot(uav['uavobj'].position[1], uav['uavobj'].position[0], 'o', c='orange')
             # plotNCpos, = plt.plot(uav['dubins'].ys, uav['dubins'].xs, 'o', c='orange')
@@ -945,6 +955,7 @@ while step < 3500:
             uav['dubins'].simulateWPDubins(UseCarrotChase=False, delta=0.01)
             uav['dubins'].update_pos_simple()
             NCuavPos = uav['dubins'].position
+
 
         uav = syncAVSfromDubins(uav)
 
@@ -1014,9 +1025,9 @@ while step < 3500:
 
     fig.set_size_inches((12, 10))  
     plt.grid(True)
-    plt.pause(0.01)
+    # plt.pause(0.01)
 
-    makeAmovie = False
+    makeAmovie = True
     if makeAmovie == True:
         wd = os.getcwd()
         path=(wd + '/Movies')
