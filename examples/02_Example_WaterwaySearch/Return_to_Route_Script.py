@@ -332,7 +332,7 @@ while step < 1750:
                 ''' 
                 Look for an interpolated point some distance forward along the reference path as the astarGoal point
                 '''
-                lookAheadDist = 4
+                lookAheadDist = 2.5
                 for pt in range(0, numbOfPts-1):
                     d = distance([linX[pt], linY[pt]], [linX[pt+1], linY[pt+1]]) # Calculate distance between interpolated points
                     distTotal += d  
@@ -381,7 +381,7 @@ while step < 1750:
                 saveCurrentPOS = [mainUAV['dubins'].x, mainUAV['dubins'].y ]
 
                 ''' Insert current vehicle postion into A* wplist '''
-                [0][0] = mainUAV['uavobj'].position[0]
+                astarwpts[0][0] = mainUAV['uavobj'].position[0]
                 astarwpts[0][1] = mainUAV['uavobj'].position[1]
                 astarwpts = np.append(astarwpts, np.array([[astarGoalPt[0], astarGoalPt[1]]]), axis=0)
                 numbOfAstarPts= len(astarwpts) 
@@ -409,7 +409,7 @@ while step < 1750:
                 for i in range(0, len(ActivePath_List)):
                     TargetWPList.append(ActivePath_List[i]['pt'])
 
-                uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
+                uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=wptRad/2)
                 activeWP = uavlist[0]['dubins'].waypoints[uavlist[0]['dubins'].currentWPIndex]
 
                 print(TC.OKBLUE + 'Insert ' + str(numbOfAstarPts) + ' Astar Points at wpt index ' + str(indexRecall) + TC.ENDC)
@@ -880,7 +880,7 @@ while step < 1750:
             for i in range(0, len(ActivePath_List)):
                 TargetWPList.append(ActivePath_List[i]['pt'])
 
-            uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
+            uavlist[0]['dubins'].setWaypoints(TargetWPList, newradius=wptRad/2)
             mainUAV['dubins'].currentWPIndex = Astar_Return_Index
             activeWP = uavlist[0]['dubins'].waypoints[Astar_Return_Index]          #  mainUAV['dubins'].currentWPIndex = insertIndex 
 
@@ -941,7 +941,6 @@ while step < 1750:
             last_lapCounter= uav['dubins'].lapCounter 
 
         if uav['IsAvoidanceUAV'] == False:
-
  
             if step == 361:
                 checker = 1
@@ -969,17 +968,17 @@ while step < 1750:
 
     if Show_AstarPlan:
         plot_AstarPlan = plt.plot([pt[1] for pt in astarwpts.tolist()], [pt[0] for pt in astarwpts.tolist()], c = 'k', marker='*', markersize=8)
-        # for pts in astarwpts.tolist():
-        #         wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
-        #         plt.gca().add_artist(wptCircle)
-        #         plt.scatter(pts[1],pts[0])
+        for pts in astarwpts.tolist():
+                wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
+                plt.gca().add_artist(wptCircle)
+                plt.scatter(pts[1],pts[0])
 
     if Show_RecoveryPlan :
         plot_RecoveryPlan = plt.plot([pt[1] for pt in RecoveryPath_List], [pt[0] for pt in RecoveryPath_List], c = 'g', marker='o', markersize=8)
-        # for pts in RecoveryPath_List:
-        #         wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
-        #         plt.gca().add_artist(wptCircle)
-        #         plt.scatter(pts[1],pts[0])
+        for pts in RecoveryPath_List:
+                wptCircle = plt.Circle((pts[1], pts[0]), wptRad, color='green', alpha=0.2)
+                plt.gca().add_artist(wptCircle)
+                plt.scatter(pts[1],pts[0])
 
     plt.plot([pt[1] for pt in PruitTrack], [pt[0] for pt in PruitTrack], c='b', marker='.', markersize=8)
     # plt.plot([pt[1] for pt in TargetWPList], [pt[0] for pt in TargetWPList], c='b', marker='+', markersize=8)
@@ -1011,7 +1010,7 @@ while step < 1750:
 
     plt.text(0.1, 0.05, text, transform=ax.transAxes)
     plt.text(0.1, 0.9, text1, transform=ax.transAxes)
-
+ 
     ax.axis('equal')
     # plt.ylim((39.32450, 39.32657))
     plt.xlim((-82.11100, -82.1090))
@@ -1025,9 +1024,9 @@ while step < 1750:
 
     fig.set_size_inches((12, 10))  
     plt.grid(True)
-    # plt.pause(0.01)
+    plt.pause(0.01)
 
-    makeAmovie = True
+    makeAmovie = False
     if makeAmovie == True:
         wd = os.getcwd()
         path=(wd + '/Movies')
