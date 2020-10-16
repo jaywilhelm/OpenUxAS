@@ -805,6 +805,31 @@ class UAVHeading:
 
         return goal
 
+    def collisonDetector(self, uavh_others, area_length, static_koz):
+        if(not self.waypoint):
+            xy = (self.position[0], self.position[1])
+            r = 0.3
+            px = xy[0] + r * np.cos(self.thetaRef)
+            py = xy[1] + r * np.sin(self.thetaRef)
+            self.waypoint = [px, py]
+            #print('Set Dubs WP: ' + str(self.waypoint))
+
+
+        # Check for potential Collision
+        intersects, avoid_areas, CollisionUavIDs = self.findPotentialIntersects(uavh_others, area_length, static_koz)
+        if(intersects):
+            intersects = [1, 1]
+        else:
+            intersects = {}
+
+        if len(intersects) == 0:
+            # if not self.lastClear:
+            #     print(TC.OKGREEN + 'PATH CLEAR.' + TC.ENDC)
+            # self.lastClear = True
+            return False 
+  
+        return True
+
     '''
     UAVHeading Function: avoid
         Parameters:
@@ -834,7 +859,7 @@ class UAVHeading:
             intersects = [1, 1]
         else:
             intersects = {}
-        #intersects, avoid_areas = self.__findIntersects(uavh_others, static_koz)
+        intersects, avoid_areas = self.__findIntersects(uavh_others, static_koz)
 
         if len(intersects) == 0:
             if not self.lastClear:
@@ -1029,7 +1054,7 @@ class UAVHeading:
             # if (i > 0) and (i < len(path_x) - 1):
             #     last_pt = []
             #     last_pt.append(path_x[i-1] - self.shift_x)
-            #     last_pt.append(path_y[i-1] - self.shift_y)
+            #     last_pt.append(path_y[i-1] - self.shift_y)AstarFail
             #
             #     next_pt = []
             #     next_pt.append(path_x[i+1] - self.shift_x)
