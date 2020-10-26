@@ -70,7 +70,7 @@ def findRefPathIndex(ActivePath_List):
 
 # Find the A* goal point 
 def findAstarGoal(refWaypoint_list, ReferencePath_List, uavObj, area_length, lookAheadDist):
-    last_targetIndex = 0
+    last_targetIndex = uavObj['dubins'].currentWPIndex
     for i in range(0, len(refWaypoint_list)):
         if uavObj['dubins'].currentWPIndex == refWaypoint_list[i]['Index']:
             currentIndex = i
@@ -119,13 +119,13 @@ def findAstarGoal(refWaypoint_list, ReferencePath_List, uavObj, area_length, loo
         '''
         for pt in range(0, numbOfPts-1):
             d = distance([linX[pt], linY[pt]], [linX[pt+1], linY[pt+1]]) # Calculate distance between interpolated points
-            distTotal += d  
+            distTotal += d                                               # total distance across interpolated points
             pointList.append([linX[pt], linY[pt]])
             if distTotal >= area_length*lookAheadDist:
                 astarGoalPt = [linX[pt], linY[pt]]
                 ' Report if the astarGoalPoint is on the next lap'
                 targetIndex = astarGoalPoint_list[index]['Index']
-                if targetIndex <= last_targetIndex:
+                if targetIndex < last_targetIndex:
                     lap = True
                 else:
                     lap = False
@@ -178,7 +178,7 @@ def getPotentialRecoveryPoints(ActivePath_List, ReferencePath_List, saveCurrentP
     InsetionPoint_dict = {}
 
     # Add in additional Reference path points in case the UAV is about to make a lap
-    for j in range(0, 2):
+    for j in range(0, 6):
         InsetionPoint_dict['Index'] = j
         InsetionPoint_dict['pt'] = ReferencePath_List[j]['pt']
         InsertionPoint_list.append(InsetionPoint_dict.copy()) 
@@ -282,7 +282,7 @@ def getRecoveryPaths(RecoveryPoints, referencePathPoint, uavObj):
 
     return clothoid_List, index_List
 
-def selectRecoveryPath(clothoid_List, index_List, halfTurnRadius, numbOfwpts):
+def selectRecoveryPath(clothoid_List, index_List, halfTurnRadius, numbOfwpts, lap, additionalOffset):
     'List and counter variables for clothoid path selection'
     ClothoidPath = []           # Stores a specified number of waypoints for each clothoid segment
     recoveryPoints = []           # Stored the 1st, middle, and last wpt from the 1st, 2nd, and 3rd clothoid respectively
@@ -293,19 +293,22 @@ def selectRecoveryPath(clothoid_List, index_List, halfTurnRadius, numbOfwpts):
     checkDistance = 99999
     ''' Generate and Evaluate clothoid paths between UAV and recovery points''' 
     for i in range(0, len(clothoid_List)):
-        clothoid = clothoid_List[i]
-        index = index_List[i]
-        j=0                           # Keeps track of which clothoid segment is being evaluated
-        clothoidLength = 0          # keeps track of clothoid path length
-        temp = []                   # temporary variable - used for ploting purposes
-        circle_list = []
+        clothoid = clothoid_List[i]     # clothoid parameters
+        if lap:
+            index = index_List[i]         # current index on reference path waypoints - used to inform where the clothoid is going 
+        else:
+            index = index_List[i]
+        j=0                             # Keeps track of which clothoid segment is being evaluated
+        clothoidLength = 0              # keeps track of clothoid path length - used for path selection
+        temp = []                       # temporary variable - used for ploting purposes
+        circle_list = []                # stored circle fit info for each clothoid segment - used for path selection
 
         for segmt in clothoid:
             'Sample points from the clothoid'
             points = segmt.SampleXY(numbOfwpts)         # used for circle fitting to calcuate a turn radius for each clothoid path and used for waypoint path following
             ClothoidPath.append(points)
 
-            x0, y0, t0, k0, dk, s = segmt.Parameters    # start x, start y, initial curvature, change in curvature, clothoid segment length
+            x0, y0, t0, k0, dk, s = segmt.Parameters    # (start x, start y, initial curvature, change in curvature, clothoid segment length)
             clothoidLength += s                     # Sum up the length of each clothoid segment to find the total distance of the full clothoid
             
             '''
@@ -423,10 +426,13 @@ def getRecoveryPathWPs(chosenClothoid, numbOfwpts):
     
     return RecoveryPathWPs, pltPts_List
 
-def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, uavObj, Index2Watch4, targetIndex, numbOfAstarPts, wptRad, lap):
+def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, uavObj, Index2Watch4, returnIndex1, returnIndex2, numbOfAstarPts, wptRad, lap):
     
     changePath = False
-    if uavObj['dubins'].currentWPIndex > Index2Watch4-1:
+    if uavObj['dubins'].currentWPIndex >= Index2Watch4:
+        changePath = True
+
+        # Reset waypoint list if lap is completed. 
         if lap == True:
             ActivePath_List = ReferencePath_List[:]
             TargetWPList = []
@@ -434,16 +440,120 @@ def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, uavObj, 
                 TargetWPList.append(ActivePath_List[i]['pt'])
             uavObj['dubins'].setWaypoints(TargetWPList, newradius=wptRad) 
 
-            uavObj['dubins'].currentWPIndex = targetIndex
-            activeWP = ActivePath_List[uavObj['dubins'].currentWPIndex]['pt']
-
-            print('Completed A* path and a lap - no recovery path required')  
-            last_targetIndex = targetIndex
-            changePath = True
-
-        else: 
-            uavObj['dubins'].currentWPIndex = targetIndex + numbOfAstarPts  # This seems to work for both A* and recovery paths? double check - JB
-            # activeWP = ActivePath_List[uavObj['dubins'].currentWPIndex]['pt']
-            changePath = True
+            print('Lap completed - reset waypoint list')  
 
     return changePath, ActivePath_List, TargetWPList
+
+def RecoveryPaths_SnapShot(file_path, step, clothoid_List,refPathpts, astarwpts, KOZpoints, show_keepOutZones, RecoveryPoints, activeWP, mainUAV, uavh_others_all, area_length, fig, ax  ):
+
+    # fig, ax = plt.subplots()
+    # ==== Plot Snapshot of all possible Clothoid paths ====
+    for i in range(0, len(clothoid_List)):
+        clothoid = clothoid_List[i]
+        for segmnt in clothoid:
+            plt.plot(*segmnt.SampleXY(500))
+
+    # Plot full clothoid path(s) with larger number of sample points
+    plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
+    plt.plot(mainUAV['dubins'].y, mainUAV['dubins'].x, c='k', marker='o' )
+
+    plt.scatter([pt[1] for pt in RecoveryPoints], [pt[0] for pt in RecoveryPoints])
+    plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
+    plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
+    NCcone = uavh_others_all[0]['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
+    plotNCcone, = plt.plot([pt[1] for pt in NCcone], [pt[0] for pt in NCcone], "-r")
+
+    plot_AstarPlan = plt.plot([pt[1] for pt in astarwpts.tolist()], [pt[0] for pt in astarwpts.tolist()], c = 'k', marker='*', markersize=8)
+    plt.plot([pt[1] for pt in refPathpts], [pt[0] for pt in refPathpts], c='b', marker='.', markersize=8)
+
+    plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 5 )
+    # plot keep out zones from UAVHeading.avoid() function
+    if show_keepOutZones:
+        plotCASkoz, = plt.plot([pt[1] for pt in KOZpoints[0]], [pt[0] for pt in KOZpoints[0]], '--m')
+        plotNCkoz, = plt.plot([pt[1] for pt in KOZpoints[1]], [pt[0] for pt in KOZpoints[1]], '--m')
+    plt.axis('equal')
+    plt.grid(True)
+    # plt.ylim((mainUAV['dubins'].x - 0.001, mainUAV['dubins'].x + 0.001))
+    # plt.xlim((mainUAV['dubins'].y - 0.001, mainUAV['dubins'].y + 0.001))
+    plt.xlim((-82.11100, -82.1090))
+    plt.ylim((39.32435, 39.32657))
+
+    fig.set_size_inches((12, 10)) 
+    # plt.show()
+    # plt.pause(1)
+    
+    wd = os.getcwd()
+    path=(wd + file_path)
+    RecoveryPaths = 'RecoveryPaths%03d.png' % step
+    RecoveryPaths = os.path.join(path,RecoveryPaths)
+    plt.savefig(RecoveryPaths)
+    plt.clf()
+
+def RecoveryPath_SnapShot(file_path, step, refPath, astarwpts, pltPts_List, RecoveryPathWPs, activeWP, mainUAV, uavh_others_all, area_length, fig, ax ):
+
+    # fig, ax = plt.subplots()
+    plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
+    plt.plot(mainUAV['dubins'].y, mainUAV['dubins'].x, c='k', marker='o' )
+
+    plt.plot([pt[1] for pt in pltPts_List], [pt[0] for pt in pltPts_List], marker='.', c = 'b', markersize=4)
+    plt.plot([pt[1] for pt in RecoveryPathWPs], [pt[0] for pt in RecoveryPathWPs], c='g', marker='o')
+    plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
+    CAScone = mainUAV['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
+    plotCAScone, = plt.plot([pt[1] for pt in CAScone], [pt[0] for pt in CAScone], "-g")
+
+    NCcone = uavh_others_all[0]['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
+    plotNCcone, = plt.plot([pt[1] for pt in NCcone], [pt[0] for pt in NCcone], "-r")
+
+    plot_AstarPlan = plt.plot([pt[1] for pt in astarwpts.tolist()], [pt[0] for pt in astarwpts.tolist()], c = 'k', marker='*', markersize=8)
+    plt.plot([pt[1] for pt in refPath], [pt[0] for pt in refPath], c='b', marker='.', markersize=8)
+
+    plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 5 )
+    # plot keep out zones from UAVHeading.avoid() function
+    plt.axis('equal')
+    plt.grid(True)
+    # plt.ylim((mainUAV['dubins'].x - 0.001, mainUAV['dubins'].x + 0.001))
+    # plt.xlim((mainUAV['dubins'].y - 0.001, mainUAV['dubins'].y + 0.001))
+    plt.xlim((-82.11100, -82.1090))
+    plt.ylim((39.32435, 39.32657))
+
+    fig.set_size_inches((12, 10)) 
+    wd = os.getcwd()
+    path=(wd + file_path)
+    SelectedPath = 'SelectedPath%03d.png' % step
+    SelectedPath = os.path.join(path,SelectedPath)
+    plt.savefig(SelectedPath)
+    plt.clf()
+    # plt.show()
+
+
+def Show_AstarSnapShot(file_path, step, activeWP, mainUAV, uavh_others_all, refPath, astarwpts, astarGoalPt, KOZpoints, area_length, fig, ax):
+
+    #fig, ax = plt.subplots()
+
+    # ===== Plot snapshot of Astar Path and save frame ==============
+    plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
+    plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
+    plot_AstarPlan = plt.plot([pt[1] for pt in astarwpts.tolist()], [pt[0] for pt in astarwpts.tolist()], c = 'k', marker='*', markersize=8)
+    plt.plot([pt[1] for pt in refPath], [pt[0] for pt in refPath], c='b', marker='.', markersize=8)
+
+    plt.plot( activeWP[1], activeWP[0], c='k', marker='X', markersize = 5 )
+    plt.plot( astarGoalPt[1], astarGoalPt[0], c='k', marker='^', markersize = 6 )
+
+    # plot keep out zones from UAVHeading.avoid() function
+    # plotCASkoz, = plt.plot([pt[1] for pt in KOZpoints[0]], [pt[0] for pt in KOZpoints[0]], '--m')
+    CAScone = mainUAV['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
+    plotCAScone, = plt.plot([pt[1] for pt in CAScone], [pt[0] for pt in CAScone], "-g")
+    plotNCkoz, = plt.plot([pt[1] for pt in KOZpoints[1]], [pt[0] for pt in KOZpoints[1]], '--m')
+    plt.axis('equal')
+    plt.grid(True)
+    plt.ylim((mainUAV['dubins'].x - 0.001, mainUAV['dubins'].x + 0.001))
+    plt.xlim((mainUAV['dubins'].y - 0.001, mainUAV['dubins'].y + 0.001))
+    fig.set_size_inches((12, 10)) 
+    # plt.show()
+
+    wd = os.getcwd()
+    path=(wd + file_path)
+    AstarPath = 'AstarPath%03d.png' % step
+    AstarPaths = os.path.join(path, AstarPath)
+    plt.savefig(AstarPaths)
+    plt.clf()
