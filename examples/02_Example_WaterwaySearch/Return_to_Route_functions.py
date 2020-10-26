@@ -56,7 +56,7 @@ def fit_circle_2d(x, y, w=[]):
         r = np.sqrt(c[2] + xc ** 2 + yc ** 2)
         return xc, yc, r
 
-''' Function to find the current index number assigned to each reference path waypoint '''
+''' Function to find the current index number assigned to each reference path waypoint in the updated waypoint list'''
 def findRefPathIndex(ActivePath_List):
     temp_list = []
     temp_dict = {}                    # temporary dictionary entry
@@ -79,7 +79,7 @@ def findAstarGoal(refWaypoint_list, ReferencePath_List, uavObj, area_length, loo
     astarGoalPoint_dict = {}
     # Add in aditional Reference path in case the UAV is about to make a lap
     # This step is performed after the 'currentIndex' step above 
-    # because there will be douplicate 'Index' entries
+    # to avoid douplicate 'Index' entries
     for j in range(0, len(ReferencePath_List)):
         astarGoalPoint_dict['Index'] = j
         astarGoalPoint_dict['pt'] = ReferencePath_List[j]['pt']
@@ -96,7 +96,7 @@ def findAstarGoal(refWaypoint_list, ReferencePath_List, uavObj, area_length, loo
             x2 = astarGoalPoint_list[index]['pt'][0]
             y2 = astarGoalPoint_list[index]['pt'][1]
         else:
-            # Used to find the distance between two successive waypoints
+            # Used to find the distance between two successive reference path waypoints
             x1 = astarGoalPoint_list[index-1]['pt'][0]
             y1 = astarGoalPoint_list[index-1]['pt'][1]
 
@@ -115,7 +115,7 @@ def findAstarGoal(refWaypoint_list, ReferencePath_List, uavObj, area_length, loo
         linY = np.linspace(y1, y2, numbOfPts, endpoint=False )
 
         ''' 
-        Look for an interpolated point some distance forward along the reference path as the astarGoal point
+        Look for a point some distance forward along the reference path to be used as the astarGoal point
         '''
         for pt in range(0, numbOfPts-1):
             d = distance([linX[pt], linY[pt]], [linX[pt+1], linY[pt+1]]) # Calculate distance between interpolated points
@@ -127,6 +127,7 @@ def findAstarGoal(refWaypoint_list, ReferencePath_List, uavObj, area_length, loo
                 targetIndex = astarGoalPoint_list[index]['Index']
                 if targetIndex < last_targetIndex:
                     lap = True
+                    last_targetIndex = targetIndex
                 else:
                     lap = False
                     last_targetIndex = targetIndex
@@ -183,7 +184,7 @@ def getPotentialRecoveryPoints(ActivePath_List, ReferencePath_List, saveCurrentP
         InsetionPoint_dict['pt'] = ReferencePath_List[j]['pt']
         InsertionPoint_list.append(InsetionPoint_dict.copy()) 
 
-    # Determine which waypoint on the referece path the UAV is heading towards and report that index
+    # Determine which waypoint on the referece path the UAV is currently heading towards and report that index
     closestIndex = 9999
     for i in range(0, len(InsertionPoint_list)):
         checkIndex = InsertionPoint_list[i]['Index']
@@ -223,7 +224,7 @@ def getPotentialRecoveryPoints(ActivePath_List, ReferencePath_List, saveCurrentP
     return RecoveryPoints, referencePathPoint, InsertionPoint_list
 
 def getRecoveryPaths(RecoveryPoints, referencePathPoint, uavObj):
-#     print('Interpolating ' + str(numbOfPts) + ' points between index ' + str(index) + ' and ' + str(index+1))
+    # print('Interpolating ' + str(numbOfPts) + ' points between index ' + str(index) + ' and ' + str(index+1))
 
     '''
     Convert uav North East Down angle convention to cartesion for clothoid heading:
@@ -282,20 +283,19 @@ def getRecoveryPaths(RecoveryPoints, referencePathPoint, uavObj):
 
     return clothoid_List, index_List
 
-def selectRecoveryPath(clothoid_List, index_List, halfTurnRadius, numbOfwpts, lap, additionalOffset):
+def selectRecoveryPath(clothoid_List, index_List, indexRecall, halfTurnRadius, numbOfwpts, lap):
     'List and counter variables for clothoid path selection'
     ClothoidPath = []           # Stores a specified number of waypoints for each clothoid segment
-    recoveryPoints = []           # Stored the 1st, middle, and last wpt from the 1st, 2nd, and 3rd clothoid respectively
-
-    completeClothoidPts = []    # stores a the full path of each clothoid generated -  used for plotting purposes
     counter = 0
-    checkSuccess = False        # keeps track if a recovery path is found
-    checkDistance = 99999
+    checkSuccess = False        # evaluates to True if a valid recovery path is found
+    checkDistance = 99999       # used to evalauate the length of each recovery path
+    last_targetIndex = indexRecall
+    
     ''' Generate and Evaluate clothoid paths between UAV and recovery points''' 
     for i in range(0, len(clothoid_List)):
         clothoid = clothoid_List[i]     # clothoid parameters
         if lap:
-            index = index_List[i]         # current index on reference path waypoints - used to inform where the clothoid is going 
+            index = index_List[i]       # current index on reference path waypoints - used to inform where the clothoid is going 
         else:
             index = index_List[i]
         j=0                             # Keeps track of which clothoid segment is being evaluated
@@ -368,12 +368,11 @@ def selectRecoveryPath(clothoid_List, index_List, halfTurnRadius, numbOfwpts, la
 
         elif checkPassed == True and clothoidLength > checkDistance:
             print(TC.WARNING + '\t\t\tPath Too Long' + TC.ENDC)
-             
-    
+                 
     if checkSuccess:
-        return checkSuccess, chosenClothoid, selectIndex
+        return checkSuccess, chosenClothoid, selectIndex, lap
     else: 
-        return checkSuccess, [], [],
+        return checkSuccess, [], [], lap
 
 def getRecoveryPathWPs(chosenClothoid, numbOfwpts):
     '''
@@ -426,7 +425,7 @@ def getRecoveryPathWPs(chosenClothoid, numbOfwpts):
     
     return RecoveryPathWPs, pltPts_List
 
-def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, uavObj, Index2Watch4, returnIndex1, returnIndex2, numbOfAstarPts, wptRad, lap):
+def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, uavObj, Index2Watch4, lap, wptRad):
     
     changePath = False
     if uavObj['dubins'].currentWPIndex >= Index2Watch4:
