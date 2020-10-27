@@ -443,7 +443,7 @@ def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, uavObj, 
 
     return changePath, ActivePath_List, TargetWPList
 
-def RecoveryPaths_SnapShot(file_path, step, clothoid_List,refPathpts, astarwpts, KOZpoints, show_keepOutZones, RecoveryPoints, activeWP, mainUAV, uavh_others_all, area_length, fig, ax  ):
+def RecoveryPaths_SnapShot(file_path, step, clothoid_List, refPathpts, astarwpts, KOZpoints, show_keepOutZones, RecoveryPoints, activeWP, mainUAV, uavh_others_all, area_length, fig, ax  ):
 
     # fig, ax = plt.subplots()
     # ==== Plot Snapshot of all possible Clothoid paths ====
