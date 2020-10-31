@@ -733,11 +733,82 @@ class UAVHeading:
 
         return points
 
+    def flightProj(self, turnRate, dt, lookAhead_time):
+        time = np.arange(0, lookAhead_time, dt)
+        TRs = np.arange(-turnRate*1, turnRate*1, np.deg2rad(1))
+
+        save = []
+        edgePts = [list(self.position)]
+        for i in range(0, len(TRs)):
+            x=self.position[0]
+            y=self.position[1]
+            heading = self.thetaRef
+            for j in range(0, len(time)):
+                heading = heading + TRs[i]*dt
+
+                vx = self.speed * np.cos(heading)
+                vy = self.speed * np.sin(heading)
+                
+                x = x + vx * dt
+                y = y + vy * dt
+                save.append([x, y])
+            
+            if i == 0:
+                linX = np.linspace(self.position[0], x, len(TRs), endpoint=False )
+                liny = np.linspace(self.position[1], y, len(TRs), endpoint=False ) 
+                for k in range(0, len(linX)):     
+                    edgePts.append([linX[k],liny[k]])
+            elif i == len(TRs)-1:
+                linX = np.linspace(self.position[0], x, len(TRs), endpoint=False )
+                liny = np.linspace(self.position[1], y, len(TRs), endpoint=False )     
+                for k in range(0, len(linX)):     
+                    edgePts.append([linX[k],liny[k]]) 
+
+            edgePts.append([x,y])
+
+        # plt.scatter([pt[1] for pt in save], [pt[0] for pt in save])
+        # plt.scatter([pt[1] for pt in edgePts], [pt[0] for pt in edgePts])
+
+        # plt.axis('equal')
+        # plt.grid(True)
+        # plt.show()
+        return edgePts
+
+
+    def NewfindPotentialIntersects(self, uavh_others, area_length, static_koz, turnRate, dt, lookAhead_time):
+        
+        CollisionUavIDs =[] # which UAVs have a potential collision?
+        mypot_area = self.flightProj(turnRate, dt, lookAhead_time)
+
+        mypoly = Polygon(mypot_area)
+
+        PinP = False 
+        # Include other keep out zones not associated with other UAVs 
+        avoid_areas = static_koz[:] # '[:]' removes python references to static_koz, so I can make a copy of that list
+
+        if self.IsavoidanceUAV:
+            avoid_areas.append(self.reverseKOZ(area_length))
+        
+        index = 0
+        for ouav in uavh_others:
+            thier_area = ouav.flightProj(turnRate, dt, lookAhead_time)
+            thier_poly = Polygon(thier_area)
+            if(thier_poly.intersects(mypoly)):
+                PinP = True
+                avoid_areas.append(thier_area)
+                CollisionUavIDs.append(index) # reminder: only a Index value, not the actually UAV ID
+                # print("Pot. Collision ")
+                # break
+            index +=1
+
+        return PinP, avoid_areas, CollisionUavIDs
+
 
     def findPotentialIntersects(self, uavh_others, area_length, static_koz):
         
         CollisionUavIDs =[] # which UAVs have a potential collision?
         mypot_area = self.possibleFlightAreaStatic(area_length)
+
         mypoly = Polygon(mypot_area)
 
         PinP = False 
@@ -804,8 +875,7 @@ class UAVHeading:
         goal = []
 
         return goal
-
-    def collisonDetector(self, uavh_others, area_length, static_koz):
+    def collisionDetector(self, uavh_others, turnRate, dt, lookAhead_time, area_length, static_koz):
         if(not self.waypoint):
             xy = (self.position[0], self.position[1])
             r = 0.3
@@ -816,7 +886,7 @@ class UAVHeading:
 
 
         # Check for potential Collision
-        intersects, avoid_areas, CollisionUavIDs = self.findPotentialIntersects(uavh_others, area_length, static_koz)
+        intersects, avoid_areas, CollisionUavIDs = self.NewfindPotentialIntersects(uavh_others, area_length, static_koz, turnRate, dt, lookAhead_time)
         if(intersects):
             intersects = [1, 1]
         else:

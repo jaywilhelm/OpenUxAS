@@ -556,3 +556,39 @@ def Show_AstarSnapShot(file_path, step, activeWP, mainUAV, uavh_others_all, refP
     AstarPaths = os.path.join(path, AstarPath)
     plt.savefig(AstarPaths)
     plt.clf()
+
+def flightProj(posX, posY, heading, velocity, turnRate, dt, lookAhead_time):
+    areaLength = lookAhead_time*velocity
+    turnLengths = 0
+    time = np.arange(0, lookAhead_time, dt)
+    TRs = np.arange(-turnRate*1, turnRate*1, np.deg2rad(1))
+
+    save = []
+    edgePts = [[posX, posY]]
+    for i in range(0, len(TRs)):
+        x=posX
+        y=posY
+        head = heading
+        for j in range(0, len(time)):
+            head = head + TRs[i]*dt
+
+            vx = velocity * np.cos(head)
+            vy = velocity * np.sin(head)
+            
+            x = x + vx * dt
+            y = y + vy * dt
+            save.append([x, y])
+        edgePts.append([x,y])
+
+    edgePts.append([posX,posY])
+
+    # plt.scatter([pt[1] for pt in save], [pt[0] for pt in save])
+    # plt.scatter([pt[1] for pt in edgePts], [pt[0] for pt in edgePts])
+    # plt.plot([pt[1] for pt in edgePts], [pt[0] for pt in edgePts])
+    # plt.scatter(posY, posX)
+
+    # plt.axis('equal')
+    # plt.grid(True)
+    # plt.show()
+    # plt.clf()
+    return edgePts

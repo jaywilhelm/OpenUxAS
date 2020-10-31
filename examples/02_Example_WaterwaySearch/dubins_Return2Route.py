@@ -22,8 +22,9 @@ class dubinsUAV():
         self.v = velocity
         self.dt = dt
         self.t = 0
-        self.turnrate = np.deg2rad(20)
-        #self.turn_radius = []
+        self.turnrate = np.deg2rad(10)
+        # from Ch 5 in the Pilot's Handbook of Aernautical Knowledge 
+        self.turnRadius = ((self.v * 360/(np.rad2deg(self.turnrate)))/np.pi)/2
 
         #Current state
         self.x = position[0]
