@@ -41,6 +41,9 @@ del_folder_contents(folderPath)
 folderPath=(wd + '/RaceTrack_AstarResults')
 del_folder_contents(folderPath)
 
+folderPath=(wd + '/RaceTrack_AstarPath')
+del_folder_contents(folderPath)
+
 folderPath=(wd + '/RaceTrack_RecoveryPaths')
 del_folder_contents(folderPath)
 
@@ -86,7 +89,7 @@ dt = 0.2 # 0.1
 # distance threshold to satisfy each waypoint
 wptRad = 0.0001 
 # uavType, ID, v, thetaRef, currentWPIndex, pathWpts
-init_CAS = [[0, 1, 0.00005/2.75, np.deg2rad(270), 3, PruitTrack]]
+init_CAS = [[0, 1, 0.00005/2, np.deg2rad(270), 3, PruitTrack]]
 init_NC =  [[0, 4, 0.00005, np.deg2rad(135), 2, PruitTrack_reverse]]
 
 'Create a list of UAVs'
@@ -100,7 +103,7 @@ Simulation Variables
 area_length = 0.00025
 TargetWPList = None
 last_targetIndex = 0
-lookAhead_time = 5
+lookAhead_time = 10
 
 lap = None
 Astar_Index2Watch4 = None
@@ -128,7 +131,7 @@ savePlots6 = []
 
 fig, ax = plt.subplots()
 step = 0
-while step <= 6000:
+while step <= 900:
 
     ''' Identify UAVs using collision avoidence '''
     mainUAV = R2R.finduavbyID(uavlist, 1)                           # ID to Watch for
@@ -164,7 +167,7 @@ while step <= 6000:
                                                                         lookAheadDist)
 
             # A* replan - already a function
-            astarReplan, astarwpts, KOZpoints, full_path, uavID, AstarFailure = mainUAV['uavobj'].avoid(uavh_others, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True, simStep=step)
+            astarReplan, astarwpts, KOZpoints, full_path, uavID, AstarFailure = mainUAV['uavobj'].avoid(uavh_others, mainUAV['dubins'].turnrate, dt, lookAhead_time, area_length=area_length, static_koz=[], TargetPathWP=astarGoalPt, useAstarGoal=True, simStep=step)
 
             # some kind of waypoint list update function?
                 # needs an insert point - where to put the new waypoints
@@ -207,7 +210,7 @@ while step <= 6000:
                 TrackUAV = True
                 last_dist2UAV = R2R.distance([mainUAV['dubins'].x, mainUAV['dubins'].y] , [uavlist[1]['dubins'].x, uavlist[1]['dubins'].y])
 
-                R2R.Show_AstarSnapShot('/RaceTrack_AstarPath', step, activeWP, mainUAV, uavh_others_all, PruitTrack, astarwpts, astarGoalPt, KOZpoints, area_length, fig, ax)
+                R2R.Show_AstarSnapShot('/RaceTrack_AstarPath', step, activeWP, mainUAV, uavh_others_all, PruitTrack, astarwpts, astarGoalPt, KOZpoints, area_length, dt, lookAhead_time, fig, ax)
     
     # If collision has been detected and collision replan was successful
     # Start Distance Tracking between CAS and NC UAVs
@@ -227,10 +230,12 @@ while step <= 6000:
         
         # Generate clothoid paths and corresponding reference path indices
         clothoid_List, index_List = R2R.getRecoveryPaths(RecoveryPoints, referencePathPoint, mainUAV)
-        R2R.RecoveryPaths_SnapShot('/RaceTrack_RecoveryPaths', step, clothoid_List, PruitTrack, astarwpts, KOZpoints, False, RecoveryPoints, activeWP, mainUAV, uavh_others_all, area_length, fig, ax)
 
         # Select clothoid with shortest path that does not violate turn radius and report the reference path index 
-        RecoveryPathFound, chosenClothoid, selectIndex, lap = R2R.selectRecoveryPath(clothoid_List, index_List, indexRecall, halfTurnRadius, 10, lap)
+        RecoveryPathFound, chosenClothoid, acceptedPaths, selectIndex, lap = R2R.selectRecoveryPath(clothoid_List, index_List, indexRecall, halfTurnRadius, 10, lap)
+        R2R.RecoveryPaths_SnapShot('/RaceTrack_RecoveryPaths', step, clothoid_List, acceptedPaths, PruitTrack, astarwpts, KOZpoints, False, RecoveryPoints, activeWP, mainUAV, uavh_others_all, area_length, fig, ax)
+
+        
         nextIndex = InsertionPoint_list[selectIndex]['Index']
         if nextIndex < indexRecall:
             lap = True
@@ -314,12 +319,12 @@ while step <= 6000:
 
 
     'Plotting stuff'
-    CAS_pts = R2R.flightProj(mainUAV['dubins'].x, mainUAV['dubins'].y, mainUAV['dubins'].heading, mainUAV['dubins'].velocity, mainUAV['dubins'].turnrate, dt, lookAhead_time)
+    CASCone_pts = R2R.flightProj(mainUAV['dubins'].x, mainUAV['dubins'].y, mainUAV['dubins'].heading, mainUAV['dubins'].velocity, mainUAV['dubins'].turnrate, dt, lookAhead_time)
     color = '-g'
     if(astarReplan):
         color = '-y'
         replan = False
-    plotCAScone, = plt.plot([pt[1] for pt in CAS_pts], [pt[0] for pt in CAS_pts], color)
+    plotCAScone, = plt.plot([pt[1] for pt in CASCone_pts], [pt[0] for pt in CASCone_pts], color)
 
     # NC_pts = uavlist[1]['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
     NC_pts = R2R.flightProj(uavlist[1]['dubins'].x, uavlist[1]['dubins'].y, uavlist[1]['dubins'].heading, uavlist[1]['dubins'].velocity, uavlist[1]['dubins'].turnrate, dt, lookAhead_time)
@@ -456,7 +461,7 @@ while step <= 6000:
     plt.pause(0.01)
     # plt.show()
 
-    makeMovie = False
+    makeMovie = True
     if makeMovie:
         ''' 
         Save frames for a movie 

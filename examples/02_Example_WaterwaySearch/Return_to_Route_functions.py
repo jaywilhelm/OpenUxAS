@@ -179,10 +179,10 @@ def getPotentialRecoveryPoints(ActivePath_List, ReferencePath_List, saveCurrentP
     InsetionPoint_dict = {}
 
     # Add in additional Reference path points in case the UAV is about to make a lap
-    for j in range(0, 6):
-        InsetionPoint_dict['Index'] = j
-        InsetionPoint_dict['pt'] = ReferencePath_List[j]['pt']
-        InsertionPoint_list.append(InsetionPoint_dict.copy()) 
+    # for j in range(0, 6):
+    #     InsetionPoint_dict['Index'] = j
+    #     InsetionPoint_dict['pt'] = ReferencePath_List[j]['pt']
+    #     InsertionPoint_list.append(InsetionPoint_dict.copy()) 
 
     # Determine which waypoint on the referece path the UAV is currently heading towards and report that index
     closestIndex = 9999
@@ -246,7 +246,7 @@ def getRecoveryPaths(RecoveryPoints, referencePathPoint, uavObj):
 
     clothoid_List = []
     index_List = []
-    offset = 3
+    offset = 1
     for pt in range(offset, len(RecoveryPoints)-7):
 
         ''' 
@@ -286,6 +286,7 @@ def getRecoveryPaths(RecoveryPoints, referencePathPoint, uavObj):
 def selectRecoveryPath(clothoid_List, index_List, indexRecall, halfTurnRadius, numbOfwpts, lap):
     'List and counter variables for clothoid path selection'
     ClothoidPath = []           # Stores a specified number of waypoints for each clothoid segment
+    acceptedPaths = []          # store all paths that meet requierments - used for debugging
     counter = 0
     checkSuccess = False        # evaluates to True if a valid recovery path is found
     checkDistance = 99999       # used to evalauate the length of each recovery path
@@ -347,32 +348,39 @@ def selectRecoveryPath(clothoid_List, index_List, indexRecall, halfTurnRadius, n
         counter+=1
 
         'Determine if clothoid violates UAV Turn Radius'
-        print('\tPath Distance: ' + str(round(clothoidLength,3)) + '\tClothoid Segment Radii: ' + str(round(circle_list[0][2],3)) + 
-                '   ' + str(round(circle_list[1][2],3)) + '   ' + str(round(circle_list[2][2],3)) + '   ' + str(round(circle_list[3][2],3)))
+        print('\tPath Distance: ' + str(round(clothoidLength,5)) + '\tClothoid Segment Radii: ' + str(round(circle_list[0][2],5)) + 
+                '   ' + str(round(circle_list[1][2],5)) + '   ' + str(round(circle_list[2][2],5)) + '   ' + str(round(circle_list[3][2],5)))
 
         checkPassed = False                 # keeps track if this particular path meets requirements
         for i in range(0, len(circle_list)):                        
             if circle_list[i][2] < halfTurnRadius:
                 print(TC.WARNING + '\t\t\tTurn radius too small' + TC.ENDC)
                 checkPassed = False
+                
+
                 break
             else:
                 checkPassed = True # means that clothoid path satisfies requierments and UAV dynamics
+
+        if checkPassed == True:
+            acceptedPaths.append(1)
+        elif checkPassed == False:
+            acceptedPaths.append(0)
 
         if checkPassed == True and clothoidLength < checkDistance:   
                 checkSuccess = True            
                 checkDistance = clothoidLength
                 chosenClothoid = clothoid
                 selectIndex = index+1
-                print(TC.OKGREEN + '\t\t\tSelected index pt: ' +  str(selectIndex) + TC.ENDC)
+                print(TC.OKGREEN + '\t\t\tSelected pt: ' +  str(counter) + TC.ENDC)
 
         elif checkPassed == True and clothoidLength > checkDistance:
             print(TC.WARNING + '\t\t\tPath Too Long' + TC.ENDC)
                  
     if checkSuccess:
-        return checkSuccess, chosenClothoid, selectIndex, lap
+        return checkSuccess, chosenClothoid, acceptedPaths, selectIndex, lap
     else: 
-        return checkSuccess, [], [], lap
+        return checkSuccess, [], [], [], lap
 
 def getRecoveryPathWPs(chosenClothoid, numbOfwpts):
     '''
@@ -443,21 +451,24 @@ def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, uavObj, 
 
     return changePath, ActivePath_List, TargetWPList
 
-def RecoveryPaths_SnapShot(file_path, step, clothoid_List, refPathpts, astarwpts, KOZpoints, show_keepOutZones, RecoveryPoints, activeWP, mainUAV, uavh_others_all, area_length, fig, ax  ):
-
+def RecoveryPaths_SnapShot(file_path, step, clothoid_List, acceptedPaths, refPathpts, astarwpts, KOZpoints, show_keepOutZones, RecoveryPoints, activeWP, mainUAV, uavh_others_all, area_length, fig, ax  ):
+    plt.clf()
     # fig, ax = plt.subplots()
     # ==== Plot Snapshot of all possible Clothoid paths ====
     for i in range(0, len(clothoid_List)):
         clothoid = clothoid_List[i]
         for segmnt in clothoid:
-            plt.plot(*segmnt.SampleXY(500))
+            color = 'm'
+            if acceptedPaths[i] == 1:
+                color = 'g'
+                
+            plt.plot(*segmnt.SampleXY(500), color = color)
 
     # Plot full clothoid path(s) with larger number of sample points
-    plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
     plt.plot(mainUAV['dubins'].y, mainUAV['dubins'].x, c='k', marker='o' )
 
     plt.scatter([pt[1] for pt in RecoveryPoints], [pt[0] for pt in RecoveryPoints])
-    plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
+    # plt.plot(mainUAV['dubins'].ys, mainUAV['dubins'].xs, c='r', marker='o' )
     plt.plot(uavh_others_all[0]['dubins'].y, uavh_others_all[0]['dubins'].x, c='y', marker='o' )
     NCcone = uavh_others_all[0]['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
     plotNCcone, = plt.plot([pt[1] for pt in NCcone], [pt[0] for pt in NCcone], "-r")
@@ -524,8 +535,7 @@ def RecoveryPath_SnapShot(file_path, step, refPath, astarwpts, pltPts_List, Reco
     plt.clf()
     # plt.show()
 
-
-def Show_AstarSnapShot(file_path, step, activeWP, mainUAV, uavh_others_all, refPath, astarwpts, astarGoalPt, KOZpoints, area_length, fig, ax):
+def Show_AstarSnapShot(file_path, step, activeWP, mainUAV, uavh_others_all, refPath,    astarwpts, astarGoalPt, KOZpoints, area_length, dt, lookAhead_time, fig, ax):
 
     #fig, ax = plt.subplots()
 
@@ -540,7 +550,8 @@ def Show_AstarSnapShot(file_path, step, activeWP, mainUAV, uavh_others_all, refP
 
     # plot keep out zones from UAVHeading.avoid() function
     # plotCASkoz, = plt.plot([pt[1] for pt in KOZpoints[0]], [pt[0] for pt in KOZpoints[0]], '--m')
-    CAScone = mainUAV['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
+    # CAScone = mainUAV['uavobj'].possibleFlightAreaStatic(area_length=area_length*1.0)
+    CAScone = flightProj(mainUAV['dubins'].x, mainUAV['dubins'].y, mainUAV['dubins'].heading, mainUAV['dubins'].velocity, mainUAV['dubins'].turnrate, dt, lookAhead_time)
     plotCAScone, = plt.plot([pt[1] for pt in CAScone], [pt[0] for pt in CAScone], "-g")
     plotNCkoz, = plt.plot([pt[1] for pt in KOZpoints[1]], [pt[0] for pt in KOZpoints[1]], '--m')
     plt.axis('equal')
