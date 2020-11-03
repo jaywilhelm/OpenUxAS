@@ -9,8 +9,8 @@
 #
 
 import Return_to_Route_functions as R2R
-# from UAVDataHolder import uavData
-import UAVDataHolder as uavData
+from UAVDataHolder import uavData
+# import UAVDataHolder as uavData
 
 from dubins_Return2Route import dubinsUAV
 from TerminalColors import TerminalColors as TC
@@ -85,15 +85,45 @@ for i in range(0, len(PruitTrack)):
     ActivePath_List.append(Waypoint_dict.copy())
     ReferencePath_List.append(Waypoint_dict.copy())
 
-dt = 0.2 # 0.1
-# distance threshold to satisfy each waypoint
+'UAV variables/capabilities'
+dt = 0.2 
+# distance threshold to satisfy waypoint
 wptRad = 0.0001 
-# uavType, ID, v, thetaRef, currentWPIndex, pathWpts
-init_CAS = [[0, 1, 0.00005/2, np.deg2rad(270), 3, PruitTrack]]
-init_NC =  [[0, 4, 0.00005, np.deg2rad(135), 2, PruitTrack_reverse]]
+
+# List of Collision Avoidacen UAVs
+#  uav =  [uavType, ID, v, thetaRef, currentWPIndex, pathWpts]
+#          uavType: 0 = Message-Based updating ; 1 = use dubins simulation updating
+init_CAS = [[1, 1, 0.00005/2, np.deg2rad(270), 3, PruitTrack]]
+# List of Non-cooperative/intruder UAVs
+init_NC =  [[1, 4, 0.00005, np.deg2rad(135), 2, PruitTrack_reverse]]
+
+def syncAVSfromDubins(uav):
+    lat = uav['uavData'].x
+    lon = uav['uavData'].y
+    vel = uav['uavData'].v
+    heading = uav['uavData'].heading
+    IsAvoidanceUAV = uav['IsAvoidanceUAV']
+    uav['uavobj'] = UAVHeading(pos=[lat, lon],
+                               waypt=[], speed=vel, heading=heading,
+                               tPossible=math.radians(45), IsAvoidanceUAV=IsAvoidanceUAV)
+    return uav
+
+uavlist = []
+uav1 = {}
+uav1['uavData'] = uavData(dt, wptRad, uavType=1, ID=1, position=[], velocity=0.00005/2, heading=np.deg2rad(270), currentWPIndex=3, pathWpts=PruitTrack)
+uav1['IsAvoidance'] = True
+uavlist.append(uav1)
+uav4 = {}
+uav4['uavData'] = uavData(dt, wptRad, uavType=1, ID=4, position=[], velocity=0.00005, heading=np.deg2rad(135), currentWPIndex=3, pathWpts=PruitTrack_reverse)
+uav4['IsAvoidance'] = False
+
+uavlist.append(uav4)
+
+uavlist[0] = syncAVSfromDubins(uavlist[0])
+uavlist[1] = syncAVSfromDubins(uavlist[1])
 
 'Create a list of UAVs'
-uavlist = uavData.createUAVList( dt, wptRad, init_CAS, init_NC  )
+# uavlist = uavData.createUAVList( dt, wptRad, init_CAS, init_NC  )
 lap_Counter = uavlist[0]['dubins'].lapCounter 
 halfTurnRadius = uavlist[0]['dubins'].turnRadius*2
 
@@ -120,6 +150,8 @@ Show_AstarPlan = False
 Show_RecoveryPlan = False
 TrackUAV = False
 
+Test = False
+
 'Movie stuff'
 savePlots = []  # stores figure frames used to make a movie
 savePlots1 = []
@@ -133,7 +165,7 @@ fig, ax = plt.subplots()
 step = 0
 while step <= 900:
 
-    ''' Identify UAVs using collision avoidence '''
+    ''' Identify UAVs using collision avoidance '''
     mainUAV = R2R.finduavbyID(uavlist, 1)                           # ID to Watch for
     uavh_others_all, uavh_others = R2R.findotheruavs(uavlist, 1)    # ID not to watch for
 
@@ -153,10 +185,13 @@ while step <= 900:
         mainUAV['dubins'].setWaypoints(TargetWPList, newradius=wptRad)
         # mainUAV['dubins'].currentWPIndex = 0
 
-    # Determine If potential collision detected 
-    # Then find A* goal point
-    # Then find A* solution
-    if not hasAstarPlan:
+    '''
+    ======================================
+    === Collision Detction Starts Here ===
+    ======================================
+    '''
+
+    if not hasAstarPlan and Test == True:
 
         detect = mainUAV['uavobj'].collisionDetector(uavh_others, mainUAV['dubins'].turnrate, dt, lookAhead_time, area_length=area_length, static_koz=[])
 
@@ -311,9 +346,9 @@ while step <= 900:
 
     # Update UAV positions - already functions
     '''
-    ================================
-    === Update vehicle positions ===
-    ================================
+    =============================
+    === Update vehicle States ===
+    =============================
     '''
     uavData.updateStates(uavlist)
 

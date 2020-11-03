@@ -14,82 +14,92 @@ from UAVHeading import UAVHeading
 #            uavType,      ID,            v,        thetaRef, currentWPIndex, pathWpts
 # init_CAS = [[      0,       1, 0.00005/2.75, np.deg2rad(270),              3, PruitTrack]]
 
-# class uavData():
+class uavData():
 
-# def __init__(self):
-#     # real aircraft or Dubins?
-#     self.uavType = uavType
+    def __init__(self, dt, wptRad, uavType=0, ID=0, position=[], velocity=0, heading=0, currentWPIndex=0, pathWpts=[] ):
+        # real aircraft or Dubins?
+        self.uavType = uavType
 
-#     self.v = velocity
-#     self.turnrate = np.deg2rad(20)
-#     # from Ch 5 in the Pilot's Handbook of Aernautical Knowledge 
-#     self.turnRadius = ((self.v * 360/(np.rad2deg(self.turnrate)))/np.pi)/2
+        if self.uavType == 0:
 
-#     #Current state
-#     self.x = position[0]
-#     self.y = position[1]
-#     self.vx = []
-#     self.vy = []
-    
-#     self.heading = heading
-#     self.currentWPIndex = 0
-#     self.lapCounter =0 # how many laps have been completed
-#     self.withinThreshold = False
-    
-#     self.lastWP = False # Lets system knonw that last waypoint has been reached
-    
-#     # History
-#     self.xs = np.array([])
-#     self.ys = np.array([])
-#     self.vxs = np.array([])
-#     self.vys = np.array([])
-#     self.headings = np.array([])
-#     self.ts = np.array([])
+            ' --- MAVLink type messages to set up vehicle ---'
 
-#     self.vx = v * np.cos(heading)
-#     self.vy = v * np.sin(heading)
+        elif self.uavType == 1:
 
-def updateStates(uavlist):
-    for uav in uavlist:     
-            uav['dubins'].simulateWPDubins(UseCarrotChase=False, delta=0.01)
-            uav = syncAVSfromDubins(uav)
+            # Set up Dubins UAV 
+            self.uavDubins = dubinsUAV(position=pathWpts[currentWPIndex], velocity=velocity,          
+                                                heading=heading, dt=dt)
+            self.uavDubins.setWaypoints(newwps=pathWpts, newradius = wptRad )
+            self.uavDubins.currentWPIndex = currentWPIndex                                    
+            
+            
+            self.ID = ID        
+            self.pos = [self.uavDubins.x, self.uavDubins.y]
+            self.v = self.uavDubins.velocity
+            # from Ch 5 in the Pilot's Handbook of Aernautical Knowledge 
+            self.turnRadius = self.uavDubins.turnRadius
 
-def syncAVSfromDubins(uav):
-        lat = uav['dubins'].x
-        lon = uav['dubins'].y
-        vel = uav['dubins'].v
-        heading = uav['dubins'].heading
-        IsAvoidanceUAV = uav['IsAvoidanceUAV']
-        uav['uavobj'] = UAVHeading(pos=[lat, lon],
-                                waypt=[], speed=vel, heading=heading,
-                                tPossible=np.deg2rad(45), IsAvoidanceUAV=IsAvoidanceUAV)
-        return uav
+            #Current state
+            self.x =  self.pos[0]
+            self.y = self.pos[1]
+            self.vx =  self.uavDubins.vx
+            self.vy = self.uavDubins.vy
+            
+            self.heading = self.uavDubins.heading
+            self.currentWPIndex =  self.uavDubins.currentWPIndex
+                
+            # History
+            self.xs = np.array([])
+            self.ys = np.array([])
+            self.vxs = np.array([])
+            self.vys = np.array([])
+            self.headings = np.array([])
+            self.ts = np.array([])
 
-def createPRACASuav( dt, wptRad, uavType, ID, v, thetaRef, currentWPIndex, pathWpts ):
+            self.vx = self.v * np.cos(heading)
+            self.vy = self.v * np.sin(heading)
+
+
+    def createPRACASuav( dt, wptRad, uavType, ID, v, thetaRef, currentWPIndex, pathWpts ):
         ' CAS + Return to Route UAV '
-        uavDict = {}   
-        uavDict['dubins'] = dubinsUAV(position=pathWpts[currentWPIndex], velocity=v,          
-                                            heading=thetaRef, dt=dt)
-        uavDict['dubins'].setWaypoints(newwps=pathWpts, newradius = wptRad )
-        uavDict['dubins'].currentWPIndex = currentWPIndex                                    
-        uavDict['ID'] = ID
-        uavDict['IsAvoidanceUAV'] = True
-        
-        return uavDict
+        if uavType == 0:
+            uavDict = {}
+            
+            ' --- MAVLink or similar messages to retrieve vehicle state --- '
 
-def createNCuav( dt, wptRad, uavType, ID, v, thetaRef, currentWPIndex, pathWpts ):
+            return uavDict
+
+        elif uavType == 1:
+            uavDict = {}   
+            uavDict['dubins'] = dubinsUAV(position=pathWpts[currentWPIndex], velocity=v,          
+                                                heading=thetaRef, dt=dt)
+            uavDict['dubins'].setWaypoints(newwps=pathWpts, newradius = wptRad )
+            uavDict['dubins'].currentWPIndex = currentWPIndex                                    
+            uavDict['ID'] = ID
+            uavDict['IsAvoidanceUAV'] = True
+            return uavDict
+
+    def createNCuav( dt, wptRad, uavType, ID, v, thetaRef, currentWPIndex, pathWpts ):
         ' Non-cooperative UAV '
-        uavDict = {}
-        uavDict['dubins'] = dubinsUAV(position=pathWpts[currentWPIndex], velocity=v,         
-                                            heading=thetaRef, dt=dt)
-        uavDict['dubins'].setWaypoints(newwps=pathWpts, newradius = wptRad )
-        uavDict['dubins'].currentWPIndex = currentWPIndex
-        uavDict['ID'] = ID
-        uavDict['IsAvoidanceUAV'] = False
+        if uavType == 0:
+            uavDict = {}
+            
+            ' --- MAVLink or similar messages to retrieve vehicle state --- '
 
-        return uavDict
+            return uavDict
+        
+        elif uavType == 1: 
+            uavDict = {}
+            uavDict['dubins'] = dubinsUAV(position=pathWpts[currentWPIndex], velocity=v,         
+                                                heading=thetaRef, dt=dt)
+            uavDict['dubins'].setWaypoints(newwps=pathWpts, newradius = wptRad )
+            uavDict['dubins'].currentWPIndex = currentWPIndex
+            uavDict['ID'] = ID
+            uavDict['IsAvoidanceUAV'] = False
 
-def createUAVList(dt, wptRad, init_CAS, init_NC): 
+            return uavDict
+
+    def createUAVList(dt, wptRad, init_CAS, init_NC): 
         '''
         Create list of dictionary entries
         Each entry contains a dubins vehicle 
@@ -108,6 +118,70 @@ def createUAVList(dt, wptRad, init_CAS, init_NC):
             uavlist[i] = syncAVSfromDubins(uavlist[i])
 
         return uavlist
+
+    
+    def getPosition(self):
+        if self.uavType == 0:
+            ' --- Mavlink message to update uav state ---'
+        
+        elif self.uavType ==1:       
+            return [self.position[0], self.position[1]]
+
+    def setWaypoints(self, newwps, newradius):
+        if self.uavType == 0:
+            ' --- Mavlink message to update uav state ---'
+        
+        elif self.uavType == 1: 
+            self.waypoints = newwps
+            self.wpRadius = newradius
+
+    def getWaypoints(self):
+        if self.uavType == 0:
+            ' --- Mavlink message to update uav state ---'
+        
+        elif self.uavType == 1: 
+            return self.waypoints
+    
+    def getActiveWaypoint(self):
+        if self.uavType == 0:
+            ' --- Mavlink message to update uav state ---'
+        
+        elif self.uavType == 1: 
+            return self.waypoints[self.currentWPIndex]
+
+    def distance(self, a, b):
+        if self.uavType == 0:
+            ' --- Mavlink message to update uav state ---'
+        
+        elif self.uavType == 1: 
+            return np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
+
+    def updateStates(self, uavlist):
+        for uav in uavlist:
+            if uav.uavType == 0:
+                ' --- Mavlink message to update uav state ---'
+            
+            elif uav.uavType == 1:                             
+                    uav['dubins'].simulateWPDubins(UseCarrotChase=False, delta=0.01)
+                    uav = syncAVSfromDubins(uav)
+
+    def syncAVSfromDubins(uav):
+            lat = uav['dubins'].x
+            lon = uav['dubins'].y
+            vel = uav['dubins'].v
+            heading = uav['dubins'].heading
+            IsAvoidanceUAV = uav['IsAvoidanceUAV']
+            uav['uavobj'] = UAVHeading(pos=[lat, lon],  waypt=[], speed=vel, heading=heading,
+                                    tPossible=np.deg2rad(45), IsAvoidanceUAV=IsAvoidanceUAV)
+
+            self.pos = [uav['dubins'].x, uav['dubins'].y]
+            self.v = uav['dubins'].v
+            self.heading = uav['dubins'].heading
+
+            return uav
+
+
 
     # def testMain():
 
