@@ -19,23 +19,24 @@ import pyclothoids
 from pyclothoids import Clothoid
 from scipy import linalg
 
+from uavData import uavData
+
 def distance(a, b):
     return np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
 
-def finduavbyID(uavlist,uavID):
+def finduavbyID(uavlist, uavID):
     for uav in uavlist:
-        if(uav['ID'] == uavID):
+        if(uav.data['ID'] == uavID):
             return uav
 
     return None
+
 def findotheruavs(uavlist, uavNOT):
     otherlist = []
-    otherjustobj = []
     for uav in uavlist:
-        if(uav['ID'] != uavNOT):
+        if(uav.data['ID'] != uavNOT):
             otherlist.append(uav)
-            otherjustobj.append(uav['uavobj'])
-    return otherlist, otherjustobj
+    return otherlist
 
 def fit_circle_2d(x, y, w=[]):
         x = np.array(x)
@@ -56,7 +57,7 @@ def fit_circle_2d(x, y, w=[]):
         r = np.sqrt(c[2] + xc ** 2 + yc ** 2)
         return xc, yc, r
 
-''' Function to find the current index number assigned to each reference path waypoint in the updated waypoint list'''
+''' Find the current index number assigned to each reference path waypoint in the updated waypoint list'''
 def findRefPathIndex(ActivePath_List):
     temp_list = []
     temp_dict = {}                    # temporary dictionary entry
@@ -68,12 +69,13 @@ def findRefPathIndex(ActivePath_List):
 
     return temp_list
 
-# Find the A* goal point 
-def findAstarGoal(refWaypoint_list, ReferencePath_List, uavObj, area_length, lookAheadDist):
-    last_targetIndex = uavObj['dubins'].currentWPIndex
+''' Find goal point along reference path for A* '''
+def findAstarGoal(refWaypoint_list, ReferencePath_List, mainUAV, area_length, lookAheadDist):
+    last_targetIndex = mainUAV.getActiveWaypointIndex()
     for i in range(0, len(refWaypoint_list)):
-        if uavObj['dubins'].currentWPIndex == refWaypoint_list[i]['Index']:
+        if mainUAV.getActiveWaypointIndex() == refWaypoint_list[i]['Index']:
             currentIndex = i
+            break
 
     astarGoalPoint_list = refWaypoint_list
     astarGoalPoint_dict = {}
@@ -90,8 +92,8 @@ def findAstarGoal(refWaypoint_list, ReferencePath_List, uavObj, area_length, loo
     for index in range(currentIndex, len(astarGoalPoint_list)):
         if index == currentIndex:
             # Used to find the distance between current UAV position and the next waypoint
-            x1 = uavObj['dubins'].x
-            y1 = uavObj['dubins'].y 
+            x1 = mainUAV.position[0]
+            y1 = mainUAV.position[1]
 
             x2 = astarGoalPoint_list[index]['pt'][0]
             y2 = astarGoalPoint_list[index]['pt'][1]
@@ -568,7 +570,7 @@ def Show_AstarSnapShot(file_path, step, activeWP, mainUAV, uavh_others_all, refP
     plt.savefig(AstarPaths)
     plt.clf()
 
-def flightProj(posX, posY, heading, velocity, turnRate, dt, lookAhead_time):
+def flightProjection(posX, posY, heading, velocity, turnRate, dt, lookAhead_time):
     areaLength = lookAhead_time*velocity
     turnLengths = 0
     time = np.arange(0, lookAhead_time, dt)
