@@ -106,10 +106,10 @@ uav1 = uavData(uavinfo, uavType, UAV_AVOID.ACTIVE)
 
 uavinfo = {}
 uavinfo['velocity'] = 0.000075
-uavinfo['heading'] = np.deg2rad(280)
+uavinfo['heading'] = np.deg2rad(0)
 uavinfo['waypoints'] = PruitTrack_reverse
 uavinfo['waypoint_radius'] = wptRad 
-uavinfo['current_waypoint'] = 10       
+uavinfo['current_waypoint'] = 12       
 uavinfo['ID'] = 4
 uavinfo['lookAhead_time'] = 0
 uavinfo['dt'] = 0.2
@@ -128,7 +128,7 @@ Simulation Variables
 area_length = 0.00025
 TargetWPList = None
 last_targetIndex = 0
-lookAhead_time = 10
+lookAhead_time = 5
 
 lap = None
 Astar_Index2Watch4 = None
@@ -203,7 +203,7 @@ while step <= 900:
                                                                         lookAheadDist)
 
             # A* replan - already a function
-            astarReplan, astarwpts, KOZpoints, full_path, uavID, AstarFailure = AvoidanceLogic.avoid(mainUAV, otherUAVs, avoid_areas=avoid_areas,  astarGoalPt=astarGoalPt, simStep=step)
+            astarReplan, astarwpts, KOZpoints, full_path, AstarFailure = AvoidanceLogic.avoid(mainUAV, otherUAVs, avoid_areas=avoid_areas,  astarGoalPt=astarGoalPt, simStep=step)
 
             # some kind of waypoint list update function?
                 # needs an insert point - where to put the new waypoints

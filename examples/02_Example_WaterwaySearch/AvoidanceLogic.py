@@ -23,6 +23,41 @@ import os
 
 import pickle
 
+def distance( a, b):
+    return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
+
+
+def convertPathToUniqueWaypoints(path_x, path_y):
+    path_x = np.array(path_x)
+    path_y = np.array(path_y)
+    # waypoints come out goal first
+    path_x = np.flip(path_x)
+    path_y = np.flip(path_y)
+
+    psize = len(path_x)
+    waypoints = np.array([[path_x[0], path_y[0]]])
+    for i in range(2, psize):
+        x = [path_x[i - 2], path_x[i - 1]]
+        y = [path_y[i - 2], path_y[i - 1]]
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+
+        # print("slope: "+str(slope)+ "\t Intercept:"+str(intercept))
+        testy = slope * path_x[i] + intercept
+        # print("testy :" + str(testy) + "y: " + str(path_y[i]))
+        if (np.isnan(slope) and path_x[i] == path_x[i - 1]):
+            # print("x still on line")
+            continue
+        elif (np.isnan(slope) and path_y[i] == path_y[i - 1]):
+            # print("y still on line")
+            continue
+        elif (testy == path_y[i]):
+            # print("same " + str(i))
+            continue
+        else:
+            # print("diff " + str(i))
+            waypoints = np.concatenate((waypoints, [[path_x[i - 1], path_y[i - 1]]]), axis=0)
+    return waypoints
 
 '''
 AvoidanceLogic Function: scale_border
@@ -89,8 +124,7 @@ def intermediates(p1, p2, interval):
     Description:
                 Returns the distance from point a to b.
 '''
-def distance( a, b):
-    return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
 
 def make_uavtoavoid_koz(kozList, scalef, zero_pos):
     newkoz = np.array([])
@@ -190,8 +224,8 @@ AvoidanceLogic Function: format_astar_input
 
 # format_astar_input(mainUAV, avoid_areas, scalefactor1, AstarGoal)
 def format_astar_input(mainUAV, kozList, scalef, AstarGoal, simStep):
-    mypos = [mainUAV.position[0]*100, mainUAV.position[1]*100]
-    mygoal = [AstarGoal[0]*100, AstarGoal[1]*100]
+    mypos = [mainUAV.position[0], mainUAV.position[1]]
+    mygoal = [AstarGoal[0], AstarGoal[1]]
 
     # print('MyGoal: ' + str(mygoal))
 
@@ -219,6 +253,7 @@ def format_astar_input(mainUAV, kozList, scalef, AstarGoal, simStep):
 
     showFormatImage = True
     if showFormatImage:
+        plt.clf()
         fig, ax = plt.subplots()
         #ax.plot(t, s)
         ax.scatter(mypos[1], mypos[0], c='r')
@@ -245,9 +280,10 @@ def format_astar_input(mainUAV, kozList, scalef, AstarGoal, simStep):
         FormatedInput = os.path.join(path,FormatedInput)
         plt.savefig(FormatedInput)
         plt.close('A* formatted map')
+        plt.show()
         plt.clf()
         #fig.savefig("test.png")
-        # plt.show()
+        
         # plt.pause(1)
     return start_pt, goal_pt, border_pts, koz_pts, zero_pos, border_cells
 
@@ -374,11 +410,11 @@ def avoidCheck(mainUAV, otherUAVs, additionalKOZ, lookAhead_time):
 
     return PointInPoint, avoid_areas
 
-
 def avoid( mainUAV, otherUAVs, avoid_areas= [], astarGoalPt= [],  simStep=0):
     print(TC.WARNING + 'AVOID.' + TC.ENDC)
 
     AstarFailure = False
+    static_koz = []
 
     # Get optimal path to destination
     # Format uav data for A* input
@@ -395,9 +431,11 @@ def avoid( mainUAV, otherUAVs, avoid_areas= [], astarGoalPt= [],  simStep=0):
         print(TC.WARNING + 'Collisions detected but no keep out zones' + TC.ENDC)
 
 
-    astarGoalPt = [astarGoalPt[0]*scaleFactor0, astarGoalPt[1]*scaleFactor0 ]
+    astarGoalPt = [astarGoalPt[0]*scaleFactor0, astarGoalPt[1]*scaleFactor0]
+    mainUAV.position = [mainUAV.position[0]*scaleFactor0, mainUAV.position[1]*scaleFactor0]
+
     scalefactor1 = 200 # 75? lager value => more dense A* problem space (increased resolution)
-    start, goal, border, koz, offset, border_cells = format_astar_input(mainUAV, avoid_areas, scalefactor1, astarGoalPt )
+    start, goal, border, koz, offset, border_cells = format_astar_input(mainUAV, avoid_areas, scalefactor1, astarGoalPt, simStep)
 
     pickle.dump({"start": start,
                 "goal": goal,
@@ -440,9 +478,9 @@ def avoid( mainUAV, otherUAVs, avoid_areas= [], astarGoalPt= [],  simStep=0):
         #plt.close('all')
         plt.clf()
         AstarFail = True
-        return False, [], avoid_areas, [], CollisionUavIDs, AstarFail
+        return False, [], avoid_areas, [], AstarFail
 
-    waypoints = self.convertPathToUniqueWaypoints(path_x, path_y)
+    waypoints = convertPathToUniqueWaypoints(path_x, path_y)
     waypoints += offset
     waypoints /= scalefactor1
     waypoints /= scaleFactor0
@@ -454,5 +492,45 @@ def avoid( mainUAV, otherUAVs, avoid_areas= [], astarGoalPt= [],  simStep=0):
 
     
 
+    showAstarPath = True
+    ### v== Plot Astar result ==v ###
+    if showAstarPath:
+        fig, ax = plt.subplots()
+        #ax.plot(t, s)
+        ax.scatter(start[1], start[0], c='r')
+        ax.scatter([path_y], [path_x], c='m')
+        ax.scatter(goal[1], goal[0], c='b')
+
+        ax.scatter([pt[1] for pt in border], [pt[0] for pt in border], c='b')
+        ax.scatter([pt[1] for pt in border_cells], [pt[0] for pt in border_cells], c='k', marker='.')
+        color = ['g', 'y', 'm']
+        cc = 0
+        for x in koz:
+            for pt in x:
+                print(pt)
+            ax.scatter([pt[1] for pt in x], [pt[0] for pt in x], c = color[cc] )
+            cc +=1
+
+        plt.axis('equal')
+        fig.set_size_inches((12, 10)) 
+        ax.set(xlabel='Lon', ylabel='Lat',
+            title='A* Result')
+        ax.grid()
+        
+        #fig.savefig("test.png")
+        # plt.show()
+        # plt.pause(1)
+                    
+        wd = os.getcwd()
+        path=(wd + '/RaceTrack_AstarResults')
+        AstarResult = 'AstarResult%03d.png' % simStep
+        AstarResult = os.path.join(path, AstarResult)
+        plt.savefig(AstarResult)
+        plt.close('A* Result')
+        plt.show()
+        plt.clf()
+
+
+
     plt.clf()
-    return True, waypoints, avoid_areas, full_path, CollisionUavIDs, AstarFail
+    return True, waypoints, avoid_areas, full_path, AstarFail
