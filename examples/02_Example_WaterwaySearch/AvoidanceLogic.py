@@ -222,7 +222,6 @@ AvoidanceLogic Function: format_astar_input
                     - use_pseudo_target
 '''
 
-# format_astar_input(mainUAV, avoid_areas, scalefactor1, AstarGoal)
 def format_astar_input(mainUAV, kozList, scalef, AstarGoal, simStep):
     mypos = [mainUAV.position[0], mainUAV.position[1]]
     mygoal = [AstarGoal[0], AstarGoal[1]]
@@ -256,21 +255,21 @@ def format_astar_input(mainUAV, kozList, scalef, AstarGoal, simStep):
         plt.clf()
         fig, ax = plt.subplots()
         #ax.plot(t, s)
-        ax.scatter(mypos[1], mypos[0], c='r')
-        ax.scatter(mygoal[1], mygoal[0], c='b')
-        ax.scatter([pt[1] for pt in border_pts], [pt[0] for pt in border_pts], c='b')
-        ax.scatter([pt[1] for pt in border_cells], [pt[0] for pt in border_cells], c='k', marker='.')
+        ax.scatter(mypos[0], mypos[1], c='r')
+        ax.scatter(mygoal[0], mygoal[1], c='b')
+        ax.scatter([pt[0] for pt in border_pts], [pt[1] for pt in border_pts], c='b')
+        ax.scatter([pt[0] for pt in border_cells], [pt[1] for pt in border_cells], c='k', marker='.')
         color = ['g', 'y', 'm']
         cc = 0
         for koz in newkoz:
             for pt in koz:
                 print(pt)
-            ax.scatter([pt[1] for pt in koz], [pt[0] for pt in koz], c = color[cc] )
+            ax.scatter([pt[0] for pt in koz], [pt[1] for pt in koz], c = color[cc] )
             cc +=1
 
         plt.axis('equal')
         fig.set_size_inches((12, 10)) 
-        ax.set(xlabel='Lon', ylabel='Lat',
+        ax.set(xlabel='x', ylabel='y',
             title='A* formatted map')
         ax.grid()
         
@@ -308,14 +307,14 @@ def flightProjection(mainUAV, dt, lookAhead_time):
             save.append([x, y])
         
         if i == 0:
-            linX = np.linspace(mainUAV.position[0], x, len(projectionRange), endpoint=False )
-            liny = np.linspace(mainUAV.position[1], y, len(projectionRange), endpoint=False ) 
+            linX = np.linspace(mainUAV.position[0], x, int(len(projectionRange)/2), endpoint=False )
+            liny = np.linspace(mainUAV.position[1], y, int(len(projectionRange)/2), endpoint=False ) 
             for k in range(0, len(linX)):     
                 projectionPts.append([linX[k],liny[k]])
 
         elif i == len(projectionRange)-1:
-            linX = np.linspace(mainUAV.position[0], x, len(projectionRange), endpoint=False )
-            liny = np.linspace(mainUAV.position[1], y, len(projectionRange), endpoint=False )     
+            linX = np.linspace(mainUAV.position[0], x, int(len(projectionRange)/2), endpoint=False )
+            liny = np.linspace(mainUAV.position[1], y, int(len(projectionRange)/2), endpoint=False )     
             for k in range(0, len(linX)):     
                 projectionPts.append([linX[k],liny[k]]) 
 
@@ -389,8 +388,8 @@ def avoidCheck(mainUAV, otherUAVs, additionalKOZ, lookAhead_time):
     # Include other keep out zones not associated with other UAVs 
     avoid_areas = additionalKOZ[:] # '[:]' removes python references to static_koz, so I can make a copy of that list
 
-    if mainUAV.avoidance == UAV_AVOID.ACTIVE:
-        avoid_areas.append(reverseKOZ(mainUAV))
+    # if mainUAV.avoidance == UAV_AVOID.ACTIVE:
+    #     avoid_areas.append(reverseKOZ(mainUAV))
     
     index = 0
     for otherUAV in otherUAVs:
@@ -422,7 +421,7 @@ def avoid( mainUAV, otherUAVs, avoid_areas= [], astarGoalPt= [],  simStep=0):
     if not len(astarGoalPt) > 0:
         print(TC.WARNING + 'Collisions detected but no A* goal point provided' + TC.ENDC)
 
-    scaleFactor0 = 100 # A* uses integers - most of the position info in in the Long/Lat decimal places
+    scaleFactor0 = 1 # (was 100) A* uses integers - most of the position info in in the Long/Lat decimal places
     if len(avoid_areas) > 0:
         for i in range(0, len(avoid_areas)):
             for j in range(0,len(avoid_areas[i])):
@@ -434,8 +433,10 @@ def avoid( mainUAV, otherUAVs, avoid_areas= [], astarGoalPt= [],  simStep=0):
     astarGoalPt = [astarGoalPt[0]*scaleFactor0, astarGoalPt[1]*scaleFactor0]
     mainUAV.position = [mainUAV.position[0]*scaleFactor0, mainUAV.position[1]*scaleFactor0]
 
-    scalefactor1 = 200 # 75? lager value => more dense A* problem space (increased resolution)
+    scalefactor1 = 50 # 100 gives a 50x50 ob map; (was 200) 75? lager value => more dense A* problem space (increased resolution)
     start, goal, border, koz, offset, border_cells = format_astar_input(mainUAV, avoid_areas, scalefactor1, astarGoalPt, simStep)
+
+    mainUAV.position = [mainUAV.position[0]/scaleFactor0, mainUAV.position[1]/scaleFactor0]
 
     pickle.dump({"start": start,
                 "goal": goal,
@@ -492,7 +493,7 @@ def avoid( mainUAV, otherUAVs, avoid_areas= [], astarGoalPt= [],  simStep=0):
 
     
 
-    showAstarPath = True
+    showAstarPath = False
     ### v== Plot Astar result ==v ###
     if showAstarPath:
         fig, ax = plt.subplots()
@@ -527,7 +528,7 @@ def avoid( mainUAV, otherUAVs, avoid_areas= [], astarGoalPt= [],  simStep=0):
         AstarResult = os.path.join(path, AstarResult)
         plt.savefig(AstarResult)
         plt.close('A* Result')
-        plt.show()
+        # plt.show()
         plt.clf()
 
 

@@ -19,14 +19,14 @@ wgs84 = pyproj.Proj(init="epsg:4326")
 epsg3035 = pyproj.Proj(init="epsg:3035")
 
 x1, y1 = pyproj.transform(wgs84, epsg3035, lon1, lat1)
-print(x1, y1)
+# print(x1, y1)
 
 x2, y2 = pyproj.transform(wgs84, epsg3035, lon2, lat2)
-print(x2, y2)
+# print(x2, y2)
 
 # a Pythagore's theorem is sufficient to compute an approximate distance
 distance_m = np.sqrt((x2-x1)**2 + (y2-y1)**2)
-print(distance_m)
+# print(distance_m)
 
 # ===========================================================================# 
 
@@ -46,14 +46,14 @@ for pt in PruitTrack:
 
     XYpruitTrack.append([x1,y1])
 
-print(XYpruitTrack)
+# print(XYpruitTrack)
 
-fig, ax = plt.subplots()
-plt.plot([pt[0] for pt in XYpruitTrack], [pt[1] for pt in XYpruitTrack], c='b', marker='.', markersize=8)
-ax.axis('equal')
-plt.grid(True)
+# fig, ax = plt.subplots()
+# plt.plot([pt[0] for pt in XYpruitTrack], [pt[1] for pt in XYpruitTrack], c='b', marker='.', markersize=8)
+# ax.axis('equal')
+# plt.grid(True)
 
-plt.show()
+# plt.show()
 
 # ===========================================================================# 
 import utm
@@ -68,30 +68,29 @@ for pt in PruitTrack:
 
     XYpruitTrack.append([utmPts[0], utmPts[1]])
 
-print(XYpruitTrack)
+# print(XYpruitTrack)
 
-fig, ax = plt.subplots()
-plt.plot([pt[0] for pt in XYpruitTrack], [pt[1] for pt in XYpruitTrack], c='b', marker='.', markersize=8)
-ax.axis('equal')
-plt.grid(True)
+# fig, ax = plt.subplots()
+# plt.plot([pt[0] for pt in XYpruitTrack], [pt[1] for pt in XYpruitTrack], c='b', marker='.', markersize=8)
+# ax.axis('equal')
+# plt.grid(True)
 
-plt.show()
+# plt.show()
 
 #==================================================
 # this seems to work the best !!!!!
 from pyproj import Proj
-p = Proj(proj='utm',zone=17,ellps='WGS84', preserve_units=False)
+p = Proj(proj='utm',zone=17, ellps='WGS84', preserve_units=False)
 
 XYpruitTrack = []
 for pt in PruitTrack:
-    lon1 = pt[0]
-    lat1 = pt[1]
-    x,y = p(lat1, lon1)
-
+    lon = pt[0]
+    lat = pt[1]
+    x,y = p(lat, lon)
 
     XYpruitTrack.append([x, y])
 
-print(XYpruitTrack)
+print('Pruit Track Meters = ' + '\n' + str(XYpruitTrack))
 
 fig, ax = plt.subplots()
 plt.plot([pt[0] for pt in XYpruitTrack], [pt[1] for pt in XYpruitTrack], c='b', marker='.', markersize=8)
@@ -107,7 +106,7 @@ for pt in XYpruitTrack:
 
     XYinverse.append([lon, lat])
 
-print(XYinverse)
+print('Pruit Track Long/Lat = ' + '\n' + str(XYinverse))
 
 fig, ax = plt.subplots()
 plt.plot([pt[0] for pt in XYinverse], [pt[1] for pt in XYinverse], c='b', marker='.', markersize=8)

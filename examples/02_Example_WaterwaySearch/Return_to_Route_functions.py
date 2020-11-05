@@ -70,7 +70,7 @@ def findRefPathIndex(ActivePath_List):
     return temp_list
 
 ''' Find goal point along reference path for A* '''
-def findAstarGoal(refWaypoint_list, ReferencePath_List, mainUAV, area_length, lookAheadDist):
+def findAstarGoal(refWaypoint_list, ReferencePath_List, mainUAV, lookAheadDist):
     last_targetIndex = mainUAV.getActiveWaypointIndex()
     for i in range(0, len(refWaypoint_list)):
         if mainUAV.getActiveWaypointIndex() == refWaypoint_list[i]['Index']:
@@ -110,7 +110,7 @@ def findAstarGoal(refWaypoint_list, ReferencePath_List, mainUAV, area_length, lo
         Note - process does not include the endpoint ( ie. [x2,y2]) - it is included in the next index set
         '''
         dist2WP = distance ([y1, x1], [y2, x2])
-        numbOfPts = int(dist2WP/0.000005)   # number of interpolated points based on distance between waypoints
+        numbOfPts = int(dist2WP/1)   # number of interpolated points based on distance between waypoints
         if numbOfPts == 0:
             numbOfPts = 50
         linX = np.linspace(x1, x2, numbOfPts, endpoint=False )
@@ -123,7 +123,7 @@ def findAstarGoal(refWaypoint_list, ReferencePath_List, mainUAV, area_length, lo
             d = distance([linX[pt], linY[pt]], [linX[pt+1], linY[pt+1]]) # Calculate distance between interpolated points
             distTotal += d                                               # total distance across interpolated points
             pointList.append([linX[pt], linY[pt]])
-            if distTotal >= area_length*lookAheadDist:
+            if distTotal >=lookAheadDist:
                 astarGoalPt = [linX[pt], linY[pt]]
                 ' Report if the astarGoalPoint is on the next lap'
                 targetIndex = astarGoalPoint_list[index]['Index']
@@ -134,19 +134,19 @@ def findAstarGoal(refWaypoint_list, ReferencePath_List, mainUAV, area_length, lo
                     lap = False
                     last_targetIndex = targetIndex
                 break
-        if distTotal >= area_length*lookAheadDist:
+        if distTotal >=lookAheadDist:
             break
 
     return astarGoalPt, targetIndex, pointList, lap 
 
-def UpdateWPList(ActivePath_List, uavObj, wypts2add, numbOfPts, List_belongsTo, insertIndex):
+def UpdateWPList(ActivePath_List, mainUAV, wypts2add, numbOfPts, List_belongsTo, insertIndex):
     ''' Update Active path with avoidance or recovery path waypoints'''
     Waypoint_List = []
     Waypoint_dict = {}
     for i in range(0, len(wypts2add)):
         Waypoint_dict['pt'] = wypts2add[i]    
         Waypoint_dict['Belongs to'] = List_belongsTo
-        Waypoint_dict['A* Return Index'] = uavObj['dubins'].currentWPIndex + numbOfPts
+        Waypoint_dict['A* Return Index'] = mainUAV.getActiveWaypointIndex() + numbOfPts
         Waypoint_dict['A* Return Pt'] = 'Astar'
         Waypoint_dict['Recover Return Index']  = None
         Waypoint_dict['Recover Return Pt']  = None
@@ -435,10 +435,10 @@ def getRecoveryPathWPs(chosenClothoid, numbOfwpts):
     
     return RecoveryPathWPs, pltPts_List
 
-def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, uavObj, Index2Watch4, lap, wptRad):
+def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, mainUAV, Index2Watch4, lap, wptRad):
     
     changePath = False
-    if uavObj['dubins'].currentWPIndex >= Index2Watch4:
+    if mainUAV.getActiveWaypointIndex() >= Index2Watch4:
         changePath = True
 
         # Reset waypoint list if lap is completed. 
@@ -447,7 +447,7 @@ def check_changePath(ActivePath_List, ReferencePath_List, TargetWPList, uavObj, 
             TargetWPList = []
             for i in range(0, len(ReferencePath_List)):
                 TargetWPList.append(ActivePath_List[i]['pt'])
-            uavObj['dubins'].setWaypoints(TargetWPList, newradius=wptRad) 
+            mainUAV.setWaypoints(TargetWPList, newradius=wptRad) 
 
             print('Lap completed - reset waypoint list')  
 

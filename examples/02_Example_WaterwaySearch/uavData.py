@@ -68,6 +68,9 @@ class uavData():
         self.data['waypoints'] = newwps
         self.data['waypoint_radius'] = newradius
 
+        if self.uavType == UAV_TYPE.DUBINS:
+            self.uavDubins.setWaypoints(newwps, newradius)
+
     def getWaypoints(self):
         return self.data['waypoints']
     
@@ -76,6 +79,9 @@ class uavData():
         
     def setActiveWaypointIndex(self, newwpi):
         self.data['current_waypoint'] = newwpi
+
+        if self.uavType == UAV_TYPE.DUBINS:
+            self.uavDubins.currentWPIndex = newwpi
 
     def getActiveWaypointPosition(self):
         return self.data['waypoints'][self.data['current_waypoint']]
