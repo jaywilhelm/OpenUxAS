@@ -150,13 +150,13 @@ cd ../../..
 echo "Preparing UxAS build ..."
 rm -rf build build_debug
 python3 prepare
-sh RunLmcpGen.sh
-meson build --buildtype=release
-meson build_debug --buildtype=debug
+#sh RunLmcpGen.sh
+#meson build --buildtype=release
+#meson build_debug --buildtype=debug
 
-echo "Performing initial UxAS build ..."
-ninja -C build
-ninja -C build_release
+#echo "Performing initial UxAS build ..."
+#ninja -C build
+#ninja -C build_release
 
 cat <<'EOF'
 
