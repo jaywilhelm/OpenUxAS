@@ -99,8 +99,8 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     sudo -H pip3 install meson==0.42.1
     # Install python plotting capabilities (optional): in terminal
     sudo apt -y install python3-tk
-    sudo -H pip3 install matplotlib
-    sudo -H pip3 install pandas
+    #sudo -H pip3 install matplotlib
+    #sudo -H pip3 install pandas
     # Install Java
     sudo apt -y install openjdk-11-jdk
     # Install ant for command line build of java programs
